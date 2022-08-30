@@ -215,8 +215,7 @@ class NatTrainerSmoothVAE(NatTrainer):
         grad_mean = torch.mean(grad_info).item()
 
         model_data = {'grad mean' : grad_mean, 'loss' : batch_loss.item(), 'score' : batch_score}
-        step_data.append(model_data)
-        return step_data
+        return model_data
 
     def val_step(self):
         total_loss = 0
