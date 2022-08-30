@@ -164,13 +164,17 @@ class Adv_Robustness_NaturalTraining:
                                              sigma = smoothingVAE_sigma,
                                              trained_VAE=vae,
                                              device=self.device,
-                                             num_samples = smoothing_num_samples)
+                                             num_samples = smoothing_num_samples,
+                                             num_classes=self.num_classes,
+                                             loss_coef=vae_loss_coef)
         elif smoothVAE_version == 'sample':
             smoothVAE_clf = SmoothVAE_Sample(base_classifier=base_clf,
                                              sigma=smoothingVAE_sigma,
                                              trained_VAE=vae,
                                              device=self.device,
-                                             num_samples=smoothing_num_samples)
+                                             num_samples=smoothing_num_samples,
+                                             num_classes=self.num_classes,
+                                             loss_coef=vae_loss_coef)
 
         if with_vae_grad:
             optimizer = optim.SGD(smoothVAE_clf.parameters(), lr=self.lr)

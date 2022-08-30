@@ -36,7 +36,14 @@ class Smooth(nn.Module):
 
 class SmoothVAE_Latent(Smooth):
 
-    def __init__(self, base_classifier: torch.nn.Module, sigma: float, trained_VAE: VAE, device, num_samples, num_classes, loss_coef):
+    def __init__(self,
+                 base_classifier: torch.nn.Module,
+                 sigma: float,
+                 trained_VAE: VAE,
+                 device,
+                 num_samples,
+                 num_classes,
+                 loss_coef):
         super().__init__(base_classifier, sigma, device, num_samples, num_classes)
         # needs to be trained on the same set as the base classifier
         self.trained_VAE = trained_VAE
@@ -66,8 +73,15 @@ class SmoothVAE_Latent(Smooth):
 class SmoothVAE_Sample(Smooth):
     ABSTAIN = -1
 
-    def __init__(self, base_classifier: torch.nn.Module, sigma: float, trained_VAE: VAE, device, num_samples, loss_coef):
-        super().__init__(base_classifier, sigma, device, num_samples)
+    def __init__(self,
+                 base_classifier: torch.nn.Module,
+                 sigma: float,
+                 trained_VAE: VAE,
+                 device,
+                 num_samples,
+                 num_classes,
+                 loss_coef):
+        super().__init__(base_classifier, sigma, device, num_samples, num_classes)
         # needs to be trained on the same set as the base classifier
         self.trained_VAE = trained_VAE
         self.loss_coef = loss_coef
