@@ -8,7 +8,8 @@ class Smooth(nn.Module):
                  base_classifier: torch.nn.Module,
                  sigma: float,
                  device : torch.device,
-                 num_samples : int):
+                 num_samples : int,
+                 num_classes : int):
         super().__init__()
         """
         :param base_classifier: maps from [batch x channel x height x width] to [batch x num_classes]
@@ -19,6 +20,7 @@ class Smooth(nn.Module):
         self.sigma = sigma
         self.device = device
         self.num_samples = num_samples
+        self.num_classes = num_classes
         self.label = f'Smooth_{round(sigma, 4)}_MTrain_{num_samples}'
 
     def forward(self, x):
@@ -34,8 +36,8 @@ class Smooth(nn.Module):
 
 class SmoothVAE_Latent(Smooth):
 
-    def __init__(self, base_classifier: torch.nn.Module, sigma: float, trained_VAE: VAE, device, num_samples, loss_coef):
-        super().__init__(base_classifier, sigma, device, num_samples)
+    def __init__(self, base_classifier: torch.nn.Module, sigma: float, trained_VAE: VAE, device, num_samples, num_classes, loss_coef):
+        super().__init__(base_classifier, sigma, device, num_samples, num_classes)
         # needs to be trained on the same set as the base classifier
         self.trained_VAE = trained_VAE
         self.loss_coef = loss_coef

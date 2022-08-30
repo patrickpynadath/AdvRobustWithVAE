@@ -106,7 +106,8 @@ class Adv_Robustness_NaturalTraining:
         smooth_clf = Smooth(base_classifier=base_clf,
                             sigma = smoothing_sigma,
                             device = self.device,
-                            num_samples= smoothing_num_samples)
+                            num_samples= smoothing_num_samples,
+                            num_classes=self.num_classes)
         optimizer = optim.SGD(smooth_clf.parameters(), lr = self.lr)
         criterion = nn.CrossEntropyLoss()
         trainer = NatTrainer(model = smooth_clf,
