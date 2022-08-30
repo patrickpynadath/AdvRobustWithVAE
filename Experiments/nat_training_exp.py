@@ -91,7 +91,7 @@ class Adv_Robustness_NaturalTraining:
                                        attack_eps_values=adv_norms,
                                        steps = adv_steps,
                                        num_attacks=num_attacks)
-        return nat_acc, adv_accs
+        return nat_acc, adv_accs, base_clf.label
 
     def adv_rob_smoothclf(self,
                           clf_epochs,
@@ -128,7 +128,7 @@ class Adv_Robustness_NaturalTraining:
                                        attack_eps_values=adv_norms,
                                        steps = adv_steps,
                                        num_attacks=num_attacks)
-        return nat_acc, adv_accs
+        return nat_acc, adv_accs, smooth_clf.label
 
     # need to get VAE as well, so need to also pass those hyperparam in
     def adv_rob_smoothvae_clf(self,
@@ -201,5 +201,5 @@ class Adv_Robustness_NaturalTraining:
                                        attack_eps_values=adv_norms,
                                        steps=adv_steps,
                                        num_attacks=num_attacks)
-        return nat_acc, adv_accs
+        return nat_acc, adv_accs, smoothVAE_clf.label
 

@@ -10,35 +10,33 @@ from Utils.utils import accuracies_to_dct
 # logistical parameters
 TRAIN_METRICS_DIR = '../ExperimentLogging/TrainMetrics/'
 HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
-DEVICE = 'cpu'
+DEVICE = 'cuda'
 
 # global parameters that control smoothing process
-SMOOTHING_SIGMAS = [10/255]
-SMOOTHINGVAE_SIGMAS = [10/255]
-M_TRAIN = 1
+SMOOTHING_SIGMAS = [5/255, 10/255, 15/255, 20/255, 25/255]
+SMOOTHINGVAE_SIGMAS = [5/255, 10/255, 15/255, 20/255, 25/255]
+M_TRAIN = 10
 
 # global parameters for measuring adversarial robustness
-# TEST_EPS_linf = [1/255, 2/255, 3/255]
-TEST_EPS_linf = [1/255]
+TEST_EPS_linf = [1/255, 2/255, 3/255, 4/255, 5/255, 10/255, 15/255, 20/255, 25/255]
 #TEST_EPS_l2 = []
-TEST_ATTACK_STEPS = 1
-NUM_TEST_ATTACKS = 1
+TEST_ATTACK_STEPS = 8
+NUM_TEST_ATTACKS = 1000
 
 # global parameters for classifier
 BATCH_SIZE_CLF = 50
 LR = .01
-CLF_EPOCHS = 1
+CLF_EPOCHS = 50
 
 # global parameters for VAE
-VAE_EPOCHS = [1]
-KERNEL_NUM = [50]
-LATENT_SIZE= [100]
+VAE_EPOCHS = [1, 10, 20, 30]
+KERNEL_NUM = [10, 20, 50, 100]
+LATENT_SIZE= [10, 20, 50, 100]
 BATCH_SIZE_VAE = 32
 # VAE_LOSS_COEFS = [0, .5, 1, 2]
 # PETURBATION_NORMS = [1/255, 2/255, 5/255, 10/255, 20/255]
 
-VAE_LOSS_COEFS = [1]
-PETURBATION_NORMS = [2/255]
+VAE_LOSS_COEFS = [0, .5, 1, 1.5, 2]
 
 
 def adv_rob_linf_loop():
@@ -53,7 +51,7 @@ def adv_rob_linf_loop():
 
 
     # getting results for the baseline model -- plain classifier
-    nat_acc, adv_accs = adv_exp.adv_rob_baseclf(clf_epochs=CLF_EPOCHS,
+    nat_acc, adv_accs, label = adv_exp.adv_rob_baseclf(clf_epochs=CLF_EPOCHS,
                             adv_type='linf',
                             adv_norms=TEST_EPS_linf,
                             adv_steps=TEST_ATTACK_STEPS,
@@ -65,7 +63,8 @@ def adv_rob_linf_loop():
                  'KernelNum' : 0,
                  'LatentSize' : 0}
     metric_dct = accuracies_to_dct(nat_acc, adv_accs, TEST_EPS_linf, 'linf')
-    hparam_writer.add_hparams(param_dct, metric_dct)
+    run_name = adv_exp.hyperparam_logdir + f"/{label}"
+    hparam_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
 
     # getting results for RandSmooth models
     for smoothing_sigma in SMOOTHING_SIGMAS:
@@ -75,7 +74,7 @@ def adv_rob_linf_loop():
                      'VAE_Epoch': 0,
                      'KernelNum': 0,
                      'LatentSize': 0}
-        nat_acc, adv_accs = adv_exp.adv_rob_smoothclf(clf_epochs=CLF_EPOCHS,
+        nat_acc, adv_accs, label = adv_exp.adv_rob_smoothclf(clf_epochs=CLF_EPOCHS,
                                                       smoothing_sigma=smoothing_sigma,
                                                       smoothing_num_samples=M_TRAIN,
                                                       adv_type='linf',
@@ -83,7 +82,8 @@ def adv_rob_linf_loop():
                                                       adv_steps=TEST_ATTACK_STEPS,
                                                       num_attacks=NUM_TEST_ATTACKS)
         metric_dct = accuracies_to_dct(nat_acc, adv_accs, TEST_EPS_linf, 'linf')
-        hparam_writer.add_hparams(param_dct, metric_dct)
+        run_name = adv_exp.hyperparam_logdir + f"/{label}"
+        hparam_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
 
     # getting results for SmoothVAE models
     for smoothing_sigma in SMOOTHINGVAE_SIGMAS:
@@ -98,7 +98,7 @@ def adv_rob_linf_loop():
                                          'VAE_Epoch': num_vae_epochs,
                                          'KernelNum': kernel_num,
                                          'LatentSize': latent_size}
-                            nat_acc, adv_accs = adv_exp.adv_rob_smoothvae_clf(clf_epochs=CLF_EPOCHS,
+                            nat_acc, adv_accs, label = adv_exp.adv_rob_smoothvae_clf(clf_epochs=CLF_EPOCHS,
                                                                               smoothingVAE_sigma=smoothing_sigma,
                                                                               smoothing_num_samples=M_TRAIN,
                                                                               smoothVAE_version=model_type,
@@ -114,7 +114,8 @@ def adv_rob_linf_loop():
                                                                               adv_steps=TEST_ATTACK_STEPS,
                                                                               num_attacks=NUM_TEST_ATTACKS)
                             metric_dct = accuracies_to_dct(nat_acc, adv_accs, TEST_EPS_linf, 'linf')
-                            hparam_writer.add_hparams(param_dct, metric_dct)
+                            run_name = adv_exp.hyperparam_logdir + f"/{label}"
+                            hparam_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
     return
 
 
