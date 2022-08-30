@@ -40,7 +40,7 @@ class Adv_Robustness_NaturalTraining:
 
         transform = transforms.Compose(
             [transforms.ToTensor()])
-        root_dir = r''
+        root_dir = r'*/'
         trainset = torchvision.datasets.CIFAR10(root=root_dir, train=True,
                                                 download=True, transform=transform)
 
