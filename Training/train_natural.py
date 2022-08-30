@@ -203,12 +203,15 @@ class NatTrainerSmoothVAE(NatTrainer):
         classification_loss = criterion(outputs, labels)
 
         # calculating the loss from the VAE
-        (mean, logvar), inputs_reconstructed = model.trained_VAE(inputs)
-        reconstruction_loss = model.trained_VAE.reconstruction_loss(inputs_reconstructed, inputs)
-        kl_divergence_loss = model.trained_VAE.kl_divergence_loss(mean, logvar)
+        if model.loss_coef != 0:
+            (mean, logvar), inputs_reconstructed = model.trained_VAE(inputs)
+            reconstruction_loss = model.trained_VAE.reconstruction_loss(inputs_reconstructed, inputs)
+            kl_divergence_loss = model.trained_VAE.kl_divergence_loss(mean, logvar)
 
-        # combining for total loss
-        batch_loss = classification_loss + reconstruction_loss + kl_divergence_loss
+            # combining for total loss
+            batch_loss = classification_loss + (reconstruction_loss + kl_divergence_loss) * self.model.loss_coef
+        else:
+            batch_loss = classification_loss
         batch_loss.backward()
         optimizer.step()
 
@@ -229,19 +232,22 @@ class NatTrainerSmoothVAE(NatTrainer):
 
         with torch.no_grad():
             for i, data in enumerate(self.testloader):
+                model = self.model
                 inputs, labels = data[0].to(self.device), data[1].to(self.device)
                 total_samples += len(inputs)
-                model = self.model
                 requires_grad_(model, False)
                 model.eval()
                 criterion = self.criterion
                 # generate model outputs, get loss
                 outputs = model(inputs)
                 classification_loss = criterion(outputs, labels)
-                (mean, logvar), inputs_reconstructed = model.trained_VAE(inputs)
-                reconstruction_loss = model.trained_VAE.reconstruction_loss(inputs_reconstructed, inputs)
-                kl_divergence_loss = model.trained_VAE.kl_divergence_loss(mean, logvar)
-                batch_loss = classification_loss + kl_divergence_loss + reconstruction_loss
+                if model.loss_coef != 0:
+                    (mean, logvar), inputs_reconstructed = model.trained_VAE(inputs)
+                    reconstruction_loss = model.trained_VAE.reconstruction_loss(inputs_reconstructed, inputs)
+                    kl_divergence_loss = model.trained_VAE.kl_divergence_loss(mean, logvar)
+                    batch_loss = classification_loss + (kl_divergence_loss + reconstruction_loss) * self.model.loss_coef
+                else:
+                    batch_loss = classification_loss
                 # get accuracy values
                 pred = torch.argmax(outputs, dim=1)
                 num_correct = sum([1 if pred[i].item() == labels[i].item() else 0 for i in range(len(inputs))])
