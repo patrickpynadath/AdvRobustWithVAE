@@ -48,41 +48,41 @@ def adv_rob_linf_loop():
     hparam_writer = SummaryWriter(log_dir=adv_exp.hyperparam_logdir)
     # adding the hyperparameters for grid search
 
-    #
-    # # getting results for the baseline model -- plain classifier
-    # nat_acc, adv_accs, label = adv_exp.adv_rob_baseclf(clf_epochs=CLF_EPOCHS,
-    #                         adv_type='linf',
-    #                         adv_norms=TEST_EPS_linf,
-    #                         adv_steps=TEST_ATTACK_STEPS,
-    #                         num_attacks=NUM_TEST_ATTACKS)
-    # param_dct = {'Model' : 'base_clf',
-    #              'SmoothingSigma' : 0,
-    #              'LossCoef' : 0,
-    #              'VAE_Epoch' : 0,
-    #              'KernelNum' : 0,
-    #              'LatentSize' : 0}
-    # metric_dct = accuracies_to_dct(nat_acc, adv_accs, TEST_EPS_linf, 'linf')
-    # run_name = adv_exp.hyperparam_logdir + f"/{label}"
-    # hparam_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
-    #
-    # # getting results for RandSmooth models
-    # for smoothing_sigma in SMOOTHING_SIGMAS:
-    #     param_dct = {'Model': 'Smooth',
-    #                  'SmoothingSigma': round(smoothing_sigma, 4),
-    #                  'LossCoef': 0,
-    #                  'VAE_Epoch': 0,
-    #                  'KernelNum': 0,
-    #                  'LatentSize': 0}
-    #     nat_acc, adv_accs, label = adv_exp.adv_rob_smoothclf(clf_epochs=CLF_EPOCHS,
-    #                                                   smoothing_sigma=smoothing_sigma,
-    #                                                   smoothing_num_samples=M_TRAIN,
-    #                                                   adv_type='linf',
-    #                                                   adv_norms=TEST_EPS_linf,
-    #                                                   adv_steps=TEST_ATTACK_STEPS,
-    #                                                   num_attacks=NUM_TEST_ATTACKS)
-    #     metric_dct = accuracies_to_dct(nat_acc, adv_accs, TEST_EPS_linf, 'linf')
-    #     run_name = adv_exp.hyperparam_logdir + f"/{label}"
-    #     hparam_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
+
+    # getting results for the baseline model -- plain classifier
+    nat_acc, adv_accs, label = adv_exp.adv_rob_baseclf(clf_epochs=CLF_EPOCHS,
+                            adv_type='linf',
+                            adv_norms=TEST_EPS_linf,
+                            adv_steps=TEST_ATTACK_STEPS,
+                            num_attacks=NUM_TEST_ATTACKS)
+    param_dct = {'Model' : 'base_clf',
+                 'SmoothingSigma' : 0,
+                 'LossCoef' : 0,
+                 'VAE_Epoch' : 0,
+                 'KernelNum' : 0,
+                 'LatentSize' : 0}
+    metric_dct = accuracies_to_dct(nat_acc, adv_accs, TEST_EPS_linf, 'linf')
+    run_name = adv_exp.hyperparam_logdir + f"/{label}"
+    hparam_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
+
+    # getting results for RandSmooth models
+    for smoothing_sigma in SMOOTHING_SIGMAS:
+        param_dct = {'Model': 'Smooth',
+                     'SmoothingSigma': round(smoothing_sigma, 4),
+                     'LossCoef': 0,
+                     'VAE_Epoch': 0,
+                     'KernelNum': 0,
+                     'LatentSize': 0}
+        nat_acc, adv_accs, label = adv_exp.adv_rob_smoothclf(clf_epochs=CLF_EPOCHS,
+                                                      smoothing_sigma=smoothing_sigma,
+                                                      smoothing_num_samples=M_TRAIN,
+                                                      adv_type='linf',
+                                                      adv_norms=TEST_EPS_linf,
+                                                      adv_steps=TEST_ATTACK_STEPS,
+                                                      num_attacks=NUM_TEST_ATTACKS)
+        metric_dct = accuracies_to_dct(nat_acc, adv_accs, TEST_EPS_linf, 'linf')
+        run_name = adv_exp.hyperparam_logdir + f"/{label}"
+        hparam_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
 
     # getting results for SmoothVAE models
     for smoothing_sigma in SMOOTHINGVAE_SIGMAS:
