@@ -13,7 +13,8 @@ import os
 
 class Experiment:
 
-    def __init__(self, batch_size, training_logdir, hyperparam_logdir, device):
+    def __init__(self,
+                 batch_size, training_logdir, hyperparam_logdir, device):
         date_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         self.training_logdir = training_logdir + f"/{date_str}/"
         self.hyperparam_logdir = hyperparam_logdir + f"/{date_str}/"

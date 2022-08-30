@@ -2,26 +2,35 @@ import torch
 import numpy as np
 import torchattacks
 from Adversarial.attacks import PGD_L2
-from typing import List
 import torch.nn as f
-import datetime
-import os
-# each model gets it own folder
-# each folder has a file with the accuracy results and the hyper paramater info for the model
 
 
+
+# Class for running tests against a given model -- both natural accuracy and adversarial robustness
 class ClassifierTest:
     def __init__(self,
                  model : f.Module,
                  testloader,
                  device,
                  batch_size):
+        """
+
+        :param model: f.Module to be evaluated using testloader data
+        :param testloader: torch DataLoader to get test samples from
+        :param device: device to put model and data on
+        :param batch_size:
+        """
         self.model = model
         self.testloader = testloader
         self.device = device
         self.batch_size = batch_size
 
+
     def test_clean(self):
+        """
+
+        :return: the natural accuracy of self.model on samples from self.testloader
+        """
         num_correct = 0
         model = self.model
         model.eval()
@@ -40,7 +49,14 @@ class ClassifierTest:
                  attack_eps_values,
                  steps,
                  num_attacks):
+        """
 
+        :param adversary_type: type of attack to use against model, either 'linf' or 'l2'
+        :param attack_eps_values: max norm values for attacker
+        :param steps: number of steps for PGD attack
+        :param num_attacks: how many samples to use attack model with
+        :return: accuracy, which is num_correct/num_attacks
+        """
         testset = self.testloader.dataset
         samples_idx = np.random.randint(low=0, high=len(testset), size=num_attacks)
         original_im_dim = tuple([num_attacks]) + testset[0][0].size()

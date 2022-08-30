@@ -44,15 +44,28 @@ class SmoothVAE_Latent(Smooth):
                  num_samples,
                  num_classes,
                  loss_coef):
+        """
+
+        :param base_classifier: base classifier to apply SmoothVAE procedure to
+        :param sigma: smoothing value for randomized smoothing procedure
+        :param trained_VAE: VAE model
+        :param device: device to move model and tensors to
+        :param num_samples: number of samples to use for randomized smoothing
+        :param num_classes: total possible classes
+        :param loss_coef: the value to use to weight the VAE component of the loss function
+        """
         super().__init__(base_classifier, sigma, device, num_samples, num_classes)
-        # needs to be trained on the same set as the base classifier
         self.trained_VAE = trained_VAE
         self.loss_coef = loss_coef
         self.label = f'SmoothVAE_Latent_{sigma}_MTrain_{num_samples}_losscoef_{loss_coef}'
 
 
     def forward(self, x):
-        # sample latent code z from q given x.
+        """
+
+        :param x: torch tensor of [batch_size x channel_num x width x height]
+        :return: y, where y is [batch_size x num_classes], a probabiliy distribution over potential classes
+        """
         encoded = self.trained_VAE.encoder(x)
         mean, logvar = self.trained_VAE.q(encoded)
         z = self.trained_VAE.z(mean, logvar)
@@ -71,7 +84,6 @@ class SmoothVAE_Latent(Smooth):
 
 
 class SmoothVAE_Sample(Smooth):
-    ABSTAIN = -1
 
     def __init__(self,
                  base_classifier: torch.nn.Module,
@@ -81,14 +93,26 @@ class SmoothVAE_Sample(Smooth):
                  num_samples,
                  num_classes,
                  loss_coef):
+        """
+        :param base_classifier: base classifier to apply SmoothVAE procedure to
+        :param sigma: smoothing value for randomized smoothing procedure
+        :param trained_VAE: VAE model
+        :param device: device to move model and tensors to
+        :param num_samples: number of samples to use for randomized smoothing
+        :param num_classes: total possible classes
+        :param loss_coef: the value to use to weight the VAE component of the loss function
+        """
         super().__init__(base_classifier, sigma, device, num_samples, num_classes)
-        # needs to be trained on the same set as the base classifier
+
         self.trained_VAE = trained_VAE
         self.loss_coef = loss_coef
         self.label = f'SmoothVAE_Sample_{sigma}_MTrain_{num_samples}_losscoef_{loss_coef}'
 
     def forward(self, x):
-        # sample latent code z from q given x.
+        """
+        :param x: torch tensor of [batch_size x channel_num x width x height]
+        :return: y, where y is [batch_size x num_classes], a probabiliy distribution over potential classes
+        """
         reconstruction = torch.zeros_like(x).to(self.device)
         for i in range(self.num_samples):
             _, output = self.trained_VAE(x)

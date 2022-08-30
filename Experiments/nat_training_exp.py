@@ -14,7 +14,6 @@ import torch.optim as optim
 
 
 
-
 class Adv_Robustness_NaturalTraining:
     def __init__(self,
                  training_logdir, # directory where tensorboard logs for training will go, gets written by NatTrainer
@@ -23,7 +22,6 @@ class Adv_Robustness_NaturalTraining:
                  batch_size,
                  device):
         """
-
         :param training_logdir: directory to put training metrics, gets passed to NatTrainer object
         :param hyperparam_logdir: directory to put data for different hyperparams, written directly in this class
         :param lr: learning rate for all classifiers trained
@@ -101,7 +99,16 @@ class Adv_Robustness_NaturalTraining:
                           adv_norms,
                           adv_steps,
                           num_attacks):
-
+        """
+        :param clf_epochs: epochs to train classifier with
+        :param smoothing_sigma: smoothing value for randomized smoothing procedure
+        :param smoothing_num_samples: number of samples to use for randomized smoothing procedure
+        :param adv_type: 'l2' or 'linf'
+        :param adv_norms: list of max norms for PGD attack
+        :param adv_steps: number of steps to use for PGD attack
+        :param num_attacks: number of adversarial examples to evaluate trained model against
+        :return: natural accuracy of model, list of adversarial robustness, and label of model
+        """
         base_clf = simple_conv_net()
         smooth_clf = Smooth(base_classifier=base_clf,
                             sigma = smoothing_sigma,
@@ -147,13 +154,31 @@ class Adv_Robustness_NaturalTraining:
                               adv_norms,
                               adv_steps,
                               num_attacks):
+        """
+        :param clf_epochs: epochs to use for classifier
+        :param smoothingVAE_sigma: smoothing value for SmoothVAE
+        :param smoothing_num_samples: number of samples to use for smoothing
+        :param smoothVAE_version: 'latent' or 'sample'
+        :param vae_loss_coef: determines how much to weight VAE component of loss function
+        :param vae_img_size: dimensions for VAE input
+        :param vae_channel_num: number of channels for VAE input
+        :param vae_kern_num: number of kernels to use for VAE input
+        :param vae_z_size: dimension of latent space
+        :param vae_epochs: epochs to train VAE model
+        :param with_vae_grad: switch for allowing VAE param to be updated during backprop
+        :param adv_type: 'l2' or 'linf'
+        :param adv_norms: list of max norms to use for PGD attack
+        :param adv_steps: steps for PGD attack
+        :param num_attacks: how many attacks to evaluate model against
+        :return: natural accuracy, list of adversarial robustness, and model label
+        """
 
         base_clf = simple_conv_net()
         vae = VAE(image_size=vae_img_size,
                   channel_num=vae_channel_num,
                   kernel_num=vae_kern_num,
                   z_size=vae_z_size,
-                  device=self.device)
+                  device=self.device).to(self.device)
         if vae_epochs != 0:
             train_vae(model=vae,
                       data_loader=self.trainloader,

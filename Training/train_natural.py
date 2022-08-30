@@ -105,7 +105,7 @@ class NatTrainer:
 
     def training_loop(self, epochs : int):
         """
-
+        runs a training loop for given epochs
         :param epochs: number of epochs to train self.classifier
         :return:
         """
@@ -177,6 +177,11 @@ class NatTrainerSmoothVAE(NatTrainer):
         self.vae_loss_coef = vae_loss_coef
 
     def _train_step(self, data):
+        """
+        Goes through a single parameter update given batch data
+        :param data: tensor of dimensions [batch_size x num_channels x width x height]
+        :return: dct of metrics to keep track of in main training loop
+        """
         inputs, labels = data
         inputs, labels = inputs.to(self.device), labels.to(self.device)
 
