@@ -213,7 +213,6 @@ class Adv_Robustness_NaturalTraining:
                                       optimizer=optimizer,
                                       criterion = criterion,
                                       log_dir=self.training_logdir,
-                                      vae_loss_coef=vae_loss_coef,
                                       use_tensorboard=True)
         trainer.training_loop(clf_epochs)
         adv_tester = ClassifierTest(model = smoothVAE_clf,
