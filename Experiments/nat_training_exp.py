@@ -182,7 +182,6 @@ class Adv_Robustness_NaturalTraining:
         if vae_epochs != 0:
             train_vae(model=vae,
                       data_loader=self.trainloader,
-                      len_dataset= len(self.trainloader.dataset),
                       epochs=vae_epochs)
         if smoothVAE_version =='latent':
             smoothVAE_clf = SmoothVAE_Latent(base_classifier=base_clf,
