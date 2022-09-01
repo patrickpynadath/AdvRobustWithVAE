@@ -31,12 +31,12 @@ CLF_EPOCHS = 50
 # global parameters for VAE
 VAE_EPOCHS = [50]
 KERNEL_NUM = [50]
-LATENT_SIZE= [10, 100, 200]
+LATENT_SIZE= [100, 200]
 BATCH_SIZE_VAE = 32
 # VAE_LOSS_COEFS = [0, .5, 1, 2]
 # PETURBATION_NORMS = [1/255, 2/255, 5/255, 10/255, 20/255]
 
-VAE_LOSS_COEFS = [1]
+VAE_LOSS_COEFS = [1, 1.5, 2]
 
 def run_adv_rob_baseclf(exp : Adv_Robustness_NaturalTraining, summary_writer : SummaryWriter, adv_type : str, test_eps):
     nat_acc, adv_accs, label = exp.adv_rob_baseclf(clf_epochs=CLF_EPOCHS,
