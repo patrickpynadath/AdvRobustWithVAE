@@ -5,27 +5,52 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
-import tqdm
-from Experiments.exp import Experiment
-import os
+from torch.utils.tensorboard import SummaryWriter
 import datetime
+from Models.smoothing import SmoothVAE_Latent, SmoothVAE_Sample
+from Models.simple_conv import simple_conv_net
+from torch.optim import SGD
+from torch.nn import CrossEntropyLoss
+from sklearn.metrics import calinski_harabasz_score
+import numpy as np
+from Utils.utils import get_class_loaders
 
-# TODO: make compatable with tensorboard imagedata
 # purpose of this experiment is to provide empirical results  as to how VAE handles gaussian peturb
-class PeturbExperiment(Experiment):
-    def __init__(self, batch_size, log_dir, out_dir, device):
-        super().__init__(batch_size, log_dir,
-                         out_dir +"/VAE_EXP/"+ datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), device)
+class PeturbExperiment:
+    def __init__(self,
+                 batch_size,
+                 log_dir,
+                 device):
 
+        self.batch_size = batch_size
+
+        transform = transforms.Compose(
+            [transforms.ToTensor()])
+        root_dir = r'*/'
+        trainset = torchvision.datasets.CIFAR10(root=root_dir, train=True,
+                                                download=True, transform=transform)
+
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+                                                  shuffle=True, num_workers=2)
+
+        testset = torchvision.datasets.CIFAR10(root=root_dir, train=False,
+                                               download=True, transform=transform)
+
+        testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
+                                                 shuffle=False, num_workers=2)
+        classes = ('plane', 'car', 'bird', 'cat',
+                   'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+        self.num_classes = len(classes)
+        self.trainset = trainset
+        self.trainloader = trainloader
+        self.testset = testset
+        self.testloader = testloader
+        self.device = device
+        date_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.log_dir = log_dir + f"/{date_str}/"
 
     def sample_noise(self, shape, var):
         return torch.randn(size = shape).to(self.device) * var
-
-    def generate_VAE(self, kernel_num, z_size, vae_epochs=10, sigma_vae = 1):
-        vae = VAE(label='vae', image_size=32, channel_num=3, kernel_num=kernel_num,
-                  z_size=z_size, device=self.device, var = sigma_vae).to(self.device)
-        train_vae(vae, self.trainloader, len(self.trainset), epochs=vae_epochs, batch_size=self.batch_size)
-        return vae
 
     def get_latent_rep(self, vae: VAE, x):
         encoded = vae.encoder(x)
@@ -90,7 +115,6 @@ class PeturbExperiment(Experiment):
         peturb_latent = [{'latent' : {'l2' : [], 'linf' : []}, 'sample' : {'l2' : [], 'linf' : []}} for _ in noise_vars]
         peturb_sample= [{'latent' : {'l2' : [], 'linf' : []}, 'sample' : {'l2' : [], 'linf' : []}} for _ in noise_vars]
         unpeturb = {'latent' : {'l2' : [], 'linf' : []}, 'sample' : {'l2' : [], 'linf' : []}}
-        vae_sigma = vae.var
 
         for i, data in datastream:
             inputs = data[0].to(self.device)
@@ -116,19 +140,23 @@ class PeturbExperiment(Experiment):
                     peturb_latent[var_idx]['latent'][norm_type] += self.get_norm_data(z, norm_type)
                     peturb_latent[var_idx]['sample'][norm_type] += self.get_norm_data(recon - inputs, norm_type)
 
+        res_writer = SummaryWriter(log_dir= self.log_dir + vae.label)
+
         for norm_type in ['l2', 'linf']:
             dataset_name = 'train' if train_set else 'test'
-            # latent to sample petubr
+            # latent to sample peturb
             plt_title = f"Peturb latent rep norm analysis {norm_type} for {dataset_name}"
-            file_name = f"peturb_latent_rep_{norm_type}"
-            self.plt_norm_analysis(baseline, unpeturb, peturb_latent, noise_vars, norm_type, plt_title, file_name)
-
+            fig = self.plt_norm_analysis(baseline, unpeturb, peturb_latent, noise_vars, norm_type, plt_title)
+            res_writer.add_figure(tag=f"peturb_latent_{norm_type}_{dataset_name}", figure=fig)
+            fig.close()
+            # sample to latent peturb
             plt_title = f"Peturb sample rep norm analysis {norm_type} for {dataset_name}"
-            file_name = f"peturb_sample_rep_{norm_type}"
-            self.plt_norm_analysis(baseline, unpeturb, peturb_sample, noise_vars, norm_type, plt_title, file_name)
+            fig = self.plt_norm_analysis(baseline, unpeturb, peturb_sample, noise_vars, norm_type, plt_title)
+            res_writer.add_figure(tag=f"peturb_sample_{norm_type}_{dataset_name}", figure=fig)
+            fig.close()
         return
 
-    def plt_norm_analysis(self, baseline, unpeturb, peturb, peturb_vars, norm_type, title, file_name):
+    def plt_norm_analysis(self, baseline, unpeturb, peturb, peturb_vars, norm_type, title):
 
         f, a = plt.subplots(len(peturb_vars) + 2, 2, figsize=(8, 4 * (len(peturb_vars) + 2)))
         f.suptitle(title + f'norm {norm_type}')
@@ -149,28 +177,76 @@ class PeturbExperiment(Experiment):
                 plt_title = f'Peturb with var = {var}'
                 ax.set_title(plt_title)
                 ax.hist(peturb[var_idx][rep_space][norm_type])
+        return f
 
-        f.savefig(self.out_dir + f"/{file_name}")
-        plt.show()
+    def get_trained_vanilla_vae(self, kernel_num, z_size, epochs):
+        vae = VAE(image_size=32,
+                  channel_num=3,
+                  kernel_num=kernel_num,
+                  z_size = z_size,
+                  device = self.device)
+        train_vae(vae, self.trainloader, epochs)
+        return vae
+
+    def get_trained_smoothVAE_vae(self,
+                                  smoothVAE_version,
+                                  kernel_num,
+                                  z_size,
+                                  epochs_VAE,
+                                  epochs_CLF,
+                                  smoothing_sigma,
+                                  num_smoothing_samples,
+                                  loss_coef,
+                                  lr):
+        vae = self.get_trained_vanilla_vae(kernel_num, z_size, epochs_VAE)
+        base_clf =simple_conv_net().to(self.device)
+        if smoothVAE_version == 'latent':
+            smoothVAE = SmoothVAE_Latent(base_classifier=base_clf,
+                                         sigma = smoothing_sigma,
+                                         trained_VAE=vae,
+                                         device=self.device,
+                                         num_samples=num_smoothing_samples,
+                                         num_classes = self.num_classes,
+                                         loss_coef = loss_coef)
+        elif smoothVAE_version == 'sample':
+            smoothVAE = SmoothVAE_Sample(base_classifier=base_clf,
+                                         sigma = smoothing_sigma,
+                                         trained_VAE=vae,
+                                         device=self.device,
+                                         num_samples=num_smoothing_samples,
+                                         num_classes = self.num_classes,
+                                         loss_coef = loss_coef)
+
+        trainer = NatTrainerSmoothVAE(model = smoothVAE,
+                                      trainloader=self.trainloader,
+                                      testloader=self.testloader,
+                                      device = self.device,
+                                      optimizer = SGD(smoothVAE.parameters(), lr=lr),
+                                      criterion=CrossEntropyLoss,
+                                      use_tensorboard=False, # not interested in the trained classifier -- only care about VAE
+                                      log_dir = '')
+        trainer.training_loop(epochs_CLF)
+        return smoothVAE.trained_VAE
+
+    def run_var_ratio(self, vae, dataset_name, num_samples_per_class):
+
+        summary_writer = SummaryWriter(log_dir=self.log_dir + vae.label)
+        if dataset_name == 'train' :
+            dataset = self.trainloader.dataset
+        elif dataset_name == 'test':
+            dataset = self.testloader.dataset
+        dataloader_dct = get_class_loaders(dataset, num_samples_per_class)
+        to_concat_reps = []
+        to_concat_labels = []
+        for label in dataloader_dct.keys():
+            loader = dataloader_dct[label]
+            class_batch, class_labels = next(loader)
+            to_concat_labels += [c.item() for c in class_labels] # double check if this is best way to retrieve label information
+            class_batch = class_batch.to(self.device)
+            latent_reps = self.get_latent_rep(vae, class_batch)
+            to_concat_reps.append(latent_reps.to('cpu').numpy())
+        X = np.concatenate(to_concat_labels, axis=0)
+        labels = to_concat_labels
+        var_ratio = calinski_harabasz_score(X, labels)
+        summary_writer.add_scalar("VarRatioCriteria", scalar_value=var_ratio)
         return
-
-    # retrieving the VAE where the gradient updates for the classifier are allowed to affect the VAE paramaters
-    def get_smoothVAE_vae(self, clf_epochs, vae_loss_coef, vae_epochs, lr, sigmas, m_train, smoothVAE_version):
-        models, optimizers, criterions = self.get_smoothVAE_models(base_label='smoothVAE', lr=lr, sigmas=sigmas, m_train=m_train,
-                                                                   vae_epochs=vae_epochs, with_VAE_grad=True, model_version=smoothVAE_version)
-        smoothVAE_trainer = NatTrainerSmoothVAE(models, trainloader = self.trainloader, testloader = self.testloader, device = self.device,
-                                                optimizers=optimizers, criterions = criterions, log_dir=self.log_dir,
-                                                vae_loss_coef=vae_loss_coef, use_tensorboard=False)
-        smoothVAE_trainer.training_loop(epochs=clf_epochs)
-
-        vae_models = [m.trained_VAE for m in models]
-        return vae_models
-
-
-    def get_baseVAE_vae(self, lr, sigmas, m_train, vae_epochs, smoothVAE_version):
-        models, optimizers, criterions = self.get_smoothVAE_models(base_label='smoothVAE', lr=lr, sigmas=sigmas,
-                                                                   m_train=m_train,
-                                                                   vae_epochs=vae_epochs, with_VAE_grad=True,
-                                                                   model_version=smoothVAE_version)
-        vae_models = [m.trained_VAE for m in models]
-        return vae_models

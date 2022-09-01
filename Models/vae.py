@@ -13,6 +13,7 @@ class VAE(nn.Module):
         self.z_size = z_size
         self.device = device
         self.var = var
+        self.label = f"vae_latentsize_{z_size}_kernnum_{kernel_num}"
 
         # encoder
         self.encoder = nn.Sequential(

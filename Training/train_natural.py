@@ -159,7 +159,6 @@ class NatTrainerSmoothVAE(NatTrainer):
                  optimizer : Optimizer,
                  criterion,
                  log_dir : str,
-                 vae_loss_coef : float,
                  use_tensorboard=False):
         """
 
@@ -170,11 +169,9 @@ class NatTrainerSmoothVAE(NatTrainer):
         :param optimizer: Optimizer for updating model weights
         :param criterion: Loss function
         :param log_dir: directory to store the training metrics, used by SummaryWriter
-        :param vae_loss_coef: how much to weight loss from VAE objective
         :param use_tensorboard: switch for displaying/saving data via tensorboard
         """
         super().__init__(model, trainloader, testloader, device, optimizer, criterion, log_dir, use_tensorboard)
-        self.vae_loss_coef = vae_loss_coef
 
     def _train_step(self, data):
         """
