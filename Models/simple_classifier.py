@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
-class simple_conv_net(nn.Module):
+class simple_classifier(nn.Module):
     def __init__(self, label='', input_size = 100):
         super().__init__()
         self.label = label

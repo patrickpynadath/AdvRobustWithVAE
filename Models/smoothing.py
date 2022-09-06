@@ -121,5 +121,38 @@ class SmoothVAE_Sample(Smooth):
         return self.base_classifier(reconstruction)
 
 
+class SmoothVAE_PreProcess(Smooth):
+    def __init__(self,
+                 base_classifier: torch.nn.Module,
+                 sigma: float,
+                 trained_VAE: VAE,
+                 device,
+                 num_samples,
+                 num_classes):
+        """
+        :param base_classifier: base classifier to apply SmoothVAE procedure to
+        :param sigma: smoothing value for randomized smoothing procedure
+        :param trained_VAE: VAE model
+        :param device: device to move model and tensors to
+        :param num_samples: number of samples to use for randomized smoothing
+        :param num_classes: total possible classes
+        :param loss_coef: the value to use to weight the VAE component of the loss function
+        """
+        super().__init__(base_classifier, sigma, device, num_samples, num_classes)
+
+        self.trained_VAE = trained_VAE
+        self.label = f'SmoothVAE_PreProcess_{sigma}_MTrain_{num_samples}'
+
+    def forward(self, x):
+        encoded = self.trained_VAE.encoder(x)
+        z_mean, z_var = self.trained_VAE.q(encoded)
+        z_projected = self.trained_VAE.project(z_mean).view(
+            -1, self.trained_VAE.kernel_num,
+            self.trained_VAE.feature_size,
+            self.trained_VAE.feature_size,
+        )
+        return self.base_classifier(z_projected)
+
+
 
 

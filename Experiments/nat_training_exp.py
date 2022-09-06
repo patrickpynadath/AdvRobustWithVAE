@@ -2,7 +2,8 @@ from Training.train_natural import NatTrainer, NatTrainerSmoothVAE
 from Training.train_vae import train_vae
 from Tests.classifier_test import ClassifierTest
 from Models.simple_conv import simple_conv_net
-from Models.smoothing import Smooth, SmoothVAE_Latent, SmoothVAE_Sample
+from Models.simple_classifier import simple_classifier
+from Models.smoothing import Smooth, SmoothVAE_Latent, SmoothVAE_Sample, SmoothVAE_PreProcess
 from Models.vae import VAE
 
 import datetime
@@ -136,6 +137,56 @@ class Adv_Robustness_NaturalTraining:
                                        steps = adv_steps,
                                        num_attacks=num_attacks)
         return nat_acc, adv_accs, smooth_clf.label
+
+    def adv_rob_smoothvae_preprocess(self,
+                              clf_epochs,
+                              smoothing_num_samples,
+                              vae_img_size,
+                              vae_channel_num,
+                              vae_kern_num,
+                              vae_z_size,
+                              vae_epochs,
+                              adv_type,
+                              adv_norms,
+                              adv_steps,
+                              num_attacks):
+        base_clf = simple_classifier(input_size=vae_z_size)
+        vae = VAE(image_size=vae_img_size,
+                  channel_num=vae_channel_num,
+                  kernel_num=vae_kern_num,
+                  z_size=vae_z_size,
+                  device=self.device).to(self.device)
+        if vae_epochs != 0:
+            train_vae(model=vae,
+                      data_loader=self.trainloader,
+                      epochs=vae_epochs)
+        smoothVAE_clf = SmoothVAE_PreProcess(base_classifier=base_clf,
+                                             sigma=0,
+                                             trained_VAE=vae,
+                                             device=self.device,
+                                             num_samples=smoothing_num_samples,
+                                             num_classes=self.num_classes)
+        optimizer = optim.SGD(params=base_clf.parameters(), lr=self.lr)
+        criterion = nn.CrossEntropyLoss()
+        trainer = NatTrainerSmoothVAE(model=smoothVAE_clf,
+                                      trainloader=self.trainloader,
+                                      testloader=self.testloader,
+                                      device=self.device,
+                                      optimizer=optimizer,
+                                      criterion=criterion,
+                                      log_dir=self.training_logdir,
+                                      use_tensorboard=True)
+        trainer.training_loop(clf_epochs)
+        adv_tester = ClassifierTest(model=smoothVAE_clf,
+                                    testloader=self.testloader,
+                                    device=self.device,
+                                    batch_size=self.batch_size)
+        nat_acc = adv_tester.test_clean()
+        adv_accs = adv_tester.test_adv(adversary_type=adv_type,
+                                       attack_eps_values=adv_norms,
+                                       steps=adv_steps,
+                                       num_attacks=num_attacks)
+        return nat_acc, adv_accs, smoothVAE_clf.label
 
     # need to get VAE as well, so need to also pass those hyperparam in
     def adv_rob_smoothvae_clf(self,
