@@ -146,6 +146,7 @@ class SmoothVAE_PreProcess(Smooth):
     def forward(self, x):
         encoded = self.trained_VAE.encoder(x)
         z_mean, z_var = self.trained_VAE.q(encoded)
+        print(z_mean.size())
         z_projected = self.trained_VAE.project(z_mean).view(
             -1, self.trained_VAE.kernel_num,
             self.trained_VAE.feature_size,
