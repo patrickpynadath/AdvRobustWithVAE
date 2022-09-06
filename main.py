@@ -159,6 +159,6 @@ def peturb_analysis_loop(kernel_num, latent_size, vae_epochs):
 
 if __name__ == '__main__':
     #adv_rob_loop(adv_type='linf')
-    peturb_analysis_loop(50, 100, 50)
+    peturb_analysis_loop(50, 100, 1)
 
 
