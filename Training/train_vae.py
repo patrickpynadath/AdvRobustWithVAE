@@ -1,9 +1,10 @@
 from torch import optim
 from torch.autograd import Variable
+from Models.vae import VAE
 from tqdm import tqdm
 
 # source: https://github.com/SashaMalysheva/Pytorch-VAE
-def train_vae(model, data_loader, epochs=10,
+def train_vae(model : VAE, data_loader, epochs=10,
               batch_size=32, lr=3e-04, weight_decay=1e-5):
     # prepare optimizer and model
     model.train()
@@ -30,7 +31,7 @@ def train_vae(model, data_loader, epochs=10,
             (mean, logvar), x_reconstructed = model(x)
             reconstruction_loss = model.reconstruction_loss(x_reconstructed, x)
             kl_divergence_loss = model.kl_divergence_loss(mean, logvar)
-            total_loss = reconstruction_loss + kl_divergence_loss
+            total_loss = reconstruction_loss + model.beta * kl_divergence_loss
 
             # backprop gradients from the loss
             total_loss.backward()

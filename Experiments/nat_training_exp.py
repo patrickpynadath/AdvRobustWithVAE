@@ -139,23 +139,25 @@ class Adv_Robustness_NaturalTraining:
         return nat_acc, adv_accs, smooth_clf.label
 
     def adv_rob_smoothvae_preprocess(self,
-                              clf_epochs,
-                              smoothing_num_samples,
-                              vae_img_size,
-                              vae_channel_num,
-                              vae_kern_num,
-                              vae_z_size,
-                              vae_epochs,
-                              adv_type,
-                              adv_norms,
-                              adv_steps,
-                              num_attacks):
+                                      clf_epochs,
+                                      smoothing_num_samples,
+                                      vae_img_size,
+                                      vae_channel_num,
+                                      vae_kern_num,
+                                      vae_z_size,
+                                      vae_epochs,
+                                      adv_type,
+                                      adv_norms,
+                                      adv_steps,
+                                      num_attacks,
+                                      vae_beta=1):
         base_clf = simple_classifier(input_size=vae_z_size)
         vae = VAE(image_size=vae_img_size,
                   channel_num=vae_channel_num,
                   kernel_num=vae_kern_num,
                   z_size=vae_z_size,
-                  device=self.device).to(self.device)
+                  device=self.device,
+                  beta=vae_beta).to(self.device)
         if vae_epochs != 0:
             train_vae(model=vae,
                       data_loader=self.trainloader,
@@ -204,7 +206,8 @@ class Adv_Robustness_NaturalTraining:
                               adv_type,
                               adv_norms,
                               adv_steps,
-                              num_attacks):
+                              num_attacks,
+                              vae_beta=1):
         """
         :param clf_epochs: epochs to use for classifier
         :param smoothingVAE_sigma: smoothing value for SmoothVAE
@@ -229,7 +232,8 @@ class Adv_Robustness_NaturalTraining:
                   channel_num=vae_channel_num,
                   kernel_num=vae_kern_num,
                   z_size=vae_z_size,
-                  device=self.device).to(self.device)
+                  device=self.device,
+                  beta=vae_beta).to(self.device)
         if vae_epochs != 0:
             train_vae(model=vae,
                       data_loader=self.trainloader,

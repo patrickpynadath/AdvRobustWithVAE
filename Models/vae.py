@@ -4,7 +4,7 @@ from torch.autograd import Variable
 
 # source: https://github.com/SashaMalysheva/Pytorch-VAE
 class VAE(nn.Module):
-    def __init__(self, image_size, channel_num, kernel_num, z_size, device, var = 1):
+    def __init__(self, image_size, channel_num, kernel_num, z_size, device, var = 1, beta = 1):
         # configurations
         super().__init__()
         self.image_size = image_size
@@ -13,6 +13,7 @@ class VAE(nn.Module):
         self.z_size = z_size
         self.device = device
         self.var = var
+        self.beta = beta
         self.label = f"vae_latentsize_{z_size}_kernnum_{kernel_num}"
 
         # encoder
