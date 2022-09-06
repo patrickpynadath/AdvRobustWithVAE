@@ -29,7 +29,7 @@ LR = .01
 CLF_EPOCHS = 50
 
 # global parameters for VAE
-VAE_EPOCHS = [50]
+VAE_EPOCHS = [1, 50]
 KERNEL_NUM = [50]
 LATENT_SIZE= [100, 200]
 BATCH_SIZE_VAE = 32
