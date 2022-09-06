@@ -151,6 +151,7 @@ class SmoothVAE_PreProcess(Smooth):
             self.trained_VAE.feature_size,
             self.trained_VAE.feature_size,
         )
+        print(z_projected.size())
         return self.base_classifier(z_projected)
 
 
