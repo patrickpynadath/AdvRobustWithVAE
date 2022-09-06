@@ -185,6 +185,7 @@ class PeturbExperiment:
                   kernel_num=kernel_num,
                   z_size = z_size,
                   device = self.device)
+        vae = vae.to(self.device)
         train_vae(vae, self.trainloader, epochs)
         return vae
 
