@@ -168,7 +168,7 @@ class Adv_Robustness_NaturalTraining:
                                              num_classes=self.num_classes)
         optimizer = optim.SGD(params=base_clf.parameters(), lr=self.lr)
         criterion = nn.CrossEntropyLoss()
-        trainer = NatTrainerSmoothVAE(model=smoothVAE_clf,
+        trainer = NatTrainer(model=smoothVAE_clf,
                                       trainloader=self.trainloader,
                                       testloader=self.testloader,
                                       device=self.device,
