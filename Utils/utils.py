@@ -73,12 +73,12 @@ def get_label_idx(dataset):
     return label_idx_dct
 
 
-def get_class_loaders(dataset, batch_size):
+def get_class_subsets(dataset):
     label_dct = get_label_idx(dataset)
     dataloader_dct = {}
     for i in range(len(label_dct)):
         class_subset = torch.utils.data.Subset(dataset, label_dct[i])
-        dataloader_dct[i] = torch.utils.data.DataLoader(class_subset, batch_size, shuffle=True, num_workers=2)
+        dataloader_dct[i] = class_subset
     return dataloader_dct
 
 def accuracies_to_dct(nat_acc, adv_accs, attack_norms, attack_type):

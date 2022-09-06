@@ -13,7 +13,7 @@ from torch.optim import SGD
 from torch.nn import CrossEntropyLoss
 from sklearn.metrics import calinski_harabasz_score
 import numpy as np
-from Utils.utils import get_class_loaders
+from Utils.utils import get_class_subsets
 
 # purpose of this experiment is to provide empirical results  as to how VAE handles gaussian peturb
 class PeturbExperiment:
@@ -229,25 +229,25 @@ class PeturbExperiment:
         trainer.training_loop(epochs_CLF)
         return smoothVAE.trained_VAE
 
-    def run_var_ratio(self, vae, dataset_name, num_samples_per_class):
 
-        summary_writer = SummaryWriter(log_dir=self.log_dir + vae.label)
-        if dataset_name == 'train' :
-            dataset = self.trainloader.dataset
-        elif dataset_name == 'test':
-            dataset = self.testloader.dataset
-        dataloader_dct = get_class_loaders(dataset, num_samples_per_class)
-        to_concat_reps = []
-        to_concat_labels = []
-        for label in dataloader_dct.keys():
-            loader = dataloader_dct[label]
-            class_batch, class_labels = next(loader)
-            to_concat_labels += [c.item() for c in class_labels]
-            class_batch = class_batch.to(self.device)
-            latent_reps = self.get_latent_rep(vae, class_batch)
-            to_concat_reps.append(latent_reps.to('cpu').numpy())
-        X = np.concatenate(to_concat_labels, axis=0)
-        labels = to_concat_labels
-        var_ratio = calinski_harabasz_score(X, labels)
-        summary_writer.add_scalar(f"VarRatioCriteria/{dataset_name}", scalar_value=var_ratio)
-        return
+# Need to debug this method -- goal is to look at the calinski harabasz score to understand whether the VAE latent rep
+# encodes class information
+
+    # def run_var_ratio(self, vae, dataset_name, num_samples_per_class):
+    #
+    #     summary_writer = SummaryWriter(log_dir=self.log_dir + vae.label)
+    #     if dataset_name == 'train' :
+    #         dataset = self.trainloader.dataset
+    #     elif dataset_name == 'test':
+    #         dataset = self.testloader.dataset
+    #     subset_dct = get_class_subsets(dataset)
+    #     to_concat_reps = []
+    #     to_concat_labels = []
+    #     for label in subset_dct.keys():
+    #         subset = subset_dct[label]
+    #         # getting idx
+    #         class_sampler = torch.utils.data.RandomSampler(subset, replacement=True, num_samples=num_samples_per_class)
+    #
+    #     var_ratio = calinski_harabasz_score(X, labels)
+    #     summary_writer.add_scalar(f"VarRatioCriteria/{dataset_name}", scalar_value=var_ratio)
+    #     return
