@@ -146,14 +146,19 @@ def adv_rob_loop(adv_type):
     return
 
 
-def peturb_analysis_loop(kernel_num, latent_size):
-    # need to first generate the VAE
+def peturb_analysis_loop(kernel_num, latent_size, vae_epochs):
+    # first, need to see how the regular vae is
+    peturb_exp = PeturbExperiment(32, VAE_EXP_DIR, DEVICE)
+    vanilla_vae = peturb_exp.get_trained_vanilla_vae(kernel_num, latent_size, vae_epochs)
+    peturb_exp.run_var_ratio(vanilla_vae, 'train', 200)
+    peturb_exp.run_var_ratio(vanilla_vae, 'test', 200)
 
     return
 
 
 
 if __name__ == '__main__':
-    adv_rob_loop(adv_type='linf')
+    #adv_rob_loop(adv_type='linf')
+    peturb_analysis_loop(50, 100, 50)
 
 

@@ -241,12 +241,12 @@ class PeturbExperiment:
         for label in dataloader_dct.keys():
             loader = dataloader_dct[label]
             class_batch, class_labels = next(loader)
-            to_concat_labels += [c.item() for c in class_labels] # double check if this is best way to retrieve label information
+            to_concat_labels += [c.item() for c in class_labels]
             class_batch = class_batch.to(self.device)
             latent_reps = self.get_latent_rep(vae, class_batch)
             to_concat_reps.append(latent_reps.to('cpu').numpy())
         X = np.concatenate(to_concat_labels, axis=0)
         labels = to_concat_labels
         var_ratio = calinski_harabasz_score(X, labels)
-        summary_writer.add_scalar("VarRatioCriteria", scalar_value=var_ratio)
+        summary_writer.add_scalar(f"VarRatioCriteria/{dataset_name}", scalar_value=var_ratio)
         return
