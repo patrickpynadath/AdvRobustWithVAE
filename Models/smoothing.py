@@ -147,7 +147,6 @@ class SmoothVAE_PreProcess(Smooth):
         encoded = self.trained_VAE.encoder(x)
         z_mean, z_var = self.trained_VAE.q(encoded)
         z = self.trained_VAE.z(z_mean, z_var)
-        print(z.size())
         return self.base_classifier(z)
 
 
