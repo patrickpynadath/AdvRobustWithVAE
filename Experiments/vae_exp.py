@@ -1,3 +1,5 @@
+import matplotlib
+
 from Models.vae import VAE
 from Training.train_vae import train_vae
 from Training.train_natural import NatTrainerSmoothVAE
@@ -153,7 +155,7 @@ class PeturbExperiment:
             plt_title = f"Peturb sample rep norm analysis {norm_type} for {dataset_name}"
             fig = self.plt_norm_analysis(baseline, unpeturb, peturb_sample, noise_vars, norm_type, plt_title)
             res_writer.add_figure(tag=f"peturb_sample_{norm_type}_{dataset_name}", figure=fig)
-            fig.close()
+            matplotlib.pyplot.close(fig)
         return
 
     def plt_norm_analysis(self, baseline, unpeturb, peturb, peturb_vars, norm_type, title):
