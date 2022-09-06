@@ -150,7 +150,7 @@ class PeturbExperiment:
             plt_title = f"Peturb latent rep norm analysis {norm_type} for {dataset_name}"
             fig = self.plt_norm_analysis(baseline, unpeturb, peturb_latent, noise_vars, norm_type, plt_title)
             res_writer.add_figure(tag=f"peturb_latent_{norm_type}_{dataset_name}", figure=fig)
-            fig.close()
+            matplotlib.pyplot.close(fig)
             # sample to latent peturb
             plt_title = f"Peturb sample rep norm analysis {norm_type} for {dataset_name}"
             fig = self.plt_norm_analysis(baseline, unpeturb, peturb_sample, noise_vars, norm_type, plt_title)
