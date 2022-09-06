@@ -206,7 +206,7 @@ class NatTrainerSmoothVAE(NatTrainer):
             kl_divergence_loss = model.trained_VAE.kl_divergence_loss(mean, logvar)
 
             # combining for total loss
-            batch_loss = classification_loss + (reconstruction_loss + self.model.trained_vae.beta * kl_divergence_loss) * self.model.loss_coef
+            batch_loss = classification_loss + (reconstruction_loss + self.model.trained_VAE.beta * kl_divergence_loss) * self.model.loss_coef
         else:
             batch_loss = classification_loss
         batch_loss.backward()
