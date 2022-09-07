@@ -57,7 +57,7 @@ class SmoothVAE_Latent(Smooth):
         super().__init__(base_classifier, sigma, device, num_samples, num_classes)
         self.trained_VAE = trained_VAE
         self.loss_coef = loss_coef
-        self.label = f'SmoothVAE_Latent_{sigma}_MTrain_{num_samples}_losscoef_{loss_coef}'
+        self.label = f'SmoothVAE_Latent_{sigma}_MTrain_{num_samples}_losscoef_{loss_coef}_VAEBeta_{self.trained_VAE.beta}'
 
 
     def forward(self, x):
@@ -106,7 +106,7 @@ class SmoothVAE_Sample(Smooth):
 
         self.trained_VAE = trained_VAE
         self.loss_coef = loss_coef
-        self.label = f'SmoothVAE_Sample_{sigma}_MTrain_{num_samples}_losscoef_{loss_coef}'
+        self.label = f'SmoothVAE_Sample_{sigma}_MTrain_{num_samples}_losscoef_{loss_coef}_VAEBeta_{self.trained_VAE.beta}'
 
     def forward(self, x):
         """
@@ -141,7 +141,7 @@ class SmoothVAE_PreProcess(Smooth):
         super().__init__(base_classifier, sigma, device, num_samples, num_classes)
 
         self.trained_VAE = trained_VAE
-        self.label = f'SmoothVAE_PreProcess_{sigma}_MTrain_{num_samples}'
+        self.label = f'SmoothVAE_PreProcess_{sigma}_MTrain_{num_samples}_VAEBeta_{self.trained_VAE.beta}'
 
     def forward(self, x):
         encoded = self.trained_VAE.encoder(x)

@@ -90,7 +90,7 @@ def run_adv_rob_smoothVAE(exp : Adv_Robustness_NaturalTraining, summary_writer :
                                              'VAE_Epoch': num_vae_epochs,
                                              'KernelNum': kernel_num,
                                              'LatentSize': latent_size,
-                                             'VAE Beta' : beta}
+                                             'VAEBeta' : beta}
                                 nat_acc, adv_accs, label = exp.adv_rob_smoothvae_clf(clf_epochs=CLF_EPOCHS,
                                                                                   smoothingVAE_sigma=smoothing_sigma,
                                                                                   smoothing_num_samples=M_TRAIN,
@@ -105,7 +105,8 @@ def run_adv_rob_smoothVAE(exp : Adv_Robustness_NaturalTraining, summary_writer :
                                                                                   adv_type=adv_type,
                                                                                   adv_norms=test_eps,
                                                                                   adv_steps=TEST_ATTACK_STEPS,
-                                                                                  num_attacks=NUM_TEST_ATTACKS)
+                                                                                  num_attacks=NUM_TEST_ATTACKS,
+                                                                                   vae_beta=beta)
                                 metric_dct = accuracies_to_dct(nat_acc, adv_accs, test_eps, adv_type)
                                 run_name = exp.hyperparam_logdir + f"/{label}"
                                 summary_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
