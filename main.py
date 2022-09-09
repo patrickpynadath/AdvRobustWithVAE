@@ -113,29 +113,32 @@ def run_adv_rob_smoothVAE(exp : Adv_Robustness_NaturalTraining, summary_writer :
     return
 
 def run_adv_rob_smoothVAE_preprocess(exp : Adv_Robustness_NaturalTraining, summary_writer : SummaryWriter, adv_type : str, test_eps):
-    for vae_epoch in VAE_EPOCHS:
-        kernel_num = 50
-        latent_size = 100
-        param_dct = {'Model': f'SmoothVAE_PreProcess',
-                     'SmoothingSigma': 0,
-                     'LossCoef': 0,
-                     'VAE_Epoch': vae_epoch,
-                     'KernelNum': kernel_num,
-                     'LatentSize': latent_size}
-        nat_acc, adv_accs, label = exp.adv_rob_smoothvae_preprocess(clf_epochs=CLF_EPOCHS,
-                                                             smoothing_num_samples=M_TRAIN,
-                                                             vae_img_size=32,
-                                                             vae_channel_num=3,
-                                                             vae_kern_num=kernel_num,
-                                                             vae_z_size=latent_size,
-                                                             vae_epochs=vae_epoch,
-                                                             adv_type=adv_type,
-                                                             adv_norms=test_eps,
-                                                             adv_steps=TEST_ATTACK_STEPS,
-                                                             num_attacks=NUM_TEST_ATTACKS)
-        metric_dct = accuracies_to_dct(nat_acc, adv_accs, test_eps, adv_type)
-        run_name = exp.hyperparam_logdir + f"/{label}"
-        summary_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
+    for beta in VAE_BETAS:
+        for vae_epoch in VAE_EPOCHS:
+            kernel_num = 50
+            latent_size = 100
+            param_dct = {'Model': f'SmoothVAE_PreProcess',
+                         'SmoothingSigma': 0,
+                         'LossCoef': 0,
+                         'VAE_Epoch': vae_epoch,
+                         'KernelNum': kernel_num,
+                         'LatentSize': latent_size
+                         'VAEBeta' : beta}
+            nat_acc, adv_accs, label = exp.adv_rob_smoothvae_preprocess(clf_epochs=CLF_EPOCHS,
+                                                                 smoothing_num_samples=M_TRAIN,
+                                                                 vae_img_size=32,
+                                                                 vae_channel_num=3,
+                                                                 vae_kern_num=kernel_num,
+                                                                 vae_z_size=latent_size,
+                                                                 vae_epochs=vae_epoch,
+                                                                 adv_type=adv_type,
+                                                                 adv_norms=test_eps,
+                                                                 adv_steps=TEST_ATTACK_STEPS,
+                                                                 num_attacks=NUM_TEST_ATTACKS,
+                                                                 vae_beta=beta)
+            metric_dct = accuracies_to_dct(nat_acc, adv_accs, test_eps, adv_type)
+            run_name = exp.hyperparam_logdir + f"/{label}"
+            summary_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
 
 def run_peturn_exp():
 
