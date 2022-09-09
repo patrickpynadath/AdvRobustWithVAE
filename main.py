@@ -168,10 +168,10 @@ def adv_rob_loop(adv_type):
     #                       adv_type=adv_type,
     #                       test_eps = test_eps)
 
-    run_adv_rob_smoothVAE(exp = adv_exp,
-                          summary_writer=hparam_writer,
-                          adv_type=adv_type,
-                          test_eps=test_eps)
+    # run_adv_rob_smoothVAE(exp = adv_exp,
+    #                       summary_writer=hparam_writer,
+    #                       adv_type=adv_type,
+    #                       test_eps=test_eps)
 
     run_adv_rob_smoothVAE_preprocess(adv_exp,
                                      summary_writer=hparam_writer,
