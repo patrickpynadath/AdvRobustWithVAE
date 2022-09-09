@@ -122,7 +122,7 @@ def run_adv_rob_smoothVAE_preprocess(exp : Adv_Robustness_NaturalTraining, summa
                          'LossCoef': 0,
                          'VAE_Epoch': vae_epoch,
                          'KernelNum': kernel_num,
-                         'LatentSize': latent_size
+                         'LatentSize': latent_size,
                          'VAEBeta' : beta}
             nat_acc, adv_accs, label = exp.adv_rob_smoothvae_preprocess(clf_epochs=CLF_EPOCHS,
                                                                  smoothing_num_samples=M_TRAIN,
