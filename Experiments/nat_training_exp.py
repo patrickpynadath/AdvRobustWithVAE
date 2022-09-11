@@ -285,7 +285,7 @@ class Adv_Robustness_NaturalTraining:
     def adv_rob_pixelcnn_clf(self, epochs, adv_type, adv_norms, adv_steps, num_attacks):
         pxcnn = PixelCNN().to(device=self.device)
         train_pixel_cnn(1, pxcnn, self.device, self.trainloader)
-        clf = pixelcnn_classifier('pxl_cnn_clf_poc', pxcnn)
+        clf = pixelcnn_classifier('pxl_cnn_clf_poc', pxcnn, self.device)
         clf_trainer = NatTrainer(model = clf,
                                  trainloader=self.trainloader,
                                  testloader=self.testloader,

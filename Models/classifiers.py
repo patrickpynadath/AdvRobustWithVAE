@@ -43,11 +43,11 @@ class simple_classifier(nn.Module):
 
 
 class pixelcnn_classifier(nn.Module):
-    def __init__(self, label, pxcnn):
+    def __init__(self, label, pxcnn, device):
         super().__init__()
         self.label = label
         self.pxcnn = pxcnn
-        self.classifier = simple_conv_net(in_channels=100)
+        self.classifier = simple_conv_net(in_channels=100).to(device)
 
     def forward(self, x):
         x_trf = self.pxcnn(x)
