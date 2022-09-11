@@ -6,10 +6,10 @@ from torch.nn import functional as F
 
 
 class simple_conv_net(nn.Module):
-    def __init__(self):
+    def __init__(self, in_channels = 3):
         super().__init__()
         self.label = 'base'
-        self.conv1 = nn.Conv2d(256, 6, 5)
+        self.conv1 = nn.Conv2d(in_channels, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
