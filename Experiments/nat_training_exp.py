@@ -1,10 +1,11 @@
 from Training.train_natural import NatTrainer, NatTrainerSmoothVAE
 from Training.train_vae import train_vae
 from Tests.classifier_test import ClassifierTest
-from Models.simple_conv import simple_conv_net
-from Models.simple_classifier import simple_classifier
+from Models.classifiers import simple_conv_net, simple_classifier, pixelcnn_classifier
 from Models.smoothing import Smooth, SmoothVAE_Latent, SmoothVAE_Sample, SmoothVAE_PreProcess
 from Models.vae import VAE
+from Models.PixelCNN import PixelCNN
+from Training.train_pixelcnn import train_pixel_cnn
 
 import datetime
 import torchvision.transforms as transforms
@@ -280,4 +281,29 @@ class Adv_Robustness_NaturalTraining:
                                        steps=adv_steps,
                                        num_attacks=num_attacks)
         return nat_acc, adv_accs, smoothVAE_clf.label
+
+    def adv_rob_pixelcnn_clf(self, epochs, adv_type, adv_norms, adv_steps, num_attacks):
+        pxcnn = PixelCNN().to(device=self.device)
+        train_pixel_cnn(1, pxcnn, self.device, self.trainloader)
+        clf = pixelcnn_classifier('pxl_cnn_clf_poc', pxcnn)
+        clf_trainer = NatTrainer(model = clf,
+                                 trainloader=self.trainloader,
+                                 testloader=self.testloader,
+                                 device=self.device,
+                                 optimizer=optim.SGD(params=clf.classifier.parameters(), lr=self.lr),
+                                 criterion=nn.CrossEntropyLoss(),
+                                 log_dir=self.training_logdir,
+                                 use_tensorboard=True)
+
+        clf_trainer.training_loop(epochs)
+        adv_tester = ClassifierTest(model=clf,
+                                    testloader=self.testloader,
+                                    device=self.device,
+                                    batch_size=self.batch_size)
+        nat_acc = adv_tester.test_clean()
+        adv_accs = adv_tester.test_adv(adversary_type=adv_type,
+                                       attack_eps_values=adv_norms,
+                                       steps=adv_steps,
+                                       num_attacks=num_attacks)
+        return nat_acc, adv_accs, clf.label
 

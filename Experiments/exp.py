@@ -1,7 +1,7 @@
 from Models.vae import VAE
 from Training.train_vae import train_vae
 from Models.smoothing import Smooth, SmoothVAE_Latent, SmoothVAE_Sample
-from Models.simple_conv import simple_conv_net
+from Models.classifiers import simple_conv_net
 import torch
 import torchvision
 import torchvision.transforms as transforms

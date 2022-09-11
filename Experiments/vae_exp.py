@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 import datetime
 from Models.smoothing import SmoothVAE_Latent, SmoothVAE_Sample
-from Models.simple_conv import simple_conv_net
+from Models.classifiers import simple_conv_net
 from torch.optim import SGD
 from torch.nn import CrossEntropyLoss
 from sklearn.metrics import calinski_harabasz_score

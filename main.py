@@ -1,16 +1,18 @@
+
 from Experiments.nat_training_exp import Adv_Robustness_NaturalTraining
 from Experiments.vae_exp import PeturbExperiment
 import os
 from Experiments.vae_exp import PeturbExperiment
 from torch.utils.tensorboard import SummaryWriter
-from Utils.utils import accuracies_to_dct
+from Utils.utils import accuracies_to_dct, get_cifar_sets
 
 # global experiment variables that stay constant for every experiment
 # logistical parameters
 TRAIN_METRICS_DIR = '../ExperimentLogging/TrainMetrics/'
 HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 VAE_EXP_DIR = '../ExperimentLogging/VaeExpMetrics'
-DEVICE = 'cuda'
+DEVICE = 'cpu'
+
 
 # global parameters that control smoothing process
 SMOOTHING_SIGMAS = [5/255, 10/255, 15/255, 20/255, 25/255]
@@ -140,13 +142,18 @@ def run_adv_rob_smoothVAE_preprocess(exp : Adv_Robustness_NaturalTraining, summa
             run_name = exp.hyperparam_logdir + f"/{label}"
             summary_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
 
-def run_peturn_exp():
-
-    exp = PeturbExperiment(batch_size= BATCH_SIZE_VAE,
-                           log_dir=VAE_EXP_DIR,
-                           device=DEVICE)
-    # first, examining the VAE trained without classifier support
-    return
+def run_adv_rob_pixelcnn_clf(exp : Adv_Robustness_NaturalTraining, summary_writer: SummaryWriter, adv_type: str, test_eps):
+    param_dct = {'Model': f'PixelCNNClassifier',
+                 'SmoothingSigma': 0,
+                 'LossCoef': 0,
+                 'VAE_Epoch': 0,
+                 'KernelNum': 0,
+                 'LatentSize': 0,
+                 'VAEBeta': 0}
+    nat_acc, adv_accs, label = exp.adv_rob_pixelcnn_clf(1, adv_type, test_eps, TEST_ATTACK_STEPS, NUM_TEST_ATTACKS)
+    metric_dct = accuracies_to_dct(nat_acc, adv_accs, test_eps, adv_type)
+    run_name = exp.hyperparam_logdir + f"/{label}"
+    summary_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
 
 
 
@@ -176,10 +183,14 @@ def adv_rob_loop(adv_type):
     #                       adv_type=adv_type,
     #                       test_eps=test_eps)
 
-    run_adv_rob_smoothVAE_preprocess(adv_exp,
-                                     summary_writer=hparam_writer,
-                                     adv_type=adv_type,
-                                     test_eps=test_eps)
+    # run_adv_rob_smoothVAE_preprocess(adv_exp,
+    #                                  summary_writer=hparam_writer,
+    #                                  adv_type=adv_type,
+    #                                  test_eps=test_eps)
+    run_adv_rob_pixelcnn_clf(exp=adv_exp,
+                             summary_writer=hparam_writer,
+                             adv_type=adv_type,
+                             test_eps=test_eps)
     return
 
 
@@ -193,7 +204,11 @@ def peturb_analysis_loop(kernel_num, latent_size, vae_epochs):
 
 
 
+
+
 if __name__ == '__main__':
+
+
     adv_rob_loop(adv_type='linf')
     #peturb_analysis_loop(50, 100, 50)
 
