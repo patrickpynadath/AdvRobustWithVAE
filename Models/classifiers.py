@@ -47,7 +47,7 @@ class pixelcnn_classifier(nn.Module):
         super().__init__()
         self.label = label
         self.pxcnn = pxcnn
-        self.classifier = simple_conv_net()
+        self.classifier = simple_conv_net(in_channels=100)
 
     def forward(self, x):
         x_trf = self.pxcnn(x)
