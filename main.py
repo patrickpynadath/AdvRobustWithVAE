@@ -11,7 +11,7 @@ from Utils.utils import accuracies_to_dct, get_cifar_sets
 TRAIN_METRICS_DIR = '../ExperimentLogging/TrainMetrics/'
 HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 VAE_EXP_DIR = '../ExperimentLogging/VaeExpMetrics'
-DEVICE = 'cpu'
+DEVICE = 'cuda'
 
 
 # global parameters that control smoothing process
