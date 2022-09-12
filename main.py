@@ -198,7 +198,7 @@ def adv_rob_loop(adv_type):
 def peturb_analysis_loop(kernel_num, latent_size, vae_epochs):
     # first, need to see how the regular vae is
     peturb_exp = PeturbExperiment(32, VAE_EXP_DIR, DEVICE)
-    vanilla_vae = peturb_exp.get_trained_vanilla_vae(kernel_num, latent_size, vae_epochs)
+    vanilla_vae = peturb_exp.get_trained_vanilla_vae(50, 200, 50)
     peturb_exp.norm_analysis(vanilla_vae, noise_vars=[0], train_set=True)
     peturb_exp.norm_analysis(vanilla_vae, noise_vars=[0], train_set=False)
     return
