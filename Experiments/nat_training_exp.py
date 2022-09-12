@@ -295,7 +295,7 @@ class Adv_Robustness_NaturalTraining:
                                  log_dir=self.training_logdir,
                                  use_tensorboard=True)
 
-        clf_trainer.training_loop(epochs)
+        clf_trainer.training_loop(50)
         adv_tester = ClassifierTest(model=clf,
                                     testloader=self.testloader,
                                     device=self.device,

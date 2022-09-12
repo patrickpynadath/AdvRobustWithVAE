@@ -5,6 +5,7 @@ import os
 from Experiments.vae_exp import PeturbExperiment
 from torch.utils.tensorboard import SummaryWriter
 from Utils.utils import accuracies_to_dct, get_cifar_sets
+from Experiments import ManifoldModelingExp
 
 # global experiment variables that stay constant for every experiment
 # logistical parameters
@@ -202,14 +203,20 @@ def peturb_analysis_loop(kernel_num, latent_size, vae_epochs):
     peturb_exp.norm_analysis(vanilla_vae, noise_vars=[0], train_set=False)
     return
 
-
-
+def manifold_exp_vae():
+    exp = ManifoldModelingExp(VAE_EXP_DIR, lr=.01, batch_size=32, device='cpu')
+    vae = exp.get_trained_vanilla_vae(KERNEL_NUM, LATENT_SIZE, 50)
+    clf = exp.get_trained_clf(clf_lr=.01, clf_epochs=100)
+    original_im, attacked = exp.get_adv_examples(clf, 5/255, 'linf', 8, num_attacks=1000, dataset_name='train')
+    original_recon_loss, original_kl_loss = exp.get_vae_loss(vae, original_im)
+    adv_recon_loss, adv_kl_loss = exp.get_vae_loss(vae, attacked)
+    pass
 
 
 if __name__ == '__main__':
 
-
-    adv_rob_loop(adv_type='linf')
+    manifold_exp_vae()
+    #adv_rob_loop(adv_type='linf')
     #peturb_analysis_loop(50, 100, 50)
 
 
