@@ -49,7 +49,7 @@ def requires_grad_(model:torch.nn.Module, requires_grad:bool) -> None:
 
 
 def get_cifar_sets():
-    root_dir = r''
+    root_dir = r'../'
     transform = transforms.Compose(
         [transforms.ToTensor()])
     trainset = torchvision.datasets.CIFAR10(root=root_dir, train=True,
