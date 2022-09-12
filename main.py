@@ -198,14 +198,14 @@ def adv_rob_loop(adv_type):
 def peturb_analysis_loop(kernel_num, latent_size, vae_epochs):
     # first, need to see how the regular vae is
     peturb_exp = PeturbExperiment(32, VAE_EXP_DIR, DEVICE)
-    vanilla_vae = peturb_exp.get_trained_vanilla_vae(50, 200, 50)
+    vanilla_vae = peturb_exp.get_trained_vanilla_vae(kernel_num, latent_size, vae_epochs)
     peturb_exp.norm_analysis(vanilla_vae, noise_vars=[0], train_set=True)
     peturb_exp.norm_analysis(vanilla_vae, noise_vars=[0], train_set=False)
     return
 
 def manifold_exp_vae():
     exp = ManifoldModelingExp(VAE_EXP_DIR, lr=.01, batch_size=32, device='cpu')
-    vae = exp.get_trained_vanilla_vae(KERNEL_NUM, LATENT_SIZE, 50)
+    vae = exp.get_trained_vanilla_vae(50, 200, 50)
     clf = exp.get_trained_clf(clf_lr=.01, clf_epochs=100)
     original_im, attacked = exp.get_adv_examples(clf, 5/255, 'linf', 8, num_attacks=1000, dataset_name='train')
     original_recon_loss, original_kl_loss = exp.get_vae_loss(vae, original_im)
