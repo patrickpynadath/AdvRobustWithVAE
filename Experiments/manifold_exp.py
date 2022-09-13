@@ -138,11 +138,11 @@ class ManifoldModelingExp:
         f, a = plt.subplots(1, 2, figsize=(8, 10))
         f.suptitle(f"Loss for PixelCNN on {dataset_name}")
 
-        ax = a[0, 1]
+        ax = a[0]
         ax.set_title("Loss for Natural Data")
         ax.hist(natural_data, bins=20)
 
-        ax = a[0, 2]
+        ax = a[1]
         ax.set_title("Loss for Attacked Data")
         ax.hist(attacked_data, bins=20)
 
