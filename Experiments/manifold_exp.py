@@ -5,12 +5,13 @@ from torch.utils.data import DataLoader
 import numpy as np
 from Adversarial import PGD_L2
 import torchattacks
-from Models import VAE, simple_conv_net
-from Training import train_vae, NatTrainer
+from Models import VAE, simple_conv_net, PixelCNN, discretized_mix_logistic_loss
+from Training import train_vae, NatTrainer, train_pixel_cnn
 from torch.optim import SGD
 from torch.nn import CrossEntropyLoss
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt
+
 
 class ManifoldModelingExp:
 
@@ -27,11 +28,11 @@ class ManifoldModelingExp:
         self.batch_size = batch_size
         self.device = device
 
-    def get_trained_vae(self):
-        pass
-
-    def get_trained_pixelnn(self):
-        pass
+    def get_trained_pixelnn(self, epochs):
+        px_cnn = PixelCNN()
+        dataloader = DataLoader(self.trainset,batch_size=32)
+        train_pixel_cnn(epochs, px_cnn, self.device, dataloader)
+        return px_cnn
 
     def get_adv_examples(self, trained_classifier, attack_eps, adversary_type, steps, num_attacks = 1000, dataset_name = 'train'):
 
@@ -57,6 +58,16 @@ class ManifoldModelingExp:
             tmp = attacker(original_im, labels)
             attacks +=tmp
         return original_im, attacks
+
+    def get_pxcnn_loss(self, px_cnn, inputs):
+        losses = []
+        for input_idx in range(len(inputs)):
+            current_input = inputs[input_idx]
+            current_input = current_input[None]
+            output = px_cnn(current_input)
+            loss = discretized_mix_logistic_loss(current_input, output)
+            losses.append(loss.cpu().detach().item())
+        return losses
 
     def get_vae_loss(self, vae, inputs):
         reconstruction_losses = []
@@ -94,8 +105,8 @@ class ManifoldModelingExp:
     def create_hist_vae_loss(self, tag, dataset_name, natural_data, attacked_data):
 
 
-
-        sw = SummaryWriter(log_dir=self.result_dir)
+        sw_dir = self.result_dir + f"/{tag}"
+        sw = SummaryWriter(log_dir=sw_dir)
         # make the histograms
         # how do I return it?
         f, a = plt.subplots(2, 2, figsize=(8, 10))
@@ -115,6 +126,25 @@ class ManifoldModelingExp:
         ax = a[1, 1]
         ax.set_title("KL Loss for Attacked Data")
         ax.hist(attacked_data['KL'], bins=20)
+
+        sw.add_figure(tag=tag, figure=f)
+        plt.close(f)
+        pass
+
+    def create_hist_pxcnn_loss(self, tag, dataset_name, natural_data, attacked_data):
+        sw_dir = self.result_dir + f"/{tag}"
+        sw = SummaryWriter(log_dir=sw_dir)
+
+        f, a = plt.subplots(1, 2, figsize=(8, 10))
+        f.suptitle(f"Loss for PixelCNN on {dataset_name}")
+
+        ax = a[0, 1]
+        ax.set_title("Loss for Natural Data")
+        ax.hist(natural_data, bins=20)
+
+        ax = a[0, 2]
+        ax.set_title("Loss for Attacked Data")
+        ax.hist(attacked_data, bins=20)
 
         sw.add_figure(tag=tag, figure=f)
         plt.close(f)
