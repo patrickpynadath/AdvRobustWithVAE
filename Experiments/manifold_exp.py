@@ -97,23 +97,23 @@ class ManifoldModelingExp:
         sw = SummaryWriter(log_dir=self.result_dir)
         # make the histograms
         # how do I return it?
-        f, a = plt.subplots(2, 2)
+        f, a = plt.subplots(2, 2, figsize=(8, 10))
         f.suptitle(f"VAE Loss Analysis for {dataset_name}")
         ax = a[0, 0]
         ax.set_title("Recon. Loss for Natural Data")
-        ax.hist(natural_data['reconstruction'])
+        ax.hist(natural_data['reconstruction'], bins=20)
 
         ax = a[0, 1]
         ax.set_title(f"Recon. Loss for Attacked Data")
-        ax.hist(attacked_data['reconstruction'])
+        ax.hist(attacked_data['reconstruction'], bins=20)
 
         ax = a[1, 0]
         ax.set_title("KL Loss for Natural Data")
-        ax.hist(natural_data['KL'])
+        ax.hist(natural_data['KL'], bins=20)
 
         ax = a[1, 1]
         ax.set_title("KL Loss for Attacked Data")
-        ax.hist(attacked_data['KL'])
+        ax.hist(attacked_data['KL'], bins=20)
 
         sw.add_figure(tag=tag, figure=f)
         plt.close(f)
