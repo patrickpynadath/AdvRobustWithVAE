@@ -216,8 +216,8 @@ def manifold_exp_vae(latent_size, attack_norm, attack_type, dataset_name):
 
 def manifold_exp_pxcnn(attack_norm, attack_type, dataset_name):
     exp = ManifoldModelingExp(VAE_EXP_DIR, lr=.01, batch_size=32, device='cuda')
-    pxcnn = exp.get_trained_pixelnn(1)
-    clf = exp.get_trained_clf(.01, 1)
+    pxcnn = exp.get_trained_pixelnn(50)
+    clf = exp.get_trained_clf(.01, 50)
     original_im, attacked = exp.get_adv_examples(clf, attack_norm, attack_type, 8, num_attacks=1000,
                                                  dataset_name=dataset_name)
     nat_data = exp.get_pxcnn_loss(pxcnn, original_im)
