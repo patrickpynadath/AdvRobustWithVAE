@@ -82,7 +82,7 @@ class ManifoldModelingExp:
         return vae
 
     def get_trained_clf(self, clf_lr, clf_epochs):
-        clf = simple_conv_net()
+        clf = simple_conv_net().to(self.device)
         trainloader = DataLoader(self.trainset, batch_size=100)
         testloader = DataLoader(self.testset, batch_size=100)
         trainer = NatTrainer(clf, trainloader, testloader, self.device, SGD(clf.parameters(), clf_lr), CrossEntropyLoss(), log_dir=self.result_dir)
