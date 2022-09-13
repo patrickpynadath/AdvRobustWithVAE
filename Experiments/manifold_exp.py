@@ -66,8 +66,8 @@ class ManifoldModelingExp:
             (mean, logvar), reconstruction = vae(current_input)
             reconstruction_loss = vae.reconstruction_loss(reconstruction, current_input)
             kl_loss = vae.kl_divergence_loss(mean, logvar)
-            reconstruction_losses.append(reconstruction_loss.cpu().detach())
-            kl_losses.append(kl_loss.cpu().detach())
+            reconstruction_losses.append(reconstruction_loss.cpu().detach().item())
+            kl_losses.append(kl_loss.cpu().detach().item())
         return {'reconstruction' : reconstruction_losses, 'KL' : kl_losses}
 
 
