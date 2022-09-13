@@ -9,6 +9,8 @@ from Models import VAE, simple_conv_net
 from Training import train_vae, NatTrainer
 from torch.optim import SGD
 from torch.nn import CrossEntropyLoss
+from torch.utils.tensorboard import SummaryWriter
+import matplotlib.pyplot as plt
 
 class ManifoldModelingExp:
 
@@ -66,7 +68,7 @@ class ManifoldModelingExp:
             kl_loss = vae.kl_divergence_loss(mean, logvar)
             reconstruction_losses.append(reconstruction_loss)
             kl_losses.append(kl_loss)
-        return reconstruction_losses, kl_losses
+        return {'reconstruction' : reconstruction_losses, 'KL' : kl_losses}
 
 
     def get_trained_vanilla_vae(self, kernel_num, z_size, epochs):
@@ -86,4 +88,34 @@ class ManifoldModelingExp:
         trainer = NatTrainer(clf, trainloader, testloader, self.device, SGD(clf.parameters(), clf_lr), CrossEntropyLoss(), log_dir=self.result_dir)
         trainer.training_loop(clf_epochs)
         return clf
+
+
+    def create_hist_vae_loss(self, tag, dataset_name, natural_data, attacked_data):
+
+
+
+        sw = SummaryWriter(log_dir=self.result_dir)
+        # make the histograms
+        # how do I return it?
+        f, a = plt.subplots(2, 2)
+        f.suptitle(f"VAE Loss Analysis for {dataset_name}")
+        ax = a[0, 0]
+        ax.set_title("Recon. Loss for Natural Data")
+        ax.hist(natural_data['reconstruction'])
+
+        ax = a[0, 1]
+        ax.set_title(f"Recon. Loss for Attacked Data")
+        ax.hist(attacked_data['reconstruction'])
+
+        ax = a[1, 0]
+        ax.set_title("KL Loss for Natural Data")
+        ax.hist(natural_data['KL'])
+
+        ax = a[1, 1]
+        ax.set_title("KL Loss for Attacked Data")
+        ax.hist(attacked_data['KL'])
+
+        sw.add_figure(tag=tag, figure=f)
+        plt.close(f)
+        pass
 

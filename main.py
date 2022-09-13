@@ -203,14 +203,16 @@ def peturb_analysis_loop(kernel_num, latent_size, vae_epochs):
     peturb_exp.norm_analysis(vanilla_vae, noise_vars=[0], train_set=False)
     return
 
-def manifold_exp_vae():
+def manifold_exp_vae(latent_size, attack_norm, attack_type, dataset_name):
     exp = ManifoldModelingExp(VAE_EXP_DIR, lr=.01, batch_size=32, device='cpu')
-    vae = exp.get_trained_vanilla_vae(50, 200, 1)
+    vae = exp.get_trained_vanilla_vae(50, latent_size, 1)
     clf = exp.get_trained_clf(clf_lr=.01, clf_epochs=1)
-    original_im, attacked = exp.get_adv_examples(clf, 5/255, 'linf', 8, num_attacks=1000, dataset_name='train')
-    original_recon_loss, original_kl_loss = exp.get_vae_loss(vae, original_im)
-    adv_recon_loss, adv_kl_loss = exp.get_vae_loss(vae, attacked)
-    pass
+    original_im, attacked = exp.get_adv_examples(clf, attack_norm, attack_type, 8, num_attacks=1000, dataset_name=dataset_name)
+    nat_data = exp.get_vae_loss(vae, original_im)
+    attacked_data = exp.get_vae_loss(vae, attacked)
+    tag = f"vae_loss_latent_{latent_size}_attack_norm_{round(attack_norm, 2)}_attack_type_{attack_type}_dataset_{dataset_name}"
+    exp.create_hist_vae_loss(tag, dataset_name, nat_data, attacked_data)
+    return
 
 
 if __name__ == '__main__':
