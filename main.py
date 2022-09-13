@@ -205,7 +205,7 @@ def peturb_analysis_loop(kernel_num, latent_size, vae_epochs):
 
 def manifold_exp_vae(latent_size, attack_norm, attack_type, dataset_name):
     exp = ManifoldModelingExp(VAE_EXP_DIR, lr=.01, batch_size=32, device='cpu')
-    vae = exp.get_trained_vanilla_vae(50, latent_size, 1)
+    vae = exp.get_trained_vanilla_vae(1, latent_size, 1)
     clf = exp.get_trained_clf(clf_lr=.01, clf_epochs=1)
     original_im, attacked = exp.get_adv_examples(clf, attack_norm, attack_type, 8, num_attacks=1000, dataset_name=dataset_name)
     nat_data = exp.get_vae_loss(vae, original_im)
@@ -217,7 +217,7 @@ def manifold_exp_vae(latent_size, attack_norm, attack_type, dataset_name):
 
 if __name__ == '__main__':
 
-    manifold_exp_vae(200, 5/255, 'linf', 'train')
+    manifold_exp_vae(100, 5/255, 'linf', 'train')
     #adv_rob_loop(adv_type='linf')
     #peturb_analysis_loop(50, 100, 50)
 
