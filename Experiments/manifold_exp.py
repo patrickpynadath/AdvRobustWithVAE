@@ -29,7 +29,7 @@ class ManifoldModelingExp:
         self.device = device
 
     def get_trained_pixelnn(self, epochs):
-        px_cnn = PixelCNN()
+        px_cnn = PixelCNN().to(self.device)
         dataloader = DataLoader(self.trainset,batch_size=32)
         train_pixel_cnn(epochs, px_cnn, self.device, dataloader)
         return px_cnn
