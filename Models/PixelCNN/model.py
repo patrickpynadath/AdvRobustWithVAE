@@ -104,10 +104,9 @@ class PixelCNN(nn.Module):
 
     def forward(self, x, sample=False):
         # similar as done in the tf repo :  
-        if not sample:
-            xs = [int(y) for y in x.size()]
-            padding = Variable(torch.ones(xs[0], 1, xs[2], xs[3]), requires_grad=False)
-            self.init_padding = padding.cuda() if x.is_cuda else padding
+        xs = [int(y) for y in x.size()]
+        padding = Variable(torch.ones(xs[0], 1, xs[2], xs[3]), requires_grad=False)
+        self.init_padding = padding.cuda() if x.is_cuda else padding
         
         if sample : 
             xs = [int(y) for y in x.size()]
