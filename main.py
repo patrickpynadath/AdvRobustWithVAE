@@ -217,7 +217,7 @@ def manifold_exp_vae(latent_size, attack_norm, attack_type, dataset_name):
 
 if __name__ == '__main__':
 
-    manifold_exp_vae(100, 2/255, 'linf', 'train')
+    manifold_exp_vae(100, 2/255, 'linf', 'test')
     #adv_rob_loop(adv_type='linf')
     #peturb_analysis_loop(50, 100, 50)
 
