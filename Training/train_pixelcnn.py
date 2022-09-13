@@ -13,7 +13,7 @@ from torch.autograd import Variable
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from Models.PixelCNN import PixelCNN, discretized_mix_logistic_loss
-
+from tqdm import tqdm
 def train_pixel_cnn(epochs, net : PixelCNN, device : str, trainloader : DataLoader):
 
 
@@ -29,8 +29,8 @@ def train_pixel_cnn(epochs, net : PixelCNN, device : str, trainloader : DataLoad
         net.train(True)
         step = 0
         loss_ = 0
-
-        for _, (images, labels) in enumerate(trainloader):
+        datastream = tqdm(enumerate(trainloader, 1), total=len(trainloader), position=0, leave=True)
+        for _, (images, labels) in datastream:
 
             images = images.to(device)
 
@@ -49,7 +49,6 @@ def train_pixel_cnn(epochs, net : PixelCNN, device : str, trainloader : DataLoad
                       loss.item() / 1000.0)
                 loss_overall.append(loss_ / 1000.0)
                 loss_ = 0
-        print('Epoch: ' + str(i) + ' Over!')
 
 
     print('Training Finished! Time Taken: ', time.time() - time_start)
