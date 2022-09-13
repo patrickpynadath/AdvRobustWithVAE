@@ -54,7 +54,8 @@ class ManifoldModelingExp:
             attacks.add(attacker.attack(original_im, labels))
         elif adversary_type == 'linf':
             attacker = torchattacks.PGD(trained_classifier, attack_eps, steps)
-            attacks.add(attacker(original_im, labels).to(self.device))
+            tmp = attacker(original_im, labels)
+            attacks +=tmp
         return original_im, attacks
 
     def get_vae_loss(self, vae, inputs):
