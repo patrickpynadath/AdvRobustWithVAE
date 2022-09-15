@@ -224,7 +224,7 @@ class Adv_Robustness_NaturalTraining:
 
         base_clf = resnet(depth=110, num_classes=10).to(self.device)
         label = f"resnet110_smoothVAE_{smoothVAE_version}_sigma_{smoothingVAE_sigma}_VAE_beta_{vae_beta}"
-        vae = VampVAE(in_channels=3, latent_dim=100, img_size=32)
+        vae = VampVAE(in_channels=3, latent_dim=100, img_size=32).to(self.device)
         if vae_epochs != 0:
             train_vae(model=vae,
                       data_loader=self.trainloader,
