@@ -1,5 +1,4 @@
 import torch
-from Models import VampVAE
 import torch.nn as nn
 
 
@@ -39,7 +38,7 @@ class SmoothVAE_Latent(Smooth):
     def __init__(self,
                  base_classifier: torch.nn.Module,
                  sigma: float,
-                 trained_VAE: VampVAE,
+                 trained_VAE,
                  device,
                  num_samples,
                  num_classes,
@@ -82,7 +81,7 @@ class SmoothVAE_Sample(Smooth):
     def __init__(self,
                  base_classifier: torch.nn.Module,
                  sigma: float,
-                 trained_VAE: VampVAE,
+                 trained_VAE,
                  device,
                  num_samples,
                  num_classes,
@@ -119,7 +118,7 @@ class SmoothVAE_PreProcess(Smooth):
     def __init__(self,
                  base_classifier: torch.nn.Module,
                  sigma: float,
-                 trained_VAE: VAE,
+                 trained_VAE,
                  device,
                  num_samples,
                  num_classes):
