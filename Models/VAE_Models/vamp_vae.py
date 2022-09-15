@@ -1,25 +1,22 @@
 import torch
-from models import BaseVAE
+from base_vae import BaseVAE
+
 from torch import nn
 from torch.nn import functional as F
-from .types_ import *
-from torch.distributions import Normal
+from typing import List, Any
 
-
-class MIWAE(BaseVAE):
+class VampVAE(BaseVAE):
 
     def __init__(self,
                  in_channels: int,
                  latent_dim: int,
                  hidden_dims: List = None,
-                 num_samples: int = 5,
-                 num_estimates: int = 5,
+                 num_components: int = 50,
                  **kwargs) -> None:
-        super(MIWAE, self).__init__()
+        super(VampVAE, self).__init__()
 
         self.latent_dim = latent_dim
-        self.num_samples = num_samples # K
-        self.num_estimates = num_estimates # M
+        self.num_components = num_components
 
         modules = []
         if hidden_dims is None:
@@ -78,7 +75,11 @@ class MIWAE(BaseVAE):
                                       kernel_size= 3, padding= 1),
                             nn.Tanh())
 
-    def encode(self, input: Tensor) -> List[Tensor]:
+        self.pseudo_input = torch.eye(self.num_components, requires_grad= False)
+        self.embed_pseudo = nn.Sequential(nn.Linear(self.num_components, 12288),
+                                          nn.Hardtanh(0.0, 1.0)) # 3x64x64 = 12288
+
+    def encode(self, input: torch.Tensor) -> List[torch.Tensor]:
         """
         Encodes the input by passing through the encoder network
         and returns the latent codes.
@@ -95,24 +96,17 @@ class MIWAE(BaseVAE):
 
         return [mu, log_var]
 
-    def decode(self, z: Tensor) -> Tensor:
-        """
-        Maps the given latent codes of S samples
-        onto the image space.
-        :param z: (Tensor) [B x S x D]
-        :return: (Tensor) [B x S x C x H x W]
-        """
-        B, M,S, D = z.size()
-        z = z.contiguous().view(-1, self.latent_dim) #[BMS x D]
+    def decode(self, z: torch.Tensor) -> torch.Tensor:
         result = self.decoder_input(z)
         result = result.view(-1, 512, 2, 2)
         result = self.decoder(result)
-        result = self.final_layer(result) #[BMS x C x H x W ]
-        result = result.view([B, M, S,result.size(-3), result.size(-2), result.size(-1)]) #[B x M x S x C x H x W]
+        result = self.final_layer(result)
         return result
 
-    def reparameterize(self, mu: Tensor, logvar: Tensor) -> Tensor:
+    def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
         """
+        Will a single z be enough ti compute the expectation
+        for the loss??
         :param mu: (Tensor) Mean of the latent Gaussian
         :param logvar: (Tensor) Standard deviation of the latent Gaussian
         :return:
@@ -121,51 +115,61 @@ class MIWAE(BaseVAE):
         eps = torch.randn_like(std)
         return eps * std + mu
 
-    def forward(self, input: Tensor, **kwargs) -> List[Tensor]:
+    def forward(self, input: torch.Tensor, **kwargs) -> List[torch.Tensor]:
         mu, log_var = self.encode(input)
-        mu = mu.repeat(self.num_estimates, self.num_samples, 1, 1).permute(2, 0, 1, 3) # [B x M x S x D]
-        log_var = log_var.repeat(self.num_estimates, self.num_samples, 1, 1).permute(2, 0, 1, 3) # [B x M x S x D]
-        z = self.reparameterize(mu, log_var) # [B x M x S x D]
-        eps = (z - mu) / log_var # Prior samples
-        return  [self.decode(z), input, mu, log_var, z, eps]
+        z = self.reparameterize(mu, log_var)
+        return  [self.decode(z), input, mu, log_var, z]
 
     def loss_function(self,
                       *args,
                       **kwargs) -> dict:
-        """
-        KL(N(\mu, \sigma), N(0, 1)) = \log \frac{1}{\sigma} + \frac{\sigma^2 + \mu^2}{2} - \frac{1}{2}
-        :param args:
-        :param kwargs:
-        :return:
-        """
         recons = args[0]
         input = args[1]
         mu = args[2]
         log_var = args[3]
         z = args[4]
-        eps = args[5]
-
-        input = input.repeat(self.num_estimates,
-                             self.num_samples, 1, 1, 1, 1).permute(2, 0, 1, 3, 4, 5) #[B x M x S x C x H x W]
 
         kld_weight = kwargs['M_N'] # Account for the minibatch samples from the dataset
+        recons_loss =F.mse_loss(recons, input)
 
-        log_p_x_z = ((recons - input) ** 2).flatten(3).mean(-1) # Reconstruction Loss # [B x M x S]
+        E_log_q_z = torch.mean(torch.sum(-0.5 * (log_var + (z - mu) ** 2)/ log_var.exp(),
+                                         dim = 1),
+                               dim = 0)
 
-        kld_loss = -0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=3) # [B x M x S]
-        # Get importance weights
-        log_weight = (log_p_x_z + kld_weight * kld_loss) #.detach().data
+        # Original Prior
+        # E_log_p_z = torch.mean(torch.sum(-0.5 * (z ** 2), dim = 1), dim = 0)
 
-        # Rescale the weights (along the sample dim) to lie in [0, 1] and sum to 1
-        weight = F.softmax(log_weight, dim = -1)  # [B x M x S]
+        # Vamp Prior
+        M, C, H, W = input.size()
+        curr_device = input.device
+        self.pseudo_input = self.pseudo_input.cuda(curr_device)
+        x = self.embed_pseudo(self.pseudo_input)
+        x = x.view(-1, C, H, W)
+        prior_mu, prior_log_var = self.encode(x)
 
-        loss = torch.mean(torch.mean(torch.sum(weight * log_weight, dim=-1), dim = -2), dim = 0)
+        z_expand = z.unsqueeze(1)
+        prior_mu = prior_mu.unsqueeze(0)
+        prior_log_var = prior_log_var.unsqueeze(0)
 
-        return {'loss': loss, 'Reconstruction_Loss':log_p_x_z.mean(), 'KLD':-kld_loss.mean()}
+        E_log_p_z = torch.sum(-0.5 *
+                              (prior_log_var + (z_expand - prior_mu) ** 2)/ prior_log_var.exp(),
+                              dim = 2) - torch.log(torch.tensor(self.num_components).float())
+
+                               # dim = 0)
+        E_log_p_z = torch.logsumexp(E_log_p_z, dim = 1)
+        E_log_p_z = torch.mean(E_log_p_z, dim = 0)
+
+        # KLD = E_q log q - E_q log p
+        kld_loss = -(E_log_p_z - E_log_q_z)
+        # print(E_log_p_z, E_log_q_z)
+
+
+        loss = recons_loss + kld_weight * kld_loss
+        return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':-kld_loss}
 
     def sample(self,
                num_samples:int,
-               current_device: int, **kwargs) -> Tensor:
+               current_device: str, **kwargs) -> torch.Tensor:
         """
         Samples from the latent space and return the corresponding
         image space map.
@@ -173,20 +177,19 @@ class MIWAE(BaseVAE):
         :param current_device: (Int) Device to run the model
         :return: (Tensor)
         """
-        z = torch.randn(num_samples, 1, 1,
+        z = torch.randn(num_samples,
                         self.latent_dim)
 
         z = z.to(current_device)
 
-        samples = self.decode(z).squeeze()
+        samples = self.decode(z)
         return samples
 
-    def generate(self, x: Tensor, **kwargs) -> Tensor:
+    def generate(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
         """
-        Given an input image x, returns the reconstructed image.
-        Returns only the first reconstructed sample
+        Given an input image x, returns the reconstructed image
         :param x: (Tensor) [B x C x H x W]
         :return: (Tensor) [B x C x H x W]
         """
 
-        return self.forward(x)[0][:, 0, 0, :]
+        return self.forward(x)[0]

@@ -3,7 +3,7 @@ from Training.train_vae import train_vae
 from Tests.classifier_test import ClassifierTest
 from Models import simple_conv_net, simple_classifier, \
     pixelcnn_classifier, resnet_cifar, resnet, Smooth, \
-    SmoothVAE_Latent, SmoothVAE_Sample, SmoothVAE_PreProcess, vae_models, PixelCNN
+    SmoothVAE_Latent, SmoothVAE_Sample, SmoothVAE_PreProcess, VampVAE, PixelCNN
 
 from Training.train_pixelcnn import train_pixel_cnn
 
@@ -156,8 +156,8 @@ class Adv_Robustness_NaturalTraining:
                                       vae_beta=1):
         base_clf = resnet(depth=110, num_classes=10).to(self.device)
         label = f"resnet110_smooth_sigma_VAE_PreProcess"
-        VAE = vae_models['VampVAE']
-        vae = VAE(in_channels=3, latent1_dim=10, latent2_dim=10, img_size=32)
+
+        vae = VampVAE(in_channels=3, latent_dim=100, img_size=32)
         if vae_epochs != 0:
             train_vae(model=vae,
                       data_loader=self.trainloader,
@@ -224,8 +224,7 @@ class Adv_Robustness_NaturalTraining:
 
         base_clf = resnet(depth=110, num_classes=10).to(self.device)
         label = f"resnet110_smoothVAE_{smoothVAE_version}_sigma_{smoothingVAE_sigma}_VAE_beta_{vae_beta}"
-        VAE = vae_models['VampVAE']
-        vae = VAE(in_channels=3, latent1_dim=10, latent2_dim=10, img_size=32)
+        vae = VampVAE(in_channels=3, latent_dim=100, img_size=32)
         if vae_epochs != 0:
             train_vae(model=vae,
                       data_loader=self.trainloader,
