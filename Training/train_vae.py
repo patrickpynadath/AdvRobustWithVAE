@@ -1,6 +1,5 @@
 from torch import optim
 from torch.autograd import Variable
-from Models import vae_models
 from tqdm import tqdm
 
 # source: https://github.com/SashaMalysheva/Pytorch-VAE
