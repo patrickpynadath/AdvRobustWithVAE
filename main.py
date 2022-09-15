@@ -82,37 +82,29 @@ def run_adv_rob_smoothclf(exp : Adv_Robustness_NaturalTraining, summary_writer :
 def run_adv_rob_smoothVAE(exp : Adv_Robustness_NaturalTraining, summary_writer : SummaryWriter, adv_type : str, test_eps):
     for smoothing_sigma in SMOOTHINGVAE_SIGMAS:
         for num_vae_epochs in VAE_EPOCHS:
-            for kernel_num in KERNEL_NUM:
-                for latent_size in LATENT_SIZE:
-                    for loss_coef in VAE_LOSS_COEFS:
-                        for beta in VAE_BETAS:
-                            for model_type in ['sample', 'latent']:
-                                param_dct = {'Model': f'SmoothVAE_{model_type}',
-                                             'SmoothingSigma': round(smoothing_sigma, 4),
-                                             'LossCoef': loss_coef,
-                                             'VAE_Epoch': num_vae_epochs,
-                                             'KernelNum': kernel_num,
-                                             'LatentSize': latent_size,
-                                             'VAEBeta' : beta}
-                                nat_acc, adv_accs, label = exp.adv_rob_smoothvae_clf(clf_epochs=CLF_EPOCHS,
-                                                                                  smoothingVAE_sigma=smoothing_sigma,
-                                                                                  smoothing_num_samples=M_TRAIN,
-                                                                                  smoothVAE_version=model_type,
-                                                                                  vae_loss_coef=loss_coef,
-                                                                                  vae_img_size=32,
-                                                                                  vae_channel_num=3,
-                                                                                  vae_kern_num=kernel_num,
-                                                                                  vae_z_size=latent_size,
-                                                                                  vae_epochs=num_vae_epochs,
-                                                                                  with_vae_grad=True,
-                                                                                  adv_type=adv_type,
-                                                                                  adv_norms=test_eps,
-                                                                                  adv_steps=TEST_ATTACK_STEPS,
-                                                                                  num_attacks=NUM_TEST_ATTACKS,
-                                                                                   vae_beta=beta)
-                                metric_dct = accuracies_to_dct(nat_acc, adv_accs, test_eps, adv_type)
-                                run_name = exp.hyperparam_logdir + f"/{label}"
-                                summary_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
+            for latent_size in LATENT_SIZE:
+                for model_type in ['sample', 'latent']:
+                    param_dct = {'Model': f'SmoothVAE_{model_type}',
+                                 'SmoothingSigma': round(smoothing_sigma, 4),
+                                 'LossCoef': 0,
+                                 'VAE_Epoch': num_vae_epochs,
+                                 'KernelNum': 'VAMP',
+                                 'LatentSize': latent_size,
+                                 'VAEBeta' : 1}
+                    nat_acc, adv_accs, label = exp.adv_rob_smoothvae_clf(clf_epochs=CLF_EPOCHS,
+                                                                      smoothingVAE_sigma=smoothing_sigma,
+                                                                      smoothing_num_samples=M_TRAIN,
+                                                                      smoothVAE_version=model_type,
+                                                                      vae_loss_coef=0,
+                                                                      vae_epochs=num_vae_epochs,
+                                                                      adv_type=adv_type,
+                                                                      adv_norms=test_eps,
+                                                                      adv_steps=TEST_ATTACK_STEPS,
+                                                                      num_attacks=NUM_TEST_ATTACKS,
+                                                                      vae_beta=1)
+                    metric_dct = accuracies_to_dct(nat_acc, adv_accs, test_eps, adv_type)
+                    run_name = exp.hyperparam_logdir + f"/{label}"
+                    summary_writer.add_hparams(param_dct, metric_dct, run_name=run_name)
     return
 
 def run_adv_rob_smoothVAE_preprocess(exp : Adv_Robustness_NaturalTraining, summary_writer : SummaryWriter, adv_type : str, test_eps):
@@ -169,29 +161,29 @@ def adv_rob_loop(adv_type):
                                              batch_size=BATCH_SIZE_CLF,
                                              device=DEVICE)
     hparam_writer = SummaryWriter(log_dir=adv_exp.hyperparam_logdir)
-    # run_adv_rob_baseclf(exp = adv_exp,
-    #                     summary_writer= hparam_writer,
-    #                     adv_type=adv_type,
-    #                     test_eps=test_eps)
-    #
-    # run_adv_rob_smoothclf(exp = adv_exp,
-    #                       summary_writer=hparam_writer,
-    #                       adv_type=adv_type,
-    #                       test_eps = test_eps)
+    run_adv_rob_baseclf(exp = adv_exp,
+                        summary_writer= hparam_writer,
+                        adv_type=adv_type,
+                        test_eps=test_eps)
 
-    # run_adv_rob_smoothVAE(exp = adv_exp,
-    #                       summary_writer=hparam_writer,
-    #                       adv_type=adv_type,
-    #                       test_eps=test_eps)
+    run_adv_rob_smoothclf(exp = adv_exp,
+                          summary_writer=hparam_writer,
+                          adv_type=adv_type,
+                          test_eps = test_eps)
+
+    run_adv_rob_smoothVAE(exp = adv_exp,
+                          summary_writer=hparam_writer,
+                          adv_type=adv_type,
+                          test_eps=test_eps)
 
     # run_adv_rob_smoothVAE_preprocess(adv_exp,
     #                                  summary_writer=hparam_writer,
     #                                  adv_type=adv_type,
     #                                  test_eps=test_eps)
-    run_adv_rob_pixelcnn_clf(exp=adv_exp,
-                             summary_writer=hparam_writer,
-                             adv_type=adv_type,
-                             test_eps=test_eps)
+    # run_adv_rob_pixelcnn_clf(exp=adv_exp,
+    #                          summary_writer=hparam_writer,
+    #                          adv_type=adv_type,
+    #                          test_eps=test_eps)
     return
 
 
@@ -228,8 +220,7 @@ def manifold_exp_pxcnn(attack_norm, attack_type, dataset_name):
 
 
 if __name__ == '__main__':
-    manifold_exp_pxcnn(2/255, 'linf', 'test')
-    manifold_exp_pxcnn(2/255, 'linf', 'train')
+    adv_rob_loop('linf')
 
     #manifold_exp_vae(100, 2/255, 'linf', 'test')
     #adv_rob_loop(adv_type='linf')

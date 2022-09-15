@@ -66,18 +66,12 @@ class SmoothVAE_Latent(Smooth):
         :param x: torch tensor of [batch_size x channel_num x width x height]
         :return: y, where y is [batch_size x num_classes], a probabiliy distribution over potential classes
         """
-        encoded = self.trained_VAE.encoder(x)
-        mean, logvar = self.trained_VAE.q(encoded)
-        z = self.trained_VAE.z(mean, logvar)
-        z_projected = self.trained_VAE.project(z).view(
-            -1, self.trained_VAE.kernel_num,
-            self.trained_VAE.feature_size,
-            self.trained_VAE.feature_size,
-        )
+        [mu, log_var] = self.trained_VAE.encode(x)
+        z = self.trained_VAE.reparameterize(mu, log_var)
         output = torch.zeros((x.size(dim=0), self.num_classes)).to(self.device)
         for i in range(self.num_samples):
-            noise = torch.randn_like(z_projected).to(self.device) * self.sigma ** 2
-            reconstr = self.trained_VAE.decoder(z_projected + noise)
+            noise = torch.randn_like(z).to(self.device) * self.sigma ** 2
+            reconstr = self.trained_VAE.decode(z + noise)
             output += self.base_classifier(reconstr)
         output /= self.num_samples
         return output
@@ -115,7 +109,7 @@ class SmoothVAE_Sample(Smooth):
         """
         reconstruction = torch.zeros_like(x).to(self.device)
         for i in range(self.num_samples):
-            _, output = self.trained_VAE(x)
+            output = self.trained_VAE(x)[0]
             reconstruction += output
         reconstruction /= self.num_samples
         return self.base_classifier(reconstruction)

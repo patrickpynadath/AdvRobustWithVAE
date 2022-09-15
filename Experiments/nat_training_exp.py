@@ -1,10 +1,10 @@
 from Training.train_natural import NatTrainer, NatTrainerSmoothVAE
 from Training.train_vae import train_vae
 from Tests.classifier_test import ClassifierTest
-from Models.classifiers import simple_conv_net, simple_classifier, pixelcnn_classifier
-from Models.smoothing import Smooth, SmoothVAE_Latent, SmoothVAE_Sample, SmoothVAE_PreProcess
-from Models.vae import VAE
-from Models.PixelCNN import PixelCNN
+from Models import simple_conv_net, simple_classifier, \
+    pixelcnn_classifier, resnet_cifar, resnet, Smooth, \
+    SmoothVAE_Latent, SmoothVAE_Sample, SmoothVAE_PreProcess, vae_models, PixelCNN
+
 from Training.train_pixelcnn import train_pixel_cnn
 
 import datetime
@@ -69,7 +69,8 @@ class Adv_Robustness_NaturalTraining:
                         adv_norms,
                         adv_steps,
                         num_attacks):
-        base_clf = simple_conv_net().to(self.device)
+        label = 'resnet50'
+        base_clf = resnet(depth=110, num_classes=10).to(self.device)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(base_clf.parameters(), lr=self.lr)
         trainer = NatTrainer(model = base_clf,
@@ -80,7 +81,7 @@ class Adv_Robustness_NaturalTraining:
                              criterion = criterion,
                              log_dir = self.training_logdir,
                              use_tensorboard=True)
-        trainer.training_loop(clf_epochs)
+        trainer.training_loop(clf_epochs, label)
 
         adv_tester = ClassifierTest(model = base_clf,
                                     testloader = self.testloader,
@@ -91,7 +92,7 @@ class Adv_Robustness_NaturalTraining:
                                        attack_eps_values=adv_norms,
                                        steps = adv_steps,
                                        num_attacks=num_attacks)
-        return nat_acc, adv_accs, base_clf.label
+        return nat_acc, adv_accs, label
 
     def adv_rob_smoothclf(self,
                           clf_epochs,
@@ -111,13 +112,14 @@ class Adv_Robustness_NaturalTraining:
         :param num_attacks: number of adversarial examples to evaluate trained model against
         :return: natural accuracy of model, list of adversarial robustness, and label of model
         """
-        base_clf = simple_conv_net()
+        label= f"resnet110_smooth_sigma_{round(smoothing_sigma, 3)}"
+        base_clf = resnet(depth=110, num_classes=10).to(self.device)
         smooth_clf = Smooth(base_classifier=base_clf,
                             sigma = smoothing_sigma,
                             device = self.device,
                             num_samples= smoothing_num_samples,
                             num_classes=self.num_classes)
-        optimizer = optim.SGD(smooth_clf.parameters(), lr = self.lr)
+        optimizer = optim.SGD(smooth_clf.base_classifier.parameters(), lr = self.lr)
         criterion = nn.CrossEntropyLoss()
         trainer = NatTrainer(model = smooth_clf,
                              trainloader = self.trainloader,
@@ -127,7 +129,7 @@ class Adv_Robustness_NaturalTraining:
                              optimizer = optimizer,
                              log_dir = self.training_logdir,
                              use_tensorboard=True)
-        trainer.training_loop(clf_epochs)
+        trainer.training_loop(clf_epochs, label= f"resnet110_smooth_sigma_{round(smoothing_sigma, 3)}")
         adv_tester = ClassifierTest(model = smooth_clf,
                                     testloader=self.testloader,
                                     device = self.device,
@@ -137,7 +139,7 @@ class Adv_Robustness_NaturalTraining:
                                        attack_eps_values=adv_norms,
                                        steps = adv_steps,
                                        num_attacks=num_attacks)
-        return nat_acc, adv_accs, smooth_clf.label
+        return nat_acc, adv_accs, label
 
     def adv_rob_smoothvae_preprocess(self,
                                       clf_epochs,
@@ -152,13 +154,10 @@ class Adv_Robustness_NaturalTraining:
                                       adv_steps,
                                       num_attacks,
                                       vae_beta=1):
-        base_clf = simple_classifier(input_size=vae_z_size)
-        vae = VAE(image_size=vae_img_size,
-                  channel_num=vae_channel_num,
-                  kernel_num=vae_kern_num,
-                  z_size=vae_z_size,
-                  device=self.device,
-                  beta=vae_beta).to(self.device)
+        base_clf = resnet(depth=110, num_classes=10).to(self.device)
+        label = f"resnet110_smooth_sigma_VAE_PreProcess"
+        VAE = vae_models['VampVAE']
+        vae = VAE(in_channels=3, latent1_dim=10, latent2_dim=10, img_size=32)
         if vae_epochs != 0:
             train_vae(model=vae,
                       data_loader=self.trainloader,
@@ -179,7 +178,7 @@ class Adv_Robustness_NaturalTraining:
                                       criterion=criterion,
                                       log_dir=self.training_logdir,
                                       use_tensorboard=True)
-        trainer.training_loop(clf_epochs)
+        trainer.training_loop(clf_epochs, label)
         adv_tester = ClassifierTest(model=smoothVAE_clf,
                                     testloader=self.testloader,
                                     device=self.device,
@@ -198,12 +197,7 @@ class Adv_Robustness_NaturalTraining:
                               smoothing_num_samples,
                               smoothVAE_version,
                               vae_loss_coef,
-                              vae_img_size,
-                              vae_channel_num,
-                              vae_kern_num,
-                              vae_z_size,
                               vae_epochs,
-                              with_vae_grad,
                               adv_type,
                               adv_norms,
                               adv_steps,
@@ -228,13 +222,10 @@ class Adv_Robustness_NaturalTraining:
         :return: natural accuracy, list of adversarial robustness, and model label
         """
 
-        base_clf = simple_conv_net()
-        vae = VAE(image_size=vae_img_size,
-                  channel_num=vae_channel_num,
-                  kernel_num=vae_kern_num,
-                  z_size=vae_z_size,
-                  device=self.device,
-                  beta=vae_beta).to(self.device)
+        base_clf = resnet(depth=110, num_classes=10).to(self.device)
+        label = f"resnet110_smoothVAE_{smoothVAE_version}_sigma_{smoothingVAE_sigma}_VAE_beta_{vae_beta}"
+        VAE = vae_models['VampVAE']
+        vae = VAE(in_channels=3, latent1_dim=10, latent2_dim=10, img_size=32)
         if vae_epochs != 0:
             train_vae(model=vae,
                       data_loader=self.trainloader,
@@ -256,10 +247,8 @@ class Adv_Robustness_NaturalTraining:
                                              num_classes=self.num_classes,
                                              loss_coef=vae_loss_coef)
 
-        if with_vae_grad:
-            optimizer = optim.SGD(smoothVAE_clf.parameters(), lr=self.lr)
-        else:
-            optimizer = optim.SGD(smoothVAE_clf.base_classifier.parameters(), lr = self.lr)
+
+        optimizer = optim.SGD(smoothVAE_clf.base_classifier.parameters(), lr = self.lr)
 
         criterion = nn.CrossEntropyLoss()
         trainer = NatTrainerSmoothVAE(model = smoothVAE_clf,
@@ -270,7 +259,7 @@ class Adv_Robustness_NaturalTraining:
                                       criterion = criterion,
                                       log_dir=self.training_logdir,
                                       use_tensorboard=True)
-        trainer.training_loop(clf_epochs)
+        trainer.training_loop(clf_epochs, label)
         adv_tester = ClassifierTest(model = smoothVAE_clf,
                                     testloader=self.testloader,
                                     device=self.device,
@@ -280,7 +269,7 @@ class Adv_Robustness_NaturalTraining:
                                        attack_eps_values=adv_norms,
                                        steps=adv_steps,
                                        num_attacks=num_attacks)
-        return nat_acc, adv_accs, smoothVAE_clf.label
+        return nat_acc, adv_accs, label
 
     def adv_rob_pixelcnn_clf(self, epochs, adv_type, adv_norms, adv_steps, num_attacks):
         pxcnn = PixelCNN().to(device=self.device)
