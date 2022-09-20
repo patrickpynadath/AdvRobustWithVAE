@@ -11,6 +11,7 @@ import torch.nn.functional as F
 import math
 import pytorch_lightning as pl
 from torch.optim import SGD
+from torch.optim.lr_scheduler import ExponentialLR
 
 
 __all__ = ['resnet']
@@ -217,7 +218,9 @@ class LightningResnet(pl.LightningModule):
         return epoch_dct
 
     def configure_optimizers(self):
-        return SGD(self.model.parameters(), lr=.001)
+        optimizer = SGD(self.model.parameters(), lr=.001)
+        lr_scheduler = ExponentialLR(optimizer, .9)
+        return optimizer, lr_scheduler
 
     def test_step(self, batch, batch_idx):
         return self.validation_step(batch, batch_idx)
