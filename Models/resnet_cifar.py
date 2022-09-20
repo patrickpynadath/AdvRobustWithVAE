@@ -188,11 +188,8 @@ class LightningResnet(pl.LightningModule):
         correct = sum(x["correct"] for x in outputs)
         total = sum([x['total'] for x in outputs])
         tensorboard_logs = {"train_loss" : avg_loss, "train_accuracy" : correct/total}
-        epoch_dct = {
-            'loss': avg_loss.detach(),
-            'log' : tensorboard_logs
-        }
-        return epoch_dct
+        self.log_dict(tensorboard_logs)
+        return
 
     def validation_step(self, batch, batch_idx):
         data, target = batch
