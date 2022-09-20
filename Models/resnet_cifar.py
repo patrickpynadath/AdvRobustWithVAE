@@ -187,8 +187,8 @@ class LightningResnet(pl.LightningModule):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
         correct = sum(x["correct"] for x in outputs)
         total = sum([x['total'] for x in outputs])
-        self.log("train_loss" , avg_loss.detach(), sync_dist=True)
-        self.log("train_accuracy", correct/total, sync_dist=True)
+        self.logger.experiment.add_scalar("Loss/Train", avg_loss.detach())
+        self.logger.experiment.add_scalar("Acc/Train", correct/total)
         return
 
     def validation_step(self, batch, batch_idx):
@@ -209,9 +209,8 @@ class LightningResnet(pl.LightningModule):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
         correct = sum(x["correct"] for x in outputs)
         total = sum([x['total'] for x in outputs])
-        tensorboard_logs = {"loss": avg_loss, "train_accuracy": correct / total}
-        self.log("loss", avg_loss, sync_dist=True)
-        self.log("train_accuracy", correct/total, sync_dist=True)
+        self.logger.experiment.add_scalar("Loss/Val", avg_loss.detach())
+        self.logger.experiment.add_scalar("Acc/Val", correct/total)
         epoch_dct = {
             'val_loss': avg_loss.detach(),
         }
@@ -227,8 +226,8 @@ class LightningResnet(pl.LightningModule):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
         correct = sum(x["correct"] for x in outputs)
         total = sum([x['total'] for x in outputs])
-        self.log("test_loss", avg_loss.detach(), sync_dist=True)
-        self.log("test_accuracy", correct/total, sync_dist=True)
+        self.logger.experiment.add_scalar("Loss/Test", avg_loss.detach())
+        self.logger.experiment.add_scalar("Acc/Test", correct/total)
 
 def resnet(**kwargs):
     """
