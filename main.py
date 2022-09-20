@@ -1,5 +1,6 @@
 from Models import LightningResnet
-from Utils import Cifar10DataModule
+from torch.utils.data import DataLoader
+from Utils import Cifar10DataModule, get_cifar_sets
 from pytorch_lightning import Trainer
 
 BATCH_SIZE = 100
@@ -11,6 +12,5 @@ if __name__ == '__main__':
     trainer = Trainer(gpus=2, auto_select_gpus=True, fast_dev_run=True, enable_progress_bar=True, max_epochs=MAX_EPOCHS)
     resnet = LightningResnet(depth=20, num_classes=10, block_name='BasicBlock')
     trainer.fit(model=resnet, datamodule=data_module)
-    trainer.test()
-
+    trainer.test(datamodule=data_module)
 
