@@ -5,7 +5,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 BATCH_SIZE = 100
 MAX_EPOCHS = 100
-DATALOADER_WORKERS = 32
+DATALOADER_WORKERS = 1
 
 if __name__ == '__main__':
     dir = '*/'
