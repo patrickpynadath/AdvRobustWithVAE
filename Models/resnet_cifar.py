@@ -220,7 +220,7 @@ class LightningResnet(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = SGD(self.model.parameters(), lr=.001)
         lr_scheduler = ExponentialLR(optimizer, .9)
-        return {'Optimizer' : optimizer, 'lr_scheduler' : lr_scheduler}
+        return {'optimizer' : optimizer, 'lr_scheduler' : lr_scheduler}
 
     def test_step(self, batch, batch_idx):
         return self.validation_step(batch, batch_idx)
