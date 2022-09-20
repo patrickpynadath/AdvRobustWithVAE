@@ -1,11 +1,16 @@
 from __future__ import absolute_import
 
+import torch
+
 '''
 This file is from: https://raw.githubusercontent.com/bearpaw/pytorch-classification/master/models/cifar/resnet.py
 by Wei Yang
 '''
 import torch.nn as nn
+import torch.nn.functional as F
 import math
+import pytorch_lightning as pl
+from torch.optim import SGD
 
 
 __all__ = ['resnet']
@@ -101,7 +106,7 @@ class ResNet(nn.Module):
             n = (depth - 2) // 9
             block = Bottleneck
         else:
-            raise ValueError('block_name shoule be Basicblock or Bottleneck')
+            raise ValueError('block_name should be be Basicblock or Bottleneck')
 
 
         self.inplanes = 16
@@ -155,6 +160,76 @@ class ResNet(nn.Module):
 
         return x
 
+class LightningResnet(pl.LightningModule):
+    def __init__(self, depth, num_classes, block_name):
+        super().__init__()
+        self.model = ResNet(depth, num_classes, block_name)
+        self.save_hyperparameters('depth', 'block_name')
+
+    def forward(self, x : torch.Tensor) -> torch.Tensor:
+        return self.model(x)
+
+    def training_step(self, batch, batch_idx):
+        data, target = batch
+        outputs = self(data)
+        pred = torch.argmax(outputs, dim=1)
+        loss = F.cross_entropy(outputs, target)
+        num_correct = sum([1 if pred[i].item() == target[i].item() else 0 for i in range(len(target))])
+        total = len(target)
+        batch_dct = {
+            'loss' : loss,
+            'correct' : num_correct,
+            'total' : total
+        }
+        return batch_dct
+
+    def training_epoch_end(self, outputs):
+        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        correct = sum(x["correct"] for x in outputs)
+        total = sum([x['total'] for x in outputs])
+        tensorboard_logs = {"train_loss" : avg_loss, "train_accuracy" : correct/total}
+        epoch_dct = {
+            'loss': avg_loss.detach(),
+            'log' : tensorboard_logs
+        }
+        return epoch_dct
+
+    def validation_step(self, batch, batch_idx):
+        data, target = batch
+        outputs = self(data)
+        loss = F.cross_entropy(outputs, target)
+        pred = torch.argmax(outputs, dim=1)
+        num_correct = sum([1 if pred[i].item() == target[i].item() else 0 for i in range(len(target))])
+        total = len(target)
+        batch_dct = {
+            'val_loss': loss.detach(),
+            'correct': num_correct,
+            'total': total
+        }
+        return batch_dct
+
+    def validation_epoch_end(self, outputs):
+        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+        correct = sum(x["correct"] for x in outputs)
+        total = sum([x['total'] for x in outputs])
+        tensorboard_logs = {"loss": avg_loss, "train_accuracy": correct / total}
+        epoch_dct = {
+            'val_loss': avg_loss.detach(),
+            'log': tensorboard_logs
+        }
+        return epoch_dct
+
+    def configure_optimizers(self):
+        return SGD(self.model.parameters(), lr=.001)
+
+    def test_step(self, batch, batch_idx):
+        return self.validation_step(batch, batch_idx)
+
+    def test_epoch_end(self, outputs):
+        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+        correct = sum(x["correct"] for x in outputs)
+        total = sum([x['total'] for x in outputs])
+        self.log_dict({'test_loss' : avg_loss, 'test_accuracy' : correct/total})
 
 def resnet(**kwargs):
     """
