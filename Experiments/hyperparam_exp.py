@@ -7,11 +7,30 @@ import optuna
 import torch
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
-import os
-
+from Training import NatTrainer
 # A bit shoddy, but hardcoding the device to use -- keeping until I
 # find a better way to pass the device to the objective
 DEVICE = "cuda"
+
+
+def sanity_check():
+    epochs = 150
+    train_set, test_set = get_cifar_sets()
+    train_loader = DataLoader(train_set, batch_size=256, shuffle=True)
+    test_loader = DataLoader(test_set, batch_size=256, shuffle=False)
+    resnet = ResNet(depth=110, num_classes=10, block_name='BasicBlock')
+    trainer = NatTrainer(model=resnet,
+                         train_loader=train_loader,
+                         test_loader=test_loader,
+                         device=DEVICE,
+                         optimizer='sgd',
+                         lr=.1,
+                         log_dir=f"../ExperimentLogging/HyperParamMetrics/salman_param",
+                         use_tensorboard=True,
+                         use_step_lr=True,
+                         lr_schedule_step=10,
+                         lr_schedule_gamma=.1)
+    trainer.training_loop(epochs)
 
 
 def objective_clf(trial: optuna.trial.Trial):
@@ -24,8 +43,8 @@ def objective_clf(trial: optuna.trial.Trial):
 
     block_name = trial.suggest_categorical("block_name", ["BasicBlock", "BottleNeck"])
     optimizer_name = trial.suggest_categorical("optimizer_name", ["adam", "sgd"])
-    start_lr = trial.suggest_float("starting_lr", 1e-6, .1)
-    lr_gamma = trial.suggest_float("lr_gamma", 1e-6, .9)
+    start_lr = trial.suggest_float("starting_lr", .01, .4)
+    lr_gamma = trial.suggest_float("lr_gamma", .5, .9)
     lr_step_size = trial.suggest_int("lr_step", 1, 1000)
     criterion = torch.nn.CrossEntropyLoss()
     depth = 110
@@ -143,6 +162,7 @@ def run_hyperparam_vae():
 
 
 def run_hyperparam_clf():
+    # first, testing out the hyperparameters they used -- sanity check
     study = optuna.create_study(direction="maximize")
     study.optimize(objective_clf, n_trials=1)
     return study.best_params, study.best_value
