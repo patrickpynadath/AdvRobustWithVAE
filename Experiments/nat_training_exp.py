@@ -1,297 +1,215 @@
-from Training.train_natural import NatTrainer, NatTrainerSmoothVAE
-from Training.train_vae import train_vae
-from Tests.classifier_test import ClassifierTest
-from Models import simple_conv_net, simple_classifier, \
-    pixelcnn_classifier, resnet_cifar, resnet, Smooth, \
-    SmoothVAE_Latent, SmoothVAE_Sample, SmoothVAE_PreProcess, VampVAE, PixelCNN
-
-from Training.train_pixelcnn import train_pixel_cnn
-
-import datetime
-import torchvision.transforms as transforms
-import torchvision
-import torch
-import torch.nn as nn
-import torch.optim as optim
+from Experiments.base_exp import BaseExp
 
 
+class AdvRobustnessNaturalTraining(BaseExp):
 
-class Adv_Robustness_NaturalTraining:
-    def __init__(self,
-                 training_logdir, # directory where tensorboard logs for training will go, gets written by NatTrainer
-                 hyperparam_logdir, # directory where hyperparam data will be written
-                 lr,
-                 batch_size,
-                 device):
-        """
-        :param training_logdir: directory to put training metrics, gets passed to NatTrainer object
-        :param hyperparam_logdir: directory to put data for different hyperparams, written directly in this class
-        :param lr: learning rate for all classifiers trained
-        :param batch_size: batch size for training
-        :param device: device to send models and tensors to
-        """
+    def adv_rob_base_clf(self,
+                         net_depth,
+                         clf_epochs,
+                         adv_norms,
+                         adv_type,
+                         use_step_lr,
+                         lr_schedule_step,
+                         lr_schedule_gamma,
+                         block_name="BasicBlock",
+                         batch_size=100,
+                         optimizer='adam',
+                         lr=.01,
+                         adv_steps=10,
+                         num_attacks=1000,
+                         dataset_name='test'):
+        resnet_clf = self.get_trained_resnet(net_depth=net_depth,
+                                             block_name=block_name,
+                                             batch_size=batch_size,
+                                             optimizer=optimizer,
+                                             lr=lr,
+                                             epochs=clf_epochs,
+                                             use_step_lr=use_step_lr,
+                                             lr_schedule_step=lr_schedule_step,
+                                             lr_schedule_gamma=lr_schedule_gamma)
 
-
-        # getting the training and test loaders
-        date_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        self.training_logdir = training_logdir + f"/{date_str}/"
-        self.hyperparam_logdir = hyperparam_logdir + f"/{date_str}/"
-        self.batch_size = batch_size
-
-        transform = transforms.Compose(
-            [transforms.ToTensor()])
-        root_dir = r'*/'
-        trainset = torchvision.datasets.CIFAR10(root=root_dir, train=True,
-                                                download=True, transform=transform)
-
-        trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                                  shuffle=True, num_workers=2)
-
-        testset = torchvision.datasets.CIFAR10(root=root_dir, train=False,
-                                               download=True, transform=transform)
-
-        testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
-                                                 shuffle=False, num_workers=2)
-        classes = ('plane', 'car', 'bird', 'cat',
-                   'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-        self.num_classes = len(classes)
-        self.trainset = trainset
-        self.trainloader = trainloader
-        self.testset = testset
-        self.testloader = testloader
-        self.device = device
-        self.lr = lr
-
-
-    def adv_rob_baseclf(self,
-                        clf_epochs,
-                        adv_type,
-                        adv_norms,
-                        adv_steps,
-                        num_attacks):
-        label = 'resnet50'
-        base_clf = resnet(depth=110, num_classes=10).to(self.device)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(base_clf.parameters(), lr=self.lr)
-        trainer = NatTrainer(model = base_clf,
-                             trainloader= self.trainloader,
-                             testloader= self.testloader,
-                             device = self.device,
-                             optimizer = optimizer,
-                             criterion = criterion,
-                             log_dir = self.training_logdir,
-                             use_tensorboard=True)
-        trainer.training_loop(clf_epochs, label)
-
-        adv_tester = ClassifierTest(model = base_clf,
-                                    testloader = self.testloader,
-                                    device = self.device,
-                                    batch_size = self.batch_size)
-        nat_acc = adv_tester.test_clean()
-        adv_accs = adv_tester.test_adv(adversary_type=adv_type,
-                                       attack_eps_values=adv_norms,
-                                       steps = adv_steps,
-                                       num_attacks=num_attacks)
-        return nat_acc, adv_accs, label
+        nat_acc, adv_accuracies = self.get_accuracies(clf=resnet_clf,
+                                                      adv_norms=adv_norms,
+                                                      adv_type=adv_type,
+                                                      adv_steps=adv_steps,
+                                                      num_attacks=num_attacks,
+                                                      dataset_name=dataset_name)
+        return nat_acc, adv_accuracies
 
     def adv_rob_smoothclf(self,
                           clf_epochs,
+                          net_depth,
                           smoothing_sigma,
-                          smoothing_num_samples,
-                          adv_type,
                           adv_norms,
-                          adv_steps,
-                          num_attacks):
+                          adv_type,
+                          use_step_lr,
+                          lr_schedule_step,
+                          lr_schedule_gamma,
+                          clf_batch_size=100,
+                          block_name="BasicBlock",
+                          optimizer='adam',
+                          lr=.01,
+                          m_train=10,
+                          adv_steps=10,
+                          num_attacks=1000,
+                          dataset_name='test'):
         """
+        :param lr_schedule_gamma:
+        :param use_step_lr:
+        :param lr_schedule_step:
+        :param dataset_name:
+        :param net_depth:
+        :param block_name:
+        :param m_train:
+        :param lr:
+        :param optimizer:
+        :param clf_batch_size:
         :param clf_epochs: epochs to train classifier with
         :param smoothing_sigma: smoothing value for randomized smoothing procedure
-        :param smoothing_num_samples: number of samples to use for randomized smoothing procedure
         :param adv_type: 'l2' or 'linf'
         :param adv_norms: list of max norms for PGD attack
         :param adv_steps: number of steps to use for PGD attack
         :param num_attacks: number of adversarial examples to evaluate trained model against
         :return: natural accuracy of model, list of adversarial robustness, and label of model
         """
-        label= f"resnet110_smooth_sigma_{round(smoothing_sigma, 3)}"
-        base_clf = resnet(depth=110, num_classes=10).to(self.device)
-        smooth_clf = Smooth(base_classifier=base_clf,
-                            sigma = smoothing_sigma,
-                            device = self.device,
-                            num_samples= smoothing_num_samples,
-                            num_classes=self.num_classes)
-        optimizer = optim.SGD(smooth_clf.base_classifier.parameters(), lr = self.lr)
-        criterion = nn.CrossEntropyLoss()
-        trainer = NatTrainer(model = smooth_clf,
-                             trainloader = self.trainloader,
-                             testloader= self.testloader,
-                             device = self.device,
-                             criterion = criterion,
-                             optimizer = optimizer,
-                             log_dir = self.training_logdir,
-                             use_tensorboard=True)
-        trainer.training_loop(clf_epochs, label= f"resnet110_smooth_sigma_{round(smoothing_sigma, 3)}")
-        adv_tester = ClassifierTest(model = smooth_clf,
-                                    testloader=self.testloader,
-                                    device = self.device,
-                                    batch_size= self.batch_size)
-        nat_acc = adv_tester.test_clean()
-        adv_accs = adv_tester.test_adv(adversary_type=adv_type,
-                                       attack_eps_values=adv_norms,
-                                       steps = adv_steps,
-                                       num_attacks=num_attacks)
-        return nat_acc, adv_accs, label
-
-    def adv_rob_smoothvae_preprocess(self,
-                                      clf_epochs,
-                                      smoothing_num_samples,
-                                      vae_img_size,
-                                      vae_channel_num,
-                                      vae_kern_num,
-                                      vae_z_size,
-                                      vae_epochs,
-                                      adv_type,
-                                      adv_norms,
-                                      adv_steps,
-                                      num_attacks,
-                                      vae_beta=1):
-        base_clf = resnet(depth=110, num_classes=10).to(self.device)
-        label = f"resnet110_smooth_sigma_VAE_PreProcess"
-
-        vae = VampVAE(in_channels=3, latent_dim=100, img_size=32)
-        if vae_epochs != 0:
-            train_vae(model=vae,
-                      data_loader=self.trainloader,
-                      epochs=vae_epochs)
-        smoothVAE_clf = SmoothVAE_PreProcess(base_classifier=base_clf,
-                                             sigma=0,
-                                             trained_VAE=vae,
-                                             device=self.device,
-                                             num_samples=smoothing_num_samples,
-                                             num_classes=self.num_classes)
-        optimizer = optim.SGD(params=base_clf.parameters(), lr=self.lr)
-        criterion = nn.CrossEntropyLoss()
-        trainer = NatTrainer(model=smoothVAE_clf,
-                                      trainloader=self.trainloader,
-                                      testloader=self.testloader,
-                                      device=self.device,
-                                      optimizer=optimizer,
-                                      criterion=criterion,
-                                      log_dir=self.training_logdir,
-                                      use_tensorboard=True)
-        trainer.training_loop(clf_epochs, label)
-        adv_tester = ClassifierTest(model=smoothVAE_clf,
-                                    testloader=self.testloader,
-                                    device=self.device,
-                                    batch_size=self.batch_size)
-        nat_acc = adv_tester.test_clean()
-        adv_accs = adv_tester.test_adv(adversary_type=adv_type,
-                                       attack_eps_values=adv_norms,
-                                       steps=adv_steps,
-                                       num_attacks=num_attacks)
-        return nat_acc, adv_accs, smoothVAE_clf.label
+        smooth_resnet = self.get_trained_smooth_resnet(net_depth=net_depth,
+                                                       block_name=block_name,
+                                                       m_train=m_train,
+                                                       batch_size=clf_batch_size,
+                                                       optimizer=optimizer,
+                                                       lr=lr,
+                                                       epochs=clf_epochs,
+                                                       smoothing_sigma=smoothing_sigma,
+                                                       use_step_lr=use_step_lr,
+                                                       lr_schedule_step=lr_schedule_step,
+                                                       lr_schedule_gamma=lr_schedule_gamma)
+        nat_acc, adv_accuracies = self.get_accuracies(clf=smooth_resnet,
+                                                      adv_norms=adv_norms,
+                                                      adv_type=adv_type,
+                                                      adv_steps=adv_steps,
+                                                      num_attacks=num_attacks,
+                                                      dataset_name=dataset_name)
+        return nat_acc, adv_accuracies
 
     # need to get VAE as well, so need to also pass those hyperparam in
     def adv_rob_smoothvae_clf(self,
                               clf_epochs,
-                              smoothingVAE_sigma,
-                              smoothing_num_samples,
-                              smoothVAE_version,
-                              vae_loss_coef,
                               vae_epochs,
-                              adv_type,
+                              net_depth,
+                              smoothing_vae_sigma,
                               adv_norms,
-                              adv_steps,
-                              num_attacks,
-                              vae_beta=1):
-        """
-        :param clf_epochs: epochs to use for classifier
-        :param smoothingVAE_sigma: smoothing value for SmoothVAE
-        :param smoothing_num_samples: number of samples to use for smoothing
-        :param smoothVAE_version: 'latent' or 'sample'
-        :param vae_loss_coef: determines how much to weight VAE component of loss function
-        :param vae_img_size: dimensions for VAE input
-        :param vae_channel_num: number of channels for VAE input
-        :param vae_kern_num: number of kernels to use for VAE input
-        :param vae_z_size: dimension of latent space
-        :param vae_epochs: epochs to train VAE model
-        :param with_vae_grad: switch for allowing VAE param to be updated during backprop
-        :param adv_type: 'l2' or 'linf'
-        :param adv_norms: list of max norms to use for PGD attack
-        :param adv_steps: steps for PGD attack
-        :param num_attacks: how many attacks to evaluate model against
-        :return: natural accuracy, list of adversarial robustness, and model label
-        """
+                              adv_type,
+                              use_step_lr,
+                              lr_schedule_step,
+                              lr_schedule_gamma,
+                              m_train=10,
+                              smooth_vae_version='sample',
+                              vae_img_size=32,
+                              vae_channel_num=3,
+                              vae_kern_num=32,
+                              vae_z_size=100,
+                              adv_steps=10,
+                              num_attacks=1000,
+                              block_name='BasicBlock',
+                              dataset_name='test',
+                              vae_beta=1,
+                              optimizer='adam',
+                              vae_batch_size=32,
+                              clf_batch_size=100,
+                              clf_lr=.01):
+        resnet_smooth_vae = self.get_trained_smooth_vae_resnet(net_depth=net_depth,
+                                                               block_name=block_name,
+                                                               img_size=vae_img_size,
+                                                               num_channel=vae_channel_num,
+                                                               vae_kern_num=vae_kern_num,
+                                                               m_train=m_train,
+                                                               batch_size_clf=clf_batch_size,
+                                                               batch_size_vae=vae_batch_size,
+                                                               vae_latent_size=vae_z_size,
+                                                               vae_beta=vae_beta,
+                                                               optimizer=optimizer,
+                                                               lr_clf=clf_lr,
+                                                               epochs_clf=clf_epochs,
+                                                               epochs_vae=vae_epochs,
+                                                               smoothing_sigma=smoothing_vae_sigma,
+                                                               smooth_vae_version=smooth_vae_version,
+                                                               use_vae_param=False,
+                                                               use_step_lr=use_step_lr,
+                                                               lr_schedule_step=lr_schedule_step,
+                                                               lr_schedule_gamma=lr_schedule_gamma)
+        nat_acc, adv_accuracies = self.get_accuracies(clf=resnet_smooth_vae,
+                                                      adv_norms=adv_norms,
+                                                      adv_type=adv_type,
+                                                      adv_steps=adv_steps,
+                                                      num_attacks=num_attacks,
+                                                      dataset_name=dataset_name)
+        return nat_acc, adv_accuracies
 
-        base_clf = resnet(depth=110, num_classes=10).to(self.device)
-        label = f"resnet110_smoothVAE_{smoothVAE_version}_sigma_{smoothingVAE_sigma}_VAE_beta_{vae_beta}"
-        vae = VampVAE(in_channels=3, latent_dim=100, img_size=32).to(self.device)
-        if vae_epochs != 0:
-            train_vae(model=vae,
-                      data_loader=self.trainloader,
-                      epochs=vae_epochs)
-        if smoothVAE_version =='latent':
-            smoothVAE_clf = SmoothVAE_Latent(base_classifier=base_clf,
-                                             sigma = smoothingVAE_sigma,
-                                             trained_VAE=vae,
-                                             device=self.device,
-                                             num_samples = smoothing_num_samples,
-                                             num_classes=self.num_classes,
-                                             loss_coef=vae_loss_coef)
-        elif smoothVAE_version == 'sample':
-            smoothVAE_clf = SmoothVAE_Sample(base_classifier=base_clf,
-                                             sigma=smoothingVAE_sigma,
-                                             trained_VAE=vae,
-                                             device=self.device,
-                                             num_samples=smoothing_num_samples,
-                                             num_classes=self.num_classes,
-                                             loss_coef=vae_loss_coef)
+    def get_accuracies(self,
+                       clf,
+                       adv_norms,
+                       adv_type,
+                       adv_steps,
+                       num_attacks,
+                       dataset_name):
+        nat_acc = self.eval_clf_clean(model=clf)
+        adv_accuracies = []
+        for attack_eps in adv_norms:
+            adv_accuracy = self.eval_clf_adv(model=clf,
+                                             adversary_type=adv_type,
+                                             attack_eps_value=attack_eps,
+                                             steps=adv_steps,
+                                             num_attacks=num_attacks,
+                                             dataset_name=dataset_name)
+            adv_accuracies.append(adv_accuracy)
+        return nat_acc, adv_accuracies
 
 
-        optimizer = optim.SGD(smoothVAE_clf.base_classifier.parameters(), lr = self.lr)
+def run_adv_rob_exp(training_logdir,
+                    exp_logdir,
+                    device,
+                    resnet_depth,
+                    clf_epochs,
+                    vae_epochs,
+                    use_step_lr,
+                    lr_schedule_step,
+                    lr_schedule_gamma,
+                    train_set=None,
+                    test_set=None):
+    linf_norms = [1 / 255, 2 / 255, 4 / 255, 8 / 255]
+    smoothing_sigmas = [1 / 255, 2 / 255, 4 / 255, 8 / 255, 16 / 255, 32 / 255, 64 / 255, 128 / 255]
+    exp = AdvRobustnessNaturalTraining(training_logdir=training_logdir,
+                                       exp_logdir=exp_logdir,
+                                       device=device,
+                                       train_set=train_set,
+                                       test_set=test_set)
+    exp.adv_rob_base_clf(net_depth=resnet_depth,
+                         clf_epochs=clf_epochs,
+                         adv_norms=linf_norms,
+                         adv_type='linf',
+                         use_step_lr=use_step_lr,
+                         lr_schedule_gamma=lr_schedule_gamma,
+                         lr_schedule_step=lr_schedule_step)
+    for sigma in smoothing_sigmas:
+        exp.adv_rob_smoothclf(net_depth=resnet_depth,
+                              clf_epochs=clf_epochs,
+                              adv_norms=linf_norms,
+                              adv_type='linf',
+                              smoothing_sigma=sigma,
+                              use_step_lr=use_step_lr,
+                              lr_schedule_gamma=lr_schedule_gamma,
+                              lr_schedule_step=lr_schedule_step)
 
-        criterion = nn.CrossEntropyLoss()
-        trainer = NatTrainerSmoothVAE(model = smoothVAE_clf,
-                                      trainloader=self.trainloader,
-                                      testloader=self.testloader,
-                                      device=self.device,
-                                      optimizer=optimizer,
-                                      criterion = criterion,
-                                      log_dir=self.training_logdir,
-                                      use_tensorboard=True)
-        trainer.training_loop(clf_epochs, label)
-        adv_tester = ClassifierTest(model = smoothVAE_clf,
-                                    testloader=self.testloader,
-                                    device=self.device,
-                                    batch_size=self.batch_size)
-        nat_acc = adv_tester.test_clean()
-        adv_accs = adv_tester.test_adv(adversary_type=adv_type,
-                                       attack_eps_values=adv_norms,
-                                       steps=adv_steps,
-                                       num_attacks=num_attacks)
-        return nat_acc, adv_accs, label
-
-    def adv_rob_pixelcnn_clf(self, epochs, adv_type, adv_norms, adv_steps, num_attacks):
-        pxcnn = PixelCNN().to(device=self.device)
-        train_pixel_cnn(1, pxcnn, self.device, self.trainloader)
-        clf = pixelcnn_classifier('pxl_cnn_clf_poc', pxcnn, self.device)
-        clf_trainer = NatTrainer(model = clf,
-                                 trainloader=self.trainloader,
-                                 testloader=self.testloader,
-                                 device=self.device,
-                                 optimizer=optim.SGD(params=clf.classifier.parameters(), lr=self.lr),
-                                 criterion=nn.CrossEntropyLoss(),
-                                 log_dir=self.training_logdir,
-                                 use_tensorboard=True)
-
-        clf_trainer.training_loop(50)
-        adv_tester = ClassifierTest(model=clf,
-                                    testloader=self.testloader,
-                                    device=self.device,
-                                    batch_size=self.batch_size)
-        nat_acc = adv_tester.test_clean()
-        adv_accs = adv_tester.test_adv(adversary_type=adv_type,
-                                       attack_eps_values=adv_norms,
-                                       steps=adv_steps,
-                                       num_attacks=num_attacks)
-        return nat_acc, adv_accs, clf.label
-
+    for smooth_vae_type in ['sample', 'latent']:
+        for sigma in smoothing_sigmas:
+            exp.adv_rob_smoothvae_clf(clf_epochs=clf_epochs,
+                                      vae_epochs=vae_epochs,
+                                      net_depth=resnet_depth,
+                                      smoothing_vae_sigma=sigma,
+                                      adv_norms=linf_norms,
+                                      adv_type='linf',
+                                      smooth_vae_version=smooth_vae_type,
+                                      use_step_lr=use_step_lr,
+                                      lr_schedule_gamma=lr_schedule_gamma,
+                                      lr_schedule_step=lr_schedule_step)
+    return

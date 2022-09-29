@@ -14,6 +14,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from Models.PixelCNN import PixelCNN, discretized_mix_logistic_loss
 from tqdm import tqdm
+
+
 def train_pixel_cnn(epochs, net : PixelCNN, device : str, trainloader : DataLoader):
 
 

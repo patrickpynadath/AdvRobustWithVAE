@@ -17,7 +17,6 @@ class nin(nn.Module):
         og_x = x
         # assumes pytorch ordering
         """ a network in network layer (1x1 CONV) """
-        # TODO : try with original ordering
         x = x.permute(0, 2, 3, 1)
         shp = [int(y) for y in x.size()]
         out = self.lin_a(x.contiguous().view(shp[0]*shp[1]*shp[2], shp[3]))

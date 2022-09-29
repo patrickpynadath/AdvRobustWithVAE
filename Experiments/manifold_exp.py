@@ -1,114 +1,69 @@
-import torch
-from Utils import get_cifar_sets
-import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-import numpy as np
-from Adversarial import PGD_L2
-import torchattacks
-from Models import VAE, simple_conv_net, PixelCNN, discretized_mix_logistic_loss
-from Training import train_vae, NatTrainer, train_pixel_cnn
-from torch.optim import SGD
-from torch.nn import CrossEntropyLoss
+from Models import PixelCNN, discretized_mix_logistic_loss
+from Training import train_pixel_cnn
+from Experiments.base_exp import BaseExp
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt
 
 
-class ManifoldModelingExp:
+def get_pxcnn_loss(px_cnn, inputs):
+    losses = []
+    for input_idx in range(len(inputs)):
+        current_input = inputs[input_idx]
+        current_input = current_input[None]
+        output = px_cnn(current_input)
+        loss = discretized_mix_logistic_loss(current_input, output)
+        losses.append(loss.cpu().detach().item())
+    return losses
 
+
+def get_vae_loss(vae, inputs):
+    reconstruction_losses = []
+    kl_losses = []
+    for input_idx in range(len(inputs)):
+        current_input = inputs[input_idx]
+        current_input = current_input[None]
+        (mean, logvar), reconstruction = vae(current_input)
+        reconstruction_loss = vae.reconstruction_loss(reconstruction, current_input)
+        kl_loss = vae.kl_divergence_loss(mean, logvar)
+        reconstruction_losses.append(reconstruction_loss.cpu().detach().item())
+        kl_losses.append(kl_loss.cpu().detach().item())
+    return {'reconstruction': reconstruction_losses, 'KL': kl_losses}
+
+
+class ManifoldModelingExp(BaseExp):
     def __init__(self,
-                 result_dir,
-                 lr,
-                 batch_size,
-                 device):
-        trainset, testset = get_cifar_sets()
-        self.trainset = trainset
-        self.testset = testset
-        self.result_dir = result_dir
-        self.lr = lr
-        self.batch_size = batch_size
-        self.device = device
+                 training_logdir,
+                 exp_logdir,
+                 device,
+                 train_set=None,
+                 test_set=None):
+        super().__init__(training_logdir,
+                         f'{exp_logdir}/ManifoldExp',
+                         device,
+                         train_set=train_set,
+                         test_set=test_set)
 
-    def get_trained_pixelnn(self, epochs):
+    def get_trained_pixel_cnn(self,
+                              epochs,
+                              batch_size=32):
         px_cnn = PixelCNN().to(self.device)
-        dataloader = DataLoader(self.trainset,batch_size=32)
-        train_pixel_cnn(epochs, px_cnn, self.device, dataloader)
+        train_loader = DataLoader(self.train_set,
+                                  batch_size=batch_size)
+        train_pixel_cnn(epochs,
+                        px_cnn,
+                        self.device,
+                        train_loader)
         return px_cnn
 
-    def get_adv_examples(self, trained_classifier, attack_eps, adversary_type, steps, num_attacks = 1000, dataset_name = 'train'):
-
-        if dataset_name == 'train':
-            dataset = self.trainset
-        elif dataset_name == 'test':
-            dataset = self.testset
-        samples_idx = np.random.randint(low=0, high=len(dataset), size=num_attacks)
-        original_im_dim = tuple([num_attacks]) + dataset[0][0].size()
-        original_im = torch.zeros(original_im_dim)
-        labels = torch.zeros(size=(num_attacks,))
-        for i, idx in enumerate(samples_idx):
-            original_im[i, :] = dataset[idx][0]
-            labels[i] = dataset[idx][1]
-        labels = labels.type(torch.LongTensor)
-        original_im, labels = original_im.to(self.device), labels.to(self.device)
-        attacks = torch.zeros_like(original_im).to(self.device)
-        if adversary_type == 'l2':
-            attacker = PGD_L2(trained_classifier, steps=steps, max_norm=attack_eps, device=self.device)
-            attacks.add(attacker.attack(original_im, labels))
-        elif adversary_type == 'linf':
-            attacker = torchattacks.PGD(trained_classifier, attack_eps, steps)
-            tmp = attacker(original_im, labels)
-            attacks +=tmp
-        return original_im, attacks
-
-    def get_pxcnn_loss(self, px_cnn, inputs):
-        losses = []
-        for input_idx in range(len(inputs)):
-            current_input = inputs[input_idx]
-            current_input = current_input[None]
-            output = px_cnn(current_input)
-            loss = discretized_mix_logistic_loss(current_input, output)
-            losses.append(loss.cpu().detach().item())
-        return losses
-
-    def get_vae_loss(self, vae, inputs):
-        reconstruction_losses = []
-        kl_losses = []
-        for input_idx in range(len(inputs)):
-            current_input = inputs[input_idx]
-            current_input = current_input[None]
-            (mean, logvar), reconstruction = vae(current_input)
-            reconstruction_loss = vae.reconstruction_loss(reconstruction, current_input)
-            kl_loss = vae.kl_divergence_loss(mean, logvar)
-            reconstruction_losses.append(reconstruction_loss.cpu().detach().item())
-            kl_losses.append(kl_loss.cpu().detach().item())
-        return {'reconstruction' : reconstruction_losses, 'KL' : kl_losses}
-
-
-    def get_trained_vanilla_vae(self, kernel_num, z_size, epochs):
-        vae = VAE(image_size=32,
-                  channel_num=3,
-                  kernel_num=kernel_num,
-                  z_size = z_size,
-                  device = self.device)
-        vae = vae.to(self.device)
-        train_vae(vae, DataLoader(self.trainset, self.batch_size), epochs)
-        return vae
-
-    def get_trained_clf(self, clf_lr, clf_epochs):
-        clf = simple_conv_net().to(self.device)
-        trainloader = DataLoader(self.trainset, batch_size=100)
-        testloader = DataLoader(self.testset, batch_size=100)
-        trainer = NatTrainer(clf, trainloader, testloader, self.device, SGD(clf.parameters(), clf_lr), CrossEntropyLoss(), log_dir=self.result_dir)
-        trainer.training_loop(clf_epochs)
-        return clf
-
-
-    def create_hist_vae_loss(self, tag, dataset_name, natural_data, attacked_data):
-
-
-        sw_dir = self.result_dir + f"/{tag}"
+    def create_hist_vae_loss(self,
+                             tag,
+                             dataset_name,
+                             natural_data,
+                             attacked_data):
+        sw_dir = self.exp_logdir + f"/{tag}"
         sw = SummaryWriter(log_dir=sw_dir)
-        # make the histograms
-        # how do I return it?
+
         f, a = plt.subplots(2, 2, figsize=(8, 10))
         f.suptitle(f"VAE Loss Analysis for {dataset_name}")
         ax = a[0, 0]
@@ -131,8 +86,12 @@ class ManifoldModelingExp:
         plt.close(f)
         pass
 
-    def create_hist_pxcnn_loss(self, tag, dataset_name, natural_data, attacked_data):
-        sw_dir = self.result_dir + f"/{tag}"
+    def create_hist_pxcnn_loss(self,
+                               tag,
+                               dataset_name,
+                               natural_data,
+                               attacked_data):
+        sw_dir = self.exp_logdir + f"/{tag}"
         sw = SummaryWriter(log_dir=sw_dir)
 
         f, a = plt.subplots(1, 2, figsize=(8, 10))
@@ -148,5 +107,56 @@ class ManifoldModelingExp:
 
         sw.add_figure(tag=tag, figure=f)
         plt.close(f)
-        pass
 
+    def single_exp_loop(self,
+                        use_step_lr,
+                        lr_schedule_step,
+                        lr_schedule_gamma,
+                        img_size=32,
+                        num_channel=3,
+                        kernel_num=32,
+                        latent_size=100,
+                        vae_beta=1,
+                        vae_epochs=100,
+                        pxcnn_epochs=100,
+                        num_samples=1000,
+                        net_depth=20,
+                        clf_epochs=100,
+                        clf_lr=.01,
+                        clf_optimizer='adam',
+                        clf_batch_size=100,
+                        block_name='BasicBlock',
+                        dataset_name='test',
+                        adv_steps=8,
+                        adv_type='l2',
+                        adv_eps=2 / 255):
+        vae = self.get_trained_vae(img_size, num_channel, kernel_num, latent_size, vae_beta, self.device, vae_epochs)
+        px_cnn = self.get_trained_pixel_cnn(epochs=pxcnn_epochs)
+        trained_resnet = self.get_trained_resnet(net_depth=net_depth,
+                                                 block_name=block_name,
+                                                 batch_size=clf_batch_size,
+                                                 optimizer=clf_optimizer,
+                                                 lr=clf_lr,
+                                                 epochs=clf_epochs,
+                                                 use_step_lr=use_step_lr,
+                                                 lr_schedule_step=lr_schedule_step,
+                                                 lr_schedule_gamma=lr_schedule_gamma)
+        original_images, attacked_images, labels = self.get_adv_examples(trained_clf=trained_resnet,
+                                                                         attack_eps=adv_eps,
+                                                                         adversary_type=adv_type,
+                                                                         steps=adv_steps,
+                                                                         num_attacks=num_samples,
+                                                                         dataset_name=dataset_name)
+        vae_nat_data = get_vae_loss(vae, original_images)
+        vae_adv_data = get_vae_loss(vae, attacked_images)
+        pxcnn_loss_original = get_pxcnn_loss(px_cnn, original_images)
+        pxcnn_loss_adv = get_pxcnn_loss(px_cnn, attacked_images)
+        self.create_hist_vae_loss(tag=vae.label,
+                                  dataset_name=dataset_name,
+                                  natural_data=vae_nat_data,
+                                  attacked_data=vae_adv_data)
+        self.create_hist_pxcnn_loss(tag=px_cnn.label,
+                                    dataset_name=dataset_name,
+                                    natural_data=pxcnn_loss_original,
+                                    attacked_data=pxcnn_loss_adv)
+        return

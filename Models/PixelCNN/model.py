@@ -6,6 +6,7 @@ from torch.autograd import Variable
 from Models.PixelCNN.layers import *
 from Models.PixelCNN.utils import *
 import numpy as np
+from Utils import timestamp
 
 class PixelCNNLayer_up(nn.Module):
     def __init__(self, nr_resnet, nr_filters, resnet_nonlinearity):
@@ -56,14 +57,14 @@ class PixelCNNLayer_down(nn.Module):
          
 
 class PixelCNN(nn.Module):
-    def __init__(self, nr_resnet=5, nr_filters=80, nr_logistic_mix=10, 
+    def __init__(self, nr_resnet=5, nr_filters=80, nr_logistic_mix=10,
                     resnet_nonlinearity='concat_elu', input_channels=3):
         super(PixelCNN, self).__init__()
         if resnet_nonlinearity == 'concat_elu' : 
             self.resnet_nonlinearity = lambda x : concat_elu(x)
         else : 
             raise Exception('right now only concat elu is supported as resnet nonlinearity.')
-
+        self.label = f'pixelCNN_{timestamp()}'
         self.nr_filters = nr_filters
         self.input_channels = input_channels
         self.nr_logistic_mix = nr_logistic_mix

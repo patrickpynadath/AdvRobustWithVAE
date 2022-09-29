@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+from Utils import timestamp
 
 # source: https://github.com/SashaMalysheva/Pytorch-VAE
-class VAE(nn.Module):
+class Conv_VAE(nn.Module):
     def __init__(self, image_size, channel_num, kernel_num, z_size, device, var = 1, beta = 1):
         # configurations
         super().__init__()
@@ -14,7 +15,7 @@ class VAE(nn.Module):
         self.device = device
         self.var = var
         self.beta = beta
-        self.label = f"vae_latentsize_{z_size}_kernnum_{kernel_num}"
+        self.label = f"vae_latentsize_{z_size}_kernnum_{kernel_num}_{timestamp()}"
 
         # encoder
         self.encoder = nn.Sequential(
@@ -60,7 +61,19 @@ class VAE(nn.Module):
 
         # return the parameters of distribution of q given x and the
         # reconstructed image.
-        return (mean, logvar), x_reconstructed
+        return x_reconstructed
+
+    def project_z(self, z):
+        z_projected = self.project(z).view(
+            -1, self.kernel_num,
+            self.feature_size,
+            self.feature_size,
+        )
+        return z_projected
+
+    def get_mean_logvar(self, x):
+        encoded = self.encoder(x)
+        return self.q(encoded)
 
     # ==============
     # VAE components
@@ -78,10 +91,17 @@ class VAE(nn.Module):
         return eps.mul(std).add_(mean)
 
     def reconstruction_loss(self, x_reconstructed, x):
-        return nn.BCELoss(size_average=False)(x_reconstructed, x) / x.size(0)
+        return nn.MSELoss(size_average=False)(x_reconstructed, x) / x.size(0)
 
     def kl_divergence_loss(self, mean, logvar):
         return ((mean**2 + logvar.exp() - 1 - logvar) / 2).mean()
+
+    def loss_fn(self, x, targets=None):
+        recon = self.forward(x)
+        mean, logvar = self.get_mean_logvar(x)
+        kl_loss = self.kl_divergence_loss(mean, logvar)
+        recon_loss = self.reconstruction_loss(recon, x)
+        return recon_loss + self.beta * kl_loss
 
     # =====
     # Utils

@@ -4,6 +4,8 @@ import torch
 from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
+import datetime
+
 
 # code borrowed from https://github.com/SashaMalysheva/Pytorch-VAE/blob/master/utils.py
 
@@ -43,7 +45,8 @@ def load_checkpoint(model, model_dir):
     epoch = checkpoint['epoch']
     return epoch
 
-def requires_grad_(model:torch.nn.Module, requires_grad:bool) -> None:
+
+def requires_grad_(model: torch.nn.Module, requires_grad: bool) -> None:
     for param in model.parameters():
         param.requires_grad_(requires_grad)
 
@@ -81,11 +84,18 @@ def get_class_subsets(dataset):
         dataloader_dct[i] = class_subset
     return dataloader_dct
 
+
 def accuracies_to_dct(nat_acc, adv_accs, attack_norms, attack_type):
-    res = {'Nat Acc' : nat_acc}
+    res = {'Nat Acc': nat_acc}
     for i, acc in enumerate(adv_accs):
         key = f'hparam/AdvAcc_{attack_type}_{round(attack_norms[i], 4)}'
         res[key] = acc
     return res
 
 
+def timestamp():
+    return datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
+def torch_to_numpy(x: torch.Tensor):
+    return x.cpu().detach().numpy()
