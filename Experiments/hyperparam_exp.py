@@ -32,7 +32,7 @@ def objective_clf(trial: optuna.trial.Trial):
                     num_classes=10,
                     block_name=block_name).to(DEVICE)
     hyperparam_tag = f"{optimizer_name}_startlr_{round(start_lr, 5)}_gamma_{round(lr_gamma, 5)}_step_{lr_step_size}"
-    sw = SummaryWriter(log_dir=f"../ExperimentLogging/HyperParamExp/{hyperparam_tag}")
+    sw = SummaryWriter(log_dir=f"../ExperimentLogging/HyperParamMetrics/{hyperparam_tag}")
     if optimizer_name == 'adam':
         optimizer = Adam(resnet.parameters(),
                          lr=start_lr)
@@ -92,7 +92,7 @@ def objective_vae(trial: optuna.trial.Trial):
     kernel_num = trial.suggest_int("kern_num", 8, 64)
     latent_size = trial.suggest_int("latent_size", 50, 200)
     vae = Conv_VAE(image_size=32, channel_num=3, kernel_num=kernel_num, z_size=latent_size, device=DEVICE, beta=beta)
-    sw = SummaryWriter(log_dir=f"../ExperimentLogging/HyperParamExp/{vae.label}")
+    sw = SummaryWriter(log_dir=f"../ExperimentLogging/HyperParamMetrics/{vae.label}")
     optimizer = SGD(vae.parameters(),
                     lr=3e-04,
                     weight_decay=1e-5)
