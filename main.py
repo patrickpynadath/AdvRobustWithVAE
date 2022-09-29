@@ -9,5 +9,5 @@ if __name__ == '__main__':
     exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
                   exp_logdir=HYPERPARAM_DIR,
                   device='cuda')
-    for model_name in ['cvae', 'vampvae', 'vae', 'vq_vae']:
+    for model_name in ['vampvae', 'vae', 'vq_vae']:
         exp.get_trained_vae(64, 150, model_name, latent_dim=100,in_channels=3)
