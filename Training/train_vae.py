@@ -124,16 +124,16 @@ class VAETrainer:
             if writer:
                 # logging training data
                 for key, value in train_epoch_res.items():
-                    writer.add_scalar(f"Training/{key}", value)
+                    writer.add_scalar(f"Training/{key}", value, epoch)
                 for key, value in val_epoch_res.items():
-                    writer.add_scalar(f"Val/{key}", value)
+                    writer.add_scalar(f"Val/{key}", value, epoch)
 
                 sampled_imgs_train = self.sample_reconstructions(mode='train')
-                writer.add_images("Generated/training_reconstruction", sampled_imgs_train)
+                writer.add_images("Generated/training_reconstruction", sampled_imgs_train, epoch)
                 sampled_imgs_test = self.sample_reconstructions(mode='test')
-                writer.add_images("Generated/test_reconstruction", sampled_imgs_test)
+                writer.add_images("Generated/test_reconstruction", sampled_imgs_test, epoch)
                 sampled_imgs_rand = self.sample_reconstructions('generate')
-                writer.add_images("Generated/random_samples", sampled_imgs_rand)
+                writer.add_images("Generated/random_samples", sampled_imgs_rand, epoch)
 
     def sample_reconstructions(self, mode):
         assert mode in ['train', 'test', 'generate']
