@@ -8,7 +8,6 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 import os
 
-os.chdir("../")
 # A bit shoddy, but hardcoding the device to use -- keeping until I
 # find a better way to pass the device to the objective
 DEVICE = "cuda"
