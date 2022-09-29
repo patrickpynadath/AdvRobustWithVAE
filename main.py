@@ -16,5 +16,5 @@ if __name__ == '__main__':
     print(os.curdir)
     conf = Configuration()
     autoencoder = AutoEncoder('cpu', conf)
-    autoencoder.load_state_dict(torch.load("/saved_models/model_ema_norm_he-et-al.pth"))
+    autoencoder.load_state_dict(torch.load("AdvRobustWithVAE/saved_models/model_ema_norm_he-et-al.pth"))
 
