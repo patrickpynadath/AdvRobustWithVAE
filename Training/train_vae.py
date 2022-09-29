@@ -6,8 +6,8 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 from Utils import timestamp, get_cifar_sets
 import yaml
-from torchvision.utils import make_grid
-
+import random
+import numpy as np
 
 
 import os
@@ -139,12 +139,12 @@ class VAETrainer:
         assert mode in ['train', 'test', 'generate']
         if mode == 'train':
             dataset = self.train_loader.dataset
-            sampled_idx = torch.randint(low=0, high=len(dataset), size=(num_img,))
+            sampled_idx = torch.Tensor(np.random.randint(0, high=len(dataset), size=num_img), dtype=torch.int32)
             sampled_imgs = self.model.generate(dataset[sampled_idx].to(self.device))
             return sampled_imgs
         elif mode == 'test':
             dataset = self.test_loader.dataset
-            sampled_idx = torch.randint(low=0, high=len(dataset), size=(num_img,))
+            sampled_idx = torch.Tensor(np.random.randint(0, high=len(dataset), size=num_img), dtype=torch.int32)
             sampled_imgs = self.model.generate(dataset[sampled_idx].to(self.device))
             return sampled_imgs
         elif mode == 'generate':
