@@ -1,4 +1,4 @@
-from Models import ResNet, Conv_VAE
+from Models import ResNet
 from Utils import get_cifar_sets
 from torch.utils.data import DataLoader
 from torch.optim import Adam, SGD
@@ -105,61 +105,61 @@ def objective_clf(trial: optuna.trial.Trial):
                 raise optuna.exceptions.TrialPruned()
     return val_acc
 
+#
+# def objective_vae(trial: optuna.trial.Trial):
+#     epochs = 100
+#     train_set, test_set = get_cifar_sets()
+#     train_loader = DataLoader(train_set, batch_size=100, shuffle=True)
+#     test_loader = DataLoader(test_set, batch_size=100, shuffle=False)
+#     beta = trial.suggest_float("vae_beta", .1, 1)
+#     kernel_num = trial.suggest_int("kern_num", 8, 64)
+#     latent_size = trial.suggest_int("latent_size", 50, 200)
+#     vae = Conv_VAE(image_size=32, channel_num=3, kernel_num=kernel_num, z_size=latent_size, device=DEVICE, beta=beta)
+#     vae = vae.to(DEVICE)
+#     sw = SummaryWriter(log_dir=f"../ExperimentLogging/HyperParamMetrics/{vae.label}")
+#     optimizer = SGD(vae.parameters(),
+#                     lr=3e-04,
+#                     weight_decay=1e-5)
+#
+#     for epoch in range(epochs):
+#         vae.train()
+#         recon_loss_epoc_train = 0
+#         datastream = tqdm(enumerate(train_loader), total=len(train_loader))
+#         for batch_idx, batch in datastream:
+#             inputs, labels = batch
+#             inputs = inputs.to(DEVICE)
+#             optimizer.zero_grad()
+#             reconstruction = vae(inputs)
+#             mean, logvar = vae.get_mean_logvar(inputs)
+#             reconstruction_loss = vae.reconstruction_loss(reconstruction, inputs)
+#             kl_divergence_loss = vae.kl_divergence_loss(mean, logvar)
+#             total_loss = reconstruction_loss - vae.beta * kl_divergence_loss
+#
+#             # backprop gradients from the loss
+#             recon_loss_epoc_train += reconstruction_loss.item()
+#             total_loss.backward()
+#             optimizer.step()
+#         sw.add_scalar("Train/ReconLoss", recon_loss_epoc_train, epoch)
+#
+#         with torch.no_grad():
+#             recon_loss_epoc_val = 0
+#             for batch_idx, batch in enumerate(test_loader):
+#                 inputs, labels = batch
+#                 inputs = inputs.to(DEVICE)
+#                 reconstruction = vae(inputs)
+#                 reconstruction_loss = vae.reconstruction_loss(reconstruction, inputs)
+#                 recon_loss_epoc_val += reconstruction_loss.item()
+#             sw.add_scalar("Val/ReconLoss", recon_loss_epoc_val, epoch)
+#             trial.report(recon_loss_epoc_val, epoch)
+#             if trial.should_prune():
+#                 raise optuna.exceptions.TrialPruned()
+#     return recon_loss_epoc_val
 
-def objective_vae(trial: optuna.trial.Trial):
-    epochs = 100
-    train_set, test_set = get_cifar_sets()
-    train_loader = DataLoader(train_set, batch_size=100, shuffle=True)
-    test_loader = DataLoader(test_set, batch_size=100, shuffle=False)
-    beta = trial.suggest_float("vae_beta", .1, 1)
-    kernel_num = trial.suggest_int("kern_num", 8, 64)
-    latent_size = trial.suggest_int("latent_size", 50, 200)
-    vae = Conv_VAE(image_size=32, channel_num=3, kernel_num=kernel_num, z_size=latent_size, device=DEVICE, beta=beta)
-    vae = vae.to(DEVICE)
-    sw = SummaryWriter(log_dir=f"../ExperimentLogging/HyperParamMetrics/{vae.label}")
-    optimizer = SGD(vae.parameters(),
-                    lr=3e-04,
-                    weight_decay=1e-5)
 
-    for epoch in range(epochs):
-        vae.train()
-        recon_loss_epoc_train = 0
-        datastream = tqdm(enumerate(train_loader), total=len(train_loader))
-        for batch_idx, batch in datastream:
-            inputs, labels = batch
-            inputs = inputs.to(DEVICE)
-            optimizer.zero_grad()
-            reconstruction = vae(inputs)
-            mean, logvar = vae.get_mean_logvar(inputs)
-            reconstruction_loss = vae.reconstruction_loss(reconstruction, inputs)
-            kl_divergence_loss = vae.kl_divergence_loss(mean, logvar)
-            total_loss = reconstruction_loss - vae.beta * kl_divergence_loss
-
-            # backprop gradients from the loss
-            recon_loss_epoc_train += reconstruction_loss.item()
-            total_loss.backward()
-            optimizer.step()
-        sw.add_scalar("Train/ReconLoss", recon_loss_epoc_train, epoch)
-
-        with torch.no_grad():
-            recon_loss_epoc_val = 0
-            for batch_idx, batch in enumerate(test_loader):
-                inputs, labels = batch
-                inputs = inputs.to(DEVICE)
-                reconstruction = vae(inputs)
-                reconstruction_loss = vae.reconstruction_loss(reconstruction, inputs)
-                recon_loss_epoc_val += reconstruction_loss.item()
-            sw.add_scalar("Val/ReconLoss", recon_loss_epoc_val, epoch)
-            trial.report(recon_loss_epoc_val, epoch)
-            if trial.should_prune():
-                raise optuna.exceptions.TrialPruned()
-    return recon_loss_epoc_val
-
-
-def run_hyperparam_vae():
-    study = optuna.create_study(direction='minimize')
-    study.optimize(objective_vae, n_trials=100)
-    return study.best_params, study.best_value
+# def run_hyperparam_vae():
+#     study = optuna.create_study(direction='minimize')
+#     study.optimize(objective_vae, n_trials=100)
+#     return study.best_params, study.best_value
 
 
 def run_hyperparam_clf():

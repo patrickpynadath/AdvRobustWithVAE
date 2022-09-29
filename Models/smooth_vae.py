@@ -1,5 +1,5 @@
 import torch
-from Models import Smooth, Conv_VAE
+from Models import Smooth
 
 
 class SmoothVAE_Latent(Smooth):
@@ -7,7 +7,7 @@ class SmoothVAE_Latent(Smooth):
     def __init__(self,
                  base_classifier: torch.nn.Module,
                  sigma: float,
-                 trained_VAE : Conv_VAE,
+                 trained_VAE,
                  device : str,
                  num_samples : int,
                  num_classes : int,

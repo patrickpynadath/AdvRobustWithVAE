@@ -4,8 +4,8 @@ from torch.utils.data import DataLoader
 import torchvision
 from Adversarial import PGD_L2
 from torchattacks import PGD
-from Models import Conv_VAE, SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth
-from Training import NatTrainer, Vanilla_VAE_Trainer
+from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth
+from Training import NatTrainer, VAETrainer
 
 
 class BaseExp:
@@ -47,24 +47,20 @@ class BaseExp:
 
     def get_trained_vae(self,
                         batch_size,
-                        img_size,
-                        num_channel,
-                        kernel_num,
-                        latent_size,
-                        vae_beta,
-                        epochs):
-        vae = Conv_VAE(img_size, num_channel, kernel_num, latent_size, self.device, beta=vae_beta).to(self.device)
+                        epochs,
+                        vae_model,
+                        **kwargs):
         train_loader, test_loader = self.get_loaders(batch_size)
-        if epochs != 0:
-            vae_trainer = Vanilla_VAE_Trainer(vae,
-                                              self.training_logdir,
-                                              device=self.device,
-                                              use_tensorboard=True,
-                                              # need to be able to track the training metrics ALWAYS
-                                              trainloader=train_loader,
-                                              testloader=test_loader)
-            vae_trainer.training_loop(epochs, 25)
-        return vae
+        vae_trainer = VAETrainer(self.device,
+                                 True,
+                                 train_loader,
+                                 test_loader,
+                                 self.training_logdir,
+                                 batch_size,
+                                 vae_model,
+                                 **kwargs)
+        vae_trainer.training_loop(epochs, 25)
+        return vae_trainer.model
 
     def get_trained_resnet(self,
                            net_depth,
