@@ -94,7 +94,7 @@ def objective_vae(trial: optuna.trial.Trial):
     beta = trial.suggest_float("vae_beta", .1, 1)
     kernel_num = trial.suggest_int("kern_num", 8, 64)
     latent_size = trial.suggest_int("latent_size", 50, 200)
-    vae = Conv_VAE(image_size=32, channel_num=3, kernel_num=kernel_num, z_size=latent_size, device=DEVICE, beta=beta)
+    vae = Conv_VAE(image_size=32, channel_num=3, kernel_num=kernel_num, z_size=latent_size, device=DEVICE, beta=beta).to(DEVICE)
     sw = SummaryWriter(log_dir=f"../ExperimentLogging/HyperParamMetrics/{vae.label}")
     optimizer = SGD(vae.parameters(),
                     lr=3e-04,
