@@ -52,8 +52,8 @@ class InputCenterLayer(torch.nn.Module):
         return input - means
 
 
-def get_normalize_layer():
-    return NormalizeLayer(_CIFAR10_MEAN, _CIFAR10_STDDEV)
+def get_normalize_layer(device):
+    return NormalizeLayer(_CIFAR10_MEAN, _CIFAR10_STDDEV, device)
 
 
 def get_input_center_layer():
