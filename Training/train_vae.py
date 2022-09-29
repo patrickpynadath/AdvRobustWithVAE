@@ -67,8 +67,6 @@ class VAETrainer:
         return val_loss
 
     def training_loop(self, num_epochs):
-        model = self.model
-        model.train()
         optimizer = optim.Adam(self.model.parameters(),
                                lr=self.params['LR'],
                                weight_decay=self.params['weight_decay'])
@@ -86,8 +84,9 @@ class VAETrainer:
             datastream = tqdm(enumerate(self.train_loader), total=len(self.train_loader), position=0, leave=True)
             train_epoch_res = {}
             val_epoch_res = {}
+            self.model.train()
             for batch_idx, batch in datastream:
-
+                optimizer.zero_grad()
                 step_res = self.training_step(batch, batch_idx, optimizer_idx=0)
                 loss = step_res['loss']
                 loss.backward()
