@@ -42,7 +42,8 @@ class VAETrainer:
     # IMPORTANT NOTE: does not yet support VAE's that have multiple optimizers
     def training_step(self, batch, batch_idx, optimizer_idx):
         real_img, labels = batch
-        self.device = real_img.device
+        real_img = real_img.to(self.device)
+        labels = labels.to(self.device)
 
         results = self.model.forward(real_img, labels=labels)
         train_loss = self.model.loss_function(*results,
@@ -54,7 +55,8 @@ class VAETrainer:
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
         real_img, labels = batch
-        self.device = real_img.device
+        real_img = real_img.to(self.device)
+        labels = labels.to(self.device)
 
         results = self.model.forward(real_img, labels = labels)
         val_loss = self.model.loss_function(*results,
