@@ -102,12 +102,10 @@ def objective_vae(trial: optuna.trial.Trial):
                     weight_decay=1e-5)
 
     for epoch in range(epochs):
-        print(epoch)
         vae.train()
         recon_loss_epoc_train = 0
         datastream = tqdm(enumerate(train_loader), total=len(train_loader))
         for batch_idx, batch in datastream:
-            print(batch_idx)
             inputs, labels = batch
             inputs = inputs.to(DEVICE)
             optimizer.zero_grad()
