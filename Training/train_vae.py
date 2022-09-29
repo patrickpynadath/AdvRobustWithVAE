@@ -131,7 +131,7 @@ class VAETrainer:
                 writer.add_images("Generated/training_reconstruction", sampled_imgs_train, epoch)
                 sampled_imgs_test = self.sample_reconstructions(mode='test')
                 writer.add_images("Generated/test_reconstruction", sampled_imgs_test, epoch)
-                if self.model_name != 'vq_vae':
+                if self.model_name != 'VQVAE':
                     sampled_imgs_rand = self.sample_reconstructions('generate')
                     writer.add_images("Generated/random_samples", sampled_imgs_rand, epoch)
 
