@@ -17,7 +17,7 @@ DEVICE = "cuda"
 def objective_clf(trial: optuna.trial.Trial):
     # summary writer
 
-    epochs = 100
+    epochs = 1
     train_set, test_set = get_cifar_sets()
     train_loader = DataLoader(train_set, batch_size=100, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=100, shuffle=False)
@@ -87,7 +87,7 @@ def objective_clf(trial: optuna.trial.Trial):
 
 
 def objective_vae(trial: optuna.trial.Trial):
-    epochs = 100
+    epochs = 1
     train_set, test_set = get_cifar_sets()
     train_loader = DataLoader(train_set, batch_size=100, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=100, shuffle=False)
@@ -139,9 +139,11 @@ def objective_vae(trial: optuna.trial.Trial):
 
 def run_hyperparam_vae():
     study = optuna.create_study(direction='minimize')
-    study.optimize(objective_vae, n_trials=100)
+    study.optimize(objective_vae, n_trials=1)
+    return study.best_params, study.best_value
 
 
 def run_hyperparam_clf():
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective_clf, n_trials=100)
+    study.optimize(objective_clf, n_trials=1)
+    return study.best_params, study.best_value
