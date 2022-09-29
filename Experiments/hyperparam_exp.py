@@ -46,7 +46,7 @@ def objective_clf(trial: optuna.trial.Trial):
     optimizer_name = trial.suggest_categorical("optimizer_name", ["adam", "sgd"])
     start_lr = trial.suggest_float("starting_lr", .01, .4)
     lr_gamma = trial.suggest_float("lr_gamma", .5, .9)
-    lr_step_size = trial.suggest_int("lr_step", 1, 1000)
+    lr_step_size = trial.suggest_int("lr_step", 10, 50)
     criterion = torch.nn.CrossEntropyLoss()
     depth = 110
     resnet = ResNet(depth=depth,
@@ -77,11 +77,11 @@ def objective_clf(trial: optuna.trial.Trial):
             batch_loss = criterion(outputs, labels)
             batch_loss.backward()
             optimizer.step()
-            lr_scheduler.step()
             pred = torch.argmax(outputs, dim=1)
             num_correct = sum([1 if pred[i].item() == labels[i].item() else 0 for i in range(len(data))])
             total += len(data)
             total_correct += num_correct
+        lr_scheduler.step()
         train_acc = total_correct / total
         sw.add_scalar("Train/Acc", train_acc, epoch)
 
