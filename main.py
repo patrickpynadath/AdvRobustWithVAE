@@ -9,4 +9,4 @@ if __name__ == '__main__':
     exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
                   exp_logdir=HYPERPARAM_DIR,
                   device='cuda')
-    exp.get_trained_vae(64, 3, 'vae', latent_dim=100,in_channels=3)
+    exp.get_trained_vae(64, 150, 'vae', latent_dim=100,in_channels=3)
