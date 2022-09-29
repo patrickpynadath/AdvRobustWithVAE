@@ -21,7 +21,7 @@ class BaseExp:
         self.device = device
         transform = transforms.Compose(
             [transforms.ToTensor()])
-        root_dir = r'/'
+        root_dir = r'*/'
         if not train_set:
             train_set = torchvision.datasets.CIFAR10(root=root_dir,
                                                      train=True,
