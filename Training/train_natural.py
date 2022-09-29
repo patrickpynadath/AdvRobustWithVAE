@@ -72,8 +72,6 @@ class NatTrainer:
         batch_loss = criterion(outputs, labels)
         batch_loss.backward()
         optimizer.step()
-        if self.use_step_lr:
-            self.lr_scheduler.step()
 
         parameters = self.model.parameters()
         norm_type = 2
@@ -145,7 +143,7 @@ class NatTrainer:
                     total_loss += train_step_data['loss']
                     num_correct += train_step_data['score']
                     grad_mean.append(train_step_data['grad mean'])
-
+            self.lr_scheduler.step()
             # setting up metrics for validation
             val_step_data = self.val_step()
 
