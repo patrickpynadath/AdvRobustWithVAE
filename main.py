@@ -6,9 +6,9 @@ TRAIN_METRICS_DIR = '../ExperimentLogging/TrainMetrics/'
 HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 
 if __name__ == '__main__':
-    clf_params, clf_score = run_hyperparam_clf()
+    # clf_params, clf_score = run_hyperparam_clf()
     vae_params, vae_loss = run_hyperparam_vae()
-    print(f"Best Params for Clf with score {round(clf_score, 3)}: \n")
-    print(clf_params)
+    # print(f"Best Params for Clf with score {round(clf_score, 3)}: \n")
+    # print(clf_params)
     print(f"Best Params for VAE with loss {round(vae_loss, 5)} \n")
     print(vae_params)
