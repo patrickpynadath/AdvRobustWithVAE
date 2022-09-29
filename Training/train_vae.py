@@ -139,12 +139,12 @@ class VAETrainer:
         assert mode in ['train', 'test', 'generate']
         if mode == 'train':
             dataset = self.train_loader.dataset
-            sampled_idx = torch.Tensor(np.random.randint(0, high=len(dataset), size=num_img), dtype=torch.int32)
+            sampled_idx = torch.from_numpy(np.random.randint(0, high=len(dataset), size=num_img))
             sampled_imgs = self.model.generate(dataset[sampled_idx].to(self.device))
             return sampled_imgs
         elif mode == 'test':
             dataset = self.test_loader.dataset
-            sampled_idx = torch.Tensor(np.random.randint(0, high=len(dataset), size=num_img), dtype=torch.int32)
+            sampled_idx = torch.from_numpy(np.random.randint(0, high=len(dataset), size=num_img))
             sampled_imgs = self.model.generate(dataset[sampled_idx].to(self.device))
             return sampled_imgs
         elif mode == 'generate':
