@@ -7,7 +7,7 @@ by Wei Yang
 import torch.nn as nn
 import math
 from Utils import timestamp
-
+from Models.normalization_layers import get_normalize_layer
 
 __all__ = ['resnet']
 
@@ -105,7 +105,7 @@ class ResNet(nn.Module):
         else:
             raise ValueError('block_name shoule be Basicblock or Bottleneck')
 
-
+        self.norm_layer = get_normalize_layer()
         self.inplanes = 16
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1,
                                bias=False)
@@ -143,6 +143,7 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
+        x = self.norm_layer(x)
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)    # 32x32

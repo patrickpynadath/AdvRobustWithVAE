@@ -16,7 +16,7 @@ DEVICE = "cuda"
 def sanity_check():
     epochs = 150
     train_set, test_set = get_cifar_sets()
-    train_loader = DataLoader(train_set, batch_size=256, shuffle=True)
+    train_loader = DataLoader(train_set, batch_size=64, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=256, shuffle=False)
     resnet = ResNet(depth=110, num_classes=10, block_name='BottleNeck')
     resnet = resnet.to(DEVICE)
@@ -158,12 +158,12 @@ def objective_vae(trial: optuna.trial.Trial):
 
 def run_hyperparam_vae():
     study = optuna.create_study(direction='minimize')
-    study.optimize(objective_vae, n_trials=1)
+    study.optimize(objective_vae, n_trials=100)
     return study.best_params, study.best_value
 
 
 def run_hyperparam_clf():
     # first, testing out the hyperparameters they used -- sanity check
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective_clf, n_trials=1)
+    study.optimize(objective_clf, n_trials=100)
     return study.best_params, study.best_value
