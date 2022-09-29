@@ -141,7 +141,3 @@ def run_hyperparam_vae():
 def run_hyperparam_clf():
     study = optuna.create_study(direction="maximize")
     study.optimize(objective_clf, n_trials=100)
-
-
-if __name__ == '__main__':
-    run_hyperparam_vae()
