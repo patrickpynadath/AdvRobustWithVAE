@@ -96,9 +96,9 @@ class VAETrainer:
                 # adding the results together
                 for key, value in step_res.items():
                     if key in train_epoch_res:
-                        train_epoch_res[key] += value
+                        train_epoch_res[key] += value.item()
                     else:
-                        train_epoch_res[key] = value
+                        train_epoch_res[key] = value.item()
 
                 # tqdm loading bar
                 datastream.set_description((
@@ -118,9 +118,9 @@ class VAETrainer:
                     val_res = self.validation_step(batch, batch_idx)
                     for key, value in val_res.items():
                         if key in val_epoch_res:
-                            val_epoch_res[key] += value
+                            val_epoch_res[key] += value.item()
                         else:
-                            val_epoch_res[key] = value
+                            val_epoch_res[key] = value.item()
             if writer:
                 # logging training data
                 for key, value in train_epoch_res.items():
