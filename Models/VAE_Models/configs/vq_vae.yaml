@@ -4,7 +4,7 @@ model_params:
   embedding_dim: 64
   num_embeddings: 512
   img_size: 64
-  beta: 0.25
+  beta: 0.75
 
 data_params:
   data_path: "Data/"
