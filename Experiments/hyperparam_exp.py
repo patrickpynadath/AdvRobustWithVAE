@@ -57,7 +57,7 @@ def objective_clf(trial: optuna.trial.Trial):
             batch_loss = criterion(outputs, labels)
             batch_loss.backward()
             optimizer.step()
-            lr_scheduler.step(epoch)
+            lr_scheduler.step()
             pred = torch.argmax(outputs, dim=1)
             num_correct = sum([1 if pred[i].item() == labels[i].item() else 0 for i in range(len(data))])
             total += len(data)
