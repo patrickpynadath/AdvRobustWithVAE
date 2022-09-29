@@ -17,7 +17,7 @@ DEVICE = "cuda"
 def objective_clf(trial: optuna.trial.Trial):
     # summary writer
 
-    epochs = 1
+    epochs = 100
     train_set, test_set = get_cifar_sets()
     train_loader = DataLoader(train_set, batch_size=100, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=100, shuffle=False)
@@ -28,7 +28,7 @@ def objective_clf(trial: optuna.trial.Trial):
     lr_gamma = trial.suggest_float("lr_gamma", 1e-6, .9)
     lr_step_size = trial.suggest_int("lr_step", 1, 1000)
     criterion = torch.nn.CrossEntropyLoss()
-    depth = 20
+    depth = 110
     resnet = ResNet(depth=depth,
                     num_classes=10,
                     block_name=block_name).to(DEVICE)
@@ -87,7 +87,7 @@ def objective_clf(trial: optuna.trial.Trial):
 
 
 def objective_vae(trial: optuna.trial.Trial):
-    epochs = 1
+    epochs = 100
     train_set, test_set = get_cifar_sets()
     train_loader = DataLoader(train_set, batch_size=100, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=100, shuffle=False)
