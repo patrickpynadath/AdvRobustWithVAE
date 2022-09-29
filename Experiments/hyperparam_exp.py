@@ -18,7 +18,7 @@ def sanity_check():
     train_set, test_set = get_cifar_sets()
     train_loader = DataLoader(train_set, batch_size=256, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=256, shuffle=False)
-    resnet = ResNet(depth=110, num_classes=10, block_name='BasicBlock')
+    resnet = ResNet(depth=110, num_classes=10, block_name='BottleNeck')
     resnet = resnet.to(DEVICE)
     trainer = NatTrainer(model=resnet,
                          train_loader=train_loader,
