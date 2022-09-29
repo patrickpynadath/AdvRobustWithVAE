@@ -5,6 +5,7 @@ from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import StepLR
 import optuna
 import torch
+from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 import os
 
@@ -46,7 +47,8 @@ def objective_clf(trial: optuna.trial.Trial):
         # training
         total_correct = 0
         total = 0
-        for batch_idx, batch in enumerate(train_loader):
+        datastream = tqdm(enumerate(train_loader), total=len(train_loader))
+        for batch_idx, batch in datastream:
             data, labels = batch
             data = data.to(DEVICE)
             labels = labels.to(DEVICE)
@@ -55,6 +57,7 @@ def objective_clf(trial: optuna.trial.Trial):
             batch_loss = criterion(outputs, labels)
             batch_loss.backward()
             optimizer.step()
+            lr_scheduler.step(epoch)
             pred = torch.argmax(outputs, dim=1)
             num_correct = sum([1 if pred[i].item() == labels[i].item() else 0 for i in range(len(data))])
             total += len(data)
@@ -101,7 +104,8 @@ def objective_vae(trial: optuna.trial.Trial):
         print(epoch)
         vae.train()
         recon_loss_epoc_train = 0
-        for batch_idx, batch in enumerate(train_loader):
+        datastream = tqdm(enumerate(train_loader), total=len(train_loader))
+        for batch_idx, batch in datastream:
             print(batch_idx)
             inputs, labels = batch
             inputs = inputs.to(DEVICE)
