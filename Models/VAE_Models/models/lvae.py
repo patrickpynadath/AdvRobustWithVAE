@@ -77,7 +77,7 @@ class LVAE(BaseVAE):
 
         # Build Encoder
         modules = []
-        img_size = 64
+        img_size = 32
         for i, h_dim in enumerate(hidden_dims):
             modules.append(EncoderBlock(in_channels,
                                         h_dim,
@@ -126,7 +126,7 @@ class LVAE(BaseVAE):
                                                output_padding=1),
                             nn.BatchNorm2d(hidden_dims[-1]),
                             nn.LeakyReLU(),
-                            nn.Conv2d(hidden_dims[-1], out_channels= 3,
+                            nn.Conv2d(hidden_dims[-1], out_channels= 3, stride=2,
                                       kernel_size= 3, padding= 1),
                             nn.Tanh())
         hidden_dims.reverse()
