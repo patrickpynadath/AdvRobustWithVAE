@@ -8,5 +8,5 @@ HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 if __name__ == '__main__':
     exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
                   exp_logdir=HYPERPARAM_DIR,
-                  device='cpu')
+                  device='cuda')
     exp.get_trained_vae(64, 3, 'vampvae', latent_dim=100,in_channels=3)
