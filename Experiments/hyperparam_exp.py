@@ -29,7 +29,7 @@ def sanity_check():
                          log_dir=f"../ExperimentLogging/HyperParamMetrics/salman_param",
                          use_tensorboard=True,
                          use_step_lr=True,
-                         lr_schedule_step=10,
+                         lr_schedule_step=50,
                          lr_schedule_gamma=.1)
     trainer.training_loop(epochs)
 
