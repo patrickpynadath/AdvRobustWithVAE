@@ -139,11 +139,11 @@ class VAETrainer:
         assert mode in ['train', 'test', 'generate']
         if mode == 'train':
             batch, labels = next(iter(self.train_loader))
-            sampled_imgs = self.model.generate(batch)
+            sampled_imgs = self.model.generate(batch.to(self.device))
             return sampled_imgs
         elif mode == 'test':
             batch, labels = next(iter(self.test_loader))
-            sampled_imgs = self.model.generate(batch)
+            sampled_imgs = self.model.generate(batch.to(self.device))
             return sampled_imgs
         elif mode == 'generate':
             return self.model.sample(num_samples=self.batch_size, current_device=self.device)
