@@ -14,14 +14,14 @@ class NormalizeLayer(torch.nn.Module):
       layer of the classifier rather than as a part of preprocessing as is typical.
       """
 
-    def __init__(self, means: List[float], sds: List[float]):
+    def __init__(self, means: List[float], sds: List[float], device: str):
         """
         :param means: the channel means
         :param sds: the channel standard deviations
         """
         super(NormalizeLayer, self).__init__()
-        self.means = torch.tensor(means)
-        self.sds = torch.tensor(sds)
+        self.means = torch.tensor(means).to(device)
+        self.sds = torch.tensor(sds).to(device)
 
     def forward(self, input: torch.tensor):
         (batch_size, num_channels, height, width) = input.shape
