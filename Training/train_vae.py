@@ -66,7 +66,7 @@ class VAETrainer:
 
         return val_loss
 
-    def training_loop(self, num_epochs, num_sample_img):
+    def training_loop(self, num_epochs):
         model = self.model
         model.train()
         optimizer = optim.Adam(self.model.parameters(),
@@ -128,27 +128,25 @@ class VAETrainer:
                 for key, value in val_epoch_res.items():
                     writer.add_scalar(f"Val/{key}", value)
 
-                sampled_imgs_train = self.sample_reconstructions(mode='train', num_img=num_sample_img)
+                sampled_imgs_train = self.sample_reconstructions(mode='train')
                 writer.add_images("Generated/training_reconstruction", sampled_imgs_train)
-                sampled_imgs_test = self.sample_reconstructions(mode='test', num_img=num_sample_img)
+                sampled_imgs_test = self.sample_reconstructions(mode='test')
                 writer.add_images("Generated/test_reconstruction", sampled_imgs_test)
-                sampled_imgs_rand = self.sample_reconstructions('generate', num_sample_img)
+                sampled_imgs_rand = self.sample_reconstructions('generate')
                 writer.add_images("Generated/random_samples", sampled_imgs_rand)
 
-    def sample_reconstructions(self, mode, num_img=25):
+    def sample_reconstructions(self, mode):
         assert mode in ['train', 'test', 'generate']
         if mode == 'train':
-            dataset = self.train_loader.dataset
-            sampled_idx = torch.from_numpy(np.random.randint(0, high=len(dataset), size=num_img))
-            sampled_imgs = self.model.generate(dataset[sampled_idx].to(self.device))
+            batch, labels = next(iter(self.train_loader))
+            sampled_imgs = self.model.generate(batch)
             return sampled_imgs
         elif mode == 'test':
-            dataset = self.test_loader.dataset
-            sampled_idx = torch.from_numpy(np.random.randint(0, high=len(dataset), size=num_img))
-            sampled_imgs = self.model.generate(dataset[sampled_idx].to(self.device))
+            batch, labels = next(iter(self.test_loader))
+            sampled_imgs = self.model.generate(batch)
             return sampled_imgs
         elif mode == 'generate':
-            return self.model.sample(num_samples=num_img, current_device=self.device)
+            return self.model.sample(num_samples=self.batch_size, current_device=self.device)
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.model.parameters(),

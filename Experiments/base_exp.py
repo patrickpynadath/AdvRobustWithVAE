@@ -59,7 +59,7 @@ class BaseExp:
                                  batch_size,
                                  vae_model,
                                  **kwargs)
-        vae_trainer.training_loop(epochs, 25)
+        vae_trainer.training_loop(epochs)
         return vae_trainer.model
 
     def get_trained_resnet(self,
