@@ -14,5 +14,5 @@ if __name__ == '__main__':
     #     exp.get_trained_vae(64, 150, model_name, latent_dim=100,in_channels=3)
     conf = Configuration()
     autoencoder = AutoEncoder('cpu', conf)
-    autoencoder.load_state_dict(torch.load("saved_models/model.pth"))
+    autoencoder.load_state_dict(torch.load("model_ema_norm_he-et-al.pth"))
 
