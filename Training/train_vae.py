@@ -131,8 +131,9 @@ class VAETrainer:
                 writer.add_images("Generated/training_reconstruction", sampled_imgs_train, epoch)
                 sampled_imgs_test = self.sample_reconstructions(mode='test')
                 writer.add_images("Generated/test_reconstruction", sampled_imgs_test, epoch)
-                sampled_imgs_rand = self.sample_reconstructions('generate')
-                writer.add_images("Generated/random_samples", sampled_imgs_rand, epoch)
+                if self.model_name != 'vq_vae':
+                    sampled_imgs_rand = self.sample_reconstructions('generate')
+                    writer.add_images("Generated/random_samples", sampled_imgs_rand, epoch)
 
     def sample_reconstructions(self, mode):
         assert mode in ['train', 'test', 'generate']
