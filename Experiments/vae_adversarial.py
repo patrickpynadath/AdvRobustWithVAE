@@ -60,12 +60,12 @@ class VaeAdvGaussianExp(BaseExp):
                'adv_comp': get_norm_comparison(adv_codes - original_codes)}
         return res
 
-    def get_norm_constrained_noise(self, original_samples, norm):
-        norm_constrained_gaussian = torch.zeros_like(original_samples).to(self.device)
-        for i in range(original_samples.size(0)):
-            gaussian_noise = torch.randn_like(original_samples[i, :])
-            norm_constrained_gaussian[i, :] = gaussian_noise / torch.linalg.vector_norm(gaussian_noise) * norm
-        return norm_constrained_gaussian
+    def get_norm_constrained_noise(self, original_samples, norm, ord=float('linf')):
+        orig_shape = original_samples.size()
+        flatten_orig = torch.flatten(original_samples, start_dim=1)
+        gaussian_noise = torch.randn_like(flatten_orig).to(self.device)
+        norm_constrained_gaussian = gaussian_noise / torch.linalg.vector_norm(gaussian_noise, ord=ord, dim=1) * norm
+        return torch.reshape(norm_constrained_gaussian, orig_shape)
 
     def save_ex_reconstructions(self,
                                 sw: SummaryWriter,
@@ -119,36 +119,38 @@ def single_exp_loop(training_logdir, exp_logdir, device):
     adv_type = 'linf'
     clf_epochs = 2
     vae_epochs = 2
+    num_attacks = 20
     exp = VaeAdvGaussianExp(training_logdir=training_logdir,
                             exp_logdir=exp_logdir,
                             device=device)
+    vae = exp.get_trained_vae(batch_size=64,
+                              epochs=vae_epochs,
+                              vae_model='vae',
+                              latent_dim=100,
+                              in_channels=3)
+    clf = exp.get_trained_resnet(net_depth=110,
+                                 block_name='BottleNeck',
+                                 batch_size=64,
+                                 optimizer='sgd',
+                                 lr=.1,
+                                 epochs=clf_epochs,
+                                 use_step_lr=True,
+                                 lr_schedule_step=50,
+                                 lr_schedule_gamma=.1)
     for eps in adv_norms:
         for dataset_name in ['train', 'test']:
             sw = SummaryWriter(
                 log_dir=exp_logdir + f"/{timestamp()}/{dataset_name}/adv_norm_{round(eps, 3)}")
-            vae = exp.get_trained_vae(batch_size=64,
-                                      epochs=vae_epochs,
-                                      vae_model='vae',
-                                      latent_dim=100,
-                                      in_channels=3)
-            clf = exp.get_trained_resnet(net_depth=110,
-                                         block_name='BottleNeck',
-                                         batch_size=64,
-                                         optimizer='sgd',
-                                         lr=.1,
-                                         epochs=clf_epochs,
-                                         use_step_lr=True,
-                                         lr_schedule_step=50,
-                                         lr_schedule_gamma=.1)
             exp.save_ex_reconstructions(sw, vae, clf, dataset_name, eps, attacker_type=adv_type)
-            latent_comparison = exp.latent_code_comparison(vae, clf, dataset_name, adv_type, 1000, eps, 8)
+            latent_comparison = exp.latent_code_comparison(vae, clf, dataset_name, adv_type, num_attacks, eps, 8)
             f = get_res_hist("Noise Difference for Latent Codes", latent_comparison['gauss_comp'])
             sw.add_figure("Differences/Latent/Noise", f)
             plt.close(f)
             f = get_res_hist("Adv Difference for Latent Codes", latent_comparison['adv_comp'])
             sw.add_figure("Differences/Latent/Adv", f)
             plt.close(f)
-            reconstruction_comparison = exp.reconstruction_comparison(vae, clf, dataset_name, adv_type, eps, 8)
+
+            reconstruction_comparison = exp.reconstruction_comparison(vae, clf, dataset_name, adv_type, eps, 8, num_attacks=num_attacks)
             f = get_res_hist("Noise Difference for Reconstructions", reconstruction_comparison['gauss_comp'])
             sw.add_figure("Differences/Reconstruction/Noise", f)
             plt.close(f)
