@@ -105,7 +105,7 @@ class SmoothVAE_Sample(Smooth):
         for i in range(self.num_samples):
             noise += torch.randn_like(x) * self.sigma ** 2
         noise /= self.num_samples
-        reconstruction = self.trained_VAE(x + noise)
+        reconstruction = self.trained_VAE.generate(x + noise)
         return self.base_classifier(reconstruction)
 
 
