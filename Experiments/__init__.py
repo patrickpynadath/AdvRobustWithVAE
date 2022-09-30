@@ -1,5 +1,5 @@
 from Experiments.manifold_exp import ManifoldModelingExp
-from Experiments.nat_training_exp import AdvRobustnessNaturalTraining
+from Experiments.nat_training_exp import AdvRobustnessNaturalTraining, run_adv_rob_exp
 from Experiments.base_exp import BaseExp
 from Experiments.hyperparam_exp import run_hyperparam_clf, sanity_check
-from Experiments.vae_adversarial import single_exp_loop
+from Experiments.vae_adversarial import single_exp_loop_vae_adv

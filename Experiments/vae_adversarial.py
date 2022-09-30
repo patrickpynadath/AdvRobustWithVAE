@@ -140,7 +140,7 @@ class VaeAdvGaussianExp(BaseExp):
         return res
 
 
-def single_exp_loop(training_logdir, exp_logdir, device):
+def single_exp_loop_vae_adv(training_logdir, exp_logdir, device):
     adv_norms = [1 / 255, 2 / 255, 4 / 255, 8 / 255]
     adv_type = 'linf'
     clf_epochs = 2
