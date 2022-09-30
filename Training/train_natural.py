@@ -32,7 +32,7 @@ class NatTrainer:
         :param use_tensorboard: switch for using tensorboard
         :param use_step_lr:
         """
-        self.model = model
+        self.model = model.to(device)
         self.use_tensorboard = use_tensorboard
         self.train_loader = train_loader
         self.test_loader = test_loader
