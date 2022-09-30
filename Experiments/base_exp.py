@@ -19,19 +19,23 @@ class BaseExp:
         self.training_logdir = training_logdir
         self.exp_logdir = exp_logdir
         self.device = device
-        transform = transforms.Compose(
-            [transforms.ToTensor()])
+        train_transform = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor()
+        ])
+        test_transform = transforms.Compose([transforms.ToTensor()])
         root_dir = r'*/'
         if not train_set:
             train_set = torchvision.datasets.CIFAR10(root=root_dir,
                                                      train=True,
                                                      download=True,
-                                                     transform=transform)
+                                                     transform=train_transform)
         if not test_set:
             test_set = torchvision.datasets.CIFAR10(root=root_dir,
                                                     train=False,
                                                     download=True,
-                                                    transform=transform)
+                                                    transform=test_transform)
 
         classes = ('plane', 'car', 'bird', 'cat',
                    'deer', 'dog', 'frog', 'horse', 'ship', 'truck')

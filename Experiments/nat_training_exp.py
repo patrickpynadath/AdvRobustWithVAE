@@ -9,9 +9,9 @@ class AdvRobustnessNaturalTraining(BaseExp):
                          clf_epochs,
                          adv_norms,
                          adv_type,
-                         use_step_lr,
-                         lr_schedule_step,
-                         lr_schedule_gamma,
+                         use_step_lr=True,
+                         lr_schedule_step=50,
+                         lr_schedule_gamma=.1,
                          block_name="BottleNeck",
                          batch_size=64,
                          optimizer='sgd',
@@ -169,7 +169,9 @@ def run_adv_rob_exp(training_logdir,
                     test_set=None):
     sw = SummaryWriter(exp_logdir)
     linf_norms = [1 / 255, 2 / 255, 4 / 255, 8 / 255]
-    smoothing_sigmas = [1 / 255, 2 / 255, 4 / 255, 8 / 255, 16 / 255, 32 / 255, 64 / 255, 128 / 255]
+    # smoothing_sigmas = [1 / 255, 2 / 255, 4 / 255, 8 / 255, 16 / 255, 32 / 255, 64 / 255, 128 / 255]
+    smoothing_sigmas = [1 / 255, 4 / 255, 8 / 255]
+
     exp = AdvRobustnessNaturalTraining(training_logdir=training_logdir,
                                        exp_logdir=exp_logdir,
                                        device=device,
