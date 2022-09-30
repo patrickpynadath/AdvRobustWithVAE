@@ -6,7 +6,7 @@ import torch
 TRAIN_METRICS_DIR = '../ExperimentLogging/TrainMetrics/'
 HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 VAE_ADV_EXP = '../ExperimentLogging/AdversarialExpVAE/'
-ADV_ROB_EXP = '.../ExperimentLogging/AdvRobExp/'
+ADV_ROB_EXP = '../ExperimentLogging/AdvRobExp/'
 if __name__ == '__main__':
     run_adv_rob_exp(training_logdir=TRAIN_METRICS_DIR,
                     exp_logdir=ADV_ROB_EXP,
