@@ -63,8 +63,11 @@ class VaeAdvGaussianExp(BaseExp):
     def get_norm_constrained_noise(self, original_samples, norm, ord=float('inf')):
         orig_shape = original_samples.size()
         flatten_orig = torch.flatten(original_samples, start_dim=1)
-        gaussian_noise = torch.randn_like(flatten_orig).to(self.device)
-        norm_constrained_gaussian = gaussian_noise / torch.linalg.vector_norm(gaussian_noise, ord=ord, dim=1) * norm
+
+        norm_constrained_gaussian = torch.zeros_like(flatten_orig).to(self.device)
+        for i in range(orig_shape[0]):
+            gaussian_noise = torch.randn_like(flatten_orig[i, :])
+            norm_constrained_gaussian[i, :] = gaussian_noise / torch.linalg.vector_norm(gaussian_noise, ord=ord) * norm
         return torch.reshape(norm_constrained_gaussian, orig_shape)
 
     def save_ex_reconstructions(self,
