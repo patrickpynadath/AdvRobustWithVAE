@@ -60,7 +60,7 @@ class VaeAdvGaussianExp(BaseExp):
                'adv_comp': get_norm_comparison(adv_codes - original_codes)}
         return res
 
-    def get_norm_constrained_noise(self, original_samples, norm, ord=float('linf')):
+    def get_norm_constrained_noise(self, original_samples, norm, ord=float('inf')):
         orig_shape = original_samples.size()
         flatten_orig = torch.flatten(original_samples, start_dim=1)
         gaussian_noise = torch.randn_like(flatten_orig).to(self.device)
