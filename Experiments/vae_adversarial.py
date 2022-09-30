@@ -50,6 +50,9 @@ class VaeAdvGaussianExp(BaseExp):
                                                                            dataset_name=dataset)
 
         norm_constrained_gaussian = self.get_norm_constrained_noise(original_samples, norm=attack_eps)
+        noise_norm = vector_norm(torch.flatten(norm_constrained_gaussian, start_dim=1), ord=float('inf'))
+        print(noise_norm)
+        assert noise_norm <= attack_eps
         gaussian_codes = get_latent_rep(vae=trained_vae,
                                         x=norm_constrained_gaussian)
         adv_codes = get_latent_rep(vae=trained_vae,
@@ -89,6 +92,9 @@ class VaeAdvGaussianExp(BaseExp):
         original_reconstructions = trained_vae.generate(original_samples)
         adv_reconstructions = trained_vae.generate(adv_samples)
         gaussian_reconstructions = trained_vae.generate(gaussian_samples)
+        sw.add_images(f"InputImages/Original", original_samples)
+        sw.add_images(f"InputImages/Adversarial", adv_samples)
+        sw.add_images(f"InputImages/Noise", gaussian_samples)
         sw.add_images(f"Reconstructions/Original", original_reconstructions)
         sw.add_images(f"Reconstructions/Adversarial", adv_reconstructions)
         sw.add_images(f"Reconstructions/Noise", gaussian_reconstructions)
