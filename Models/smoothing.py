@@ -20,7 +20,7 @@ class Smooth(nn.Module):
         self.device = device
         self.num_samples = num_samples
         self.num_classes = num_classes
-        self.label = self.label + f'_Smooth_{round(sigma, 4)}_MTrain_{num_samples}'
+        self.label = self.base_classifier.label + f'_Smooth_{round(sigma, 4)}_MTrain_{num_samples}'
 
     def forward(self, x):
         output = torch.zeros((x.size(dim=0), self.num_classes)).to(self.device)

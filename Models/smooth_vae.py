@@ -25,7 +25,7 @@ class SmoothVAE_Latent(Smooth):
         super().__init__(base_classifier, sigma, device, num_samples, num_classes)
         self.trained_VAE = trained_VAE
         self.main_module = torch.nn.Sequential(self.trained_VAE, self.base_classifier)
-        self.label = f'SmoothVAE_Latent_{sigma}_MTrain_{num_samples}_VAEBeta_{self.trained_VAE.beta}'
+        self.label = f'SmoothVAE_Latent_{sigma}_MTrain_{num_samples}'
         self.vae_param = vae_param
 
 
@@ -82,7 +82,7 @@ class SmoothVAE_Sample(Smooth):
         super().__init__(base_classifier, sigma, device, num_samples, num_classes)
         self.trained_VAE = trained_VAE
         self.main_module = torch.nn.Sequential(self.trained_VAE, self.base_classifier)
-        self.label = f'SmoothVAE_Sample_{sigma}_MTrain_{num_samples}_VAEBeta_{self.trained_VAE.beta}'
+        self.label = f'SmoothVAE_Sample_{sigma}_MTrain_{num_samples}'
         self.vae_param = vae_param
 
     def parameters(self, recurse: bool = True):
