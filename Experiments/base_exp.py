@@ -13,7 +13,8 @@ class BaseExp:
                  training_logdir,
                  exp_logdir,
                  device,
-                 train_set=None,
+                 clf_train_set=None,
+                 vae_train_set = None,
                  test_set=None):
 
         self.training_logdir = training_logdir
@@ -26,11 +27,15 @@ class BaseExp:
         ])
         test_transform = transforms.Compose([transforms.ToTensor()])
         root_dir = r'*/'
-        if not train_set:
-            train_set = torchvision.datasets.CIFAR10(root=root_dir,
-                                                     train=True,
-                                                     download=True,
-                                                     transform=train_transform)
+        if not clf_train_set:
+            clf_train_set = torchvision.datasets.CIFAR10(root=root_dir,
+                                                         train=True,
+                                                         download=True,
+                                                         transform=train_transform)
+            vae_train_set = torchvision.datasets.CIFAR10(root=root_dir,
+                                                         train=True,
+                                                         download=True,
+                                                         transform=test_transform)
         if not test_set:
             test_set = torchvision.datasets.CIFAR10(root=root_dir,
                                                     train=False,
@@ -40,12 +45,16 @@ class BaseExp:
         classes = ('plane', 'car', 'bird', 'cat',
                    'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
         self.num_classes = len(classes)
-        self.train_set = train_set
+        self.clf_train_set = clf_train_set
+        self.vae_train_set = vae_train_set
         self.test_set = test_set
         self.device = device
 
-    def get_loaders(self, batch_size):
-        train_loader = DataLoader(self.train_set, batch_size, shuffle=True)
+    def get_loaders(self, batch_size, clf = True):
+        if clf:
+            train_loader = DataLoader(self.clf_train_set, batch_size, shuffle=True)
+        else:
+            train_loader = DataLoader(self.vae_train_set, batch_size, shuffle=True)
         test_loader = DataLoader(self.test_set, batch_size, shuffle=False)
         return train_loader, test_loader
 
@@ -54,7 +63,7 @@ class BaseExp:
                         epochs,
                         vae_model,
                         **kwargs):
-        train_loader, test_loader = self.get_loaders(batch_size)
+        train_loader, test_loader = self.get_loaders(batch_size, clf=False)
         vae_trainer = VAETrainer(self.device,
                                  True,
                                  train_loader,
@@ -196,7 +205,7 @@ class BaseExp:
         assert dataset_name in ['train', 'test']
         assert adversary_type in ['l2', 'linf']
         if dataset_name == 'train':
-            dataset = self.train_set
+            dataset = self.clf_train_set
         elif dataset_name == 'test':
             dataset = self.test_set
         samples_idx = torch.randint(low=0, high=len(dataset), size=(num_attacks,))

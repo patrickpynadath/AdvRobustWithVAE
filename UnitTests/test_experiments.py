@@ -22,7 +22,7 @@ class TestBaseExp(unittest.TestCase):
                                                  lr_schedule_gamma=1)
 
     def test_initialization(self):
-        if not self.base_exp.train_set:
+        if not self.base_exp.clf_train_set:
             self.fail("base_exp.train_set not initialized")
         if not self.base_exp.test_set:
             self.fail("base_exp.test_set not initialized")

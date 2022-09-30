@@ -36,19 +36,19 @@ class ManifoldModelingExp(BaseExp):
                  training_logdir,
                  exp_logdir,
                  device,
-                 train_set=None,
+                 clf_train_set=None,
                  test_set=None):
         super().__init__(training_logdir,
                          f'{exp_logdir}/ManifoldExp',
                          device,
-                         train_set=train_set,
+                         clf_train_set=clf_train_set,
                          test_set=test_set)
 
     def get_trained_pixel_cnn(self,
                               epochs,
                               batch_size=32):
         px_cnn = PixelCNN().to(self.device)
-        train_loader = DataLoader(self.train_set,
+        train_loader = DataLoader(self.clf_train_set,
                                   batch_size=batch_size)
         train_pixel_cnn(epochs,
                         px_cnn,

@@ -13,7 +13,7 @@ class AdvRobustnessNaturalTraining(BaseExp):
                          lr_schedule_step=50,
                          lr_schedule_gamma=.1,
                          block_name="BottleNeck",
-                         batch_size=64,
+                         batch_size=256,
                          optimizer='sgd',
                          lr=.1,
                          adv_steps=10,

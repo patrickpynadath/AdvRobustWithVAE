@@ -3,6 +3,8 @@ import torch
 from torch.linalg import vector_norm
 from Experiments import BaseExp
 from torch.utils.tensorboard import SummaryWriter
+from torchvision import transforms
+import torchvision
 import matplotlib.pyplot as plt
 
 
@@ -34,6 +36,19 @@ def get_norm_comparison(diff: torch.Tensor):
 
 
 class VaeAdvGaussianExp(BaseExp):
+    def __init__(self, training_logdir, exp_logdir, device):
+        super().__init__(training_logdir, exp_logdir, device)
+        transform = transforms.Compose([transforms.ToTensor()])
+        root_dir = r'*/'
+        self.train_set = torchvision.datasets.CIFAR10(root=root_dir,
+                                                 train=True,
+                                                 download=True,
+                                                 transform=transform)
+        self.test_set = torchvision.datasets.CIFAR10(root=root_dir,
+                                                train=False,
+                                                download=True,
+                                                transform=transform)
+
     def input_img_comparison(self,
                              trained_vae,
                              trained_clf,
