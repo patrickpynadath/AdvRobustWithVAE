@@ -143,9 +143,9 @@ class VaeAdvGaussianExp(BaseExp):
 def single_exp_loop_vae_adv(training_logdir, exp_logdir, device):
     adv_norms = [1 / 255, 2 / 255, 4 / 255, 8 / 255]
     adv_type = 'linf'
-    clf_epochs = 2
-    vae_epochs = 2
-    num_attacks = 20
+    clf_epochs = 150
+    vae_epochs = 150
+    num_attacks = 1000
     exp = VaeAdvGaussianExp(training_logdir=training_logdir,
                             exp_logdir=exp_logdir,
                             device=device)
