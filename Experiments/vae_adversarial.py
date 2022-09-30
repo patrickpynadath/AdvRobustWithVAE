@@ -34,6 +34,26 @@ def get_norm_comparison(diff: torch.Tensor):
 
 
 class VaeAdvGaussianExp(BaseExp):
+    def input_img_comparison(self,
+                             trained_vae,
+                             trained_clf,
+                             dataset,
+                             attacker_type,
+                             num_samples,
+                             attack_eps,
+                             num_steps):
+        original_samples, attacked_samples, labels = self.get_adv_examples(trained_clf=trained_clf,
+                                                                           attack_eps=attack_eps,
+                                                                           adversary_type=attacker_type,
+                                                                           steps=num_steps,
+                                                                           num_attacks=num_samples,
+                                                                           dataset_name=dataset)
+
+        norm_constrained_gaussian = self.get_norm_constrained_noise(original_samples, norm=attack_eps)
+        res = {'gauss_comp': get_norm_comparison(norm_constrained_gaussian),
+               'adv_comp': get_norm_comparison(attacked_samples - original_samples)}
+        return res
+
     def latent_code_comparison(self,
                                trained_vae,
                                trained_clf,
@@ -50,9 +70,6 @@ class VaeAdvGaussianExp(BaseExp):
                                                                            dataset_name=dataset)
 
         norm_constrained_gaussian = self.get_norm_constrained_noise(original_samples, norm=attack_eps)
-        noise_norm = vector_norm(torch.flatten(norm_constrained_gaussian, start_dim=1), ord=float('inf'))
-        print(noise_norm)
-        assert noise_norm <= attack_eps
         gaussian_codes = get_latent_rep(vae=trained_vae,
                                         x=norm_constrained_gaussian)
         adv_codes = get_latent_rep(vae=trained_vae,
@@ -151,6 +168,15 @@ def single_exp_loop(training_logdir, exp_logdir, device):
             sw = SummaryWriter(
                 log_dir=exp_logdir + f"/{timestamp()}/{dataset_name}/adv_norm_{round(eps, 3)}")
             exp.save_ex_reconstructions(sw, vae, clf, dataset_name, eps, attacker_type=adv_type)
+            input_img_comparison = exp.input_img_comparison(vae, clf, dataset_name, adv_type, num_attacks, eps, 8)
+
+            f = get_res_hist("Noise Difference for Input Images", input_img_comparison['gauss_comp'])
+            sw.add_figure("Differences/InputImg/Noise", f)
+            plt.close(f)
+            f = get_res_hist("Adv Difference for Input Images", input_img_comparison['adv_comp'])
+            sw.add_figure("Differences/InputImg/Adv", f)
+            plt.close(f)
+
             latent_comparison = exp.latent_code_comparison(vae, clf, dataset_name, adv_type, num_attacks, eps, 8)
             f = get_res_hist("Noise Difference for Latent Codes", latent_comparison['gauss_comp'])
             sw.add_figure("Differences/Latent/Noise", f)
