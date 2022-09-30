@@ -69,7 +69,7 @@ class VaeAdvGaussianExp(BaseExp):
                                                                            num_attacks=num_samples,
                                                                            dataset_name=dataset)
 
-        norm_constrained_gaussian = self.get_norm_constrained_noise(original_samples, norm=attack_eps)
+        norm_constrained_gaussian = self.get_norm_constrained_noise(original_samples, norm=attack_eps) + original_samples
         gaussian_codes = get_latent_rep(vae=trained_vae,
                                         x=norm_constrained_gaussian)
         adv_codes = get_latent_rep(vae=trained_vae,
@@ -131,7 +131,7 @@ class VaeAdvGaussianExp(BaseExp):
                                                                       steps=num_steps,
                                                                       num_attacks=num_attacks,
                                                                       dataset_name=dataset)
-        gaussian_samples = self.get_norm_constrained_noise(original_samples, norm=attack_eps)
+        gaussian_samples = self.get_norm_constrained_noise(original_samples, norm=attack_eps) + original_samples
         original_reconstructions = trained_vae.generate(original_samples)
         adv_reconstructions = trained_vae.generate(adv_samples)
         gaussian_reconstructions = trained_vae.generate(gaussian_samples)
