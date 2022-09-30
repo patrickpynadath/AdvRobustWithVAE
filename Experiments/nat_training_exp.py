@@ -214,7 +214,7 @@ def write_res(sw : SummaryWriter, nat_acc, adv_accs, norms, model_name, adv_type
     metric_dct = {'Nat Acc' : nat_acc}
     for i, eps in enumerate(norms):
         label = round(eps, 3)
-        metric_dct[f"{adv_type}_norm_{label}"] = adv_accs
+        metric_dct[f"{adv_type}_norm_{label}"] = adv_accs[i]
     sw.add_hparams({'model' : model_name}, metric_dct)
 
 
