@@ -169,30 +169,31 @@ def run_adv_rob_exp(training_logdir,
                     test_set=None):
     sw = SummaryWriter(exp_logdir)
     linf_norms = [1 / 255, 2 / 255, 4 / 255, 8 / 255]
-    smoothing_sigmas = [1 / 255, 2 / 255, 4 / 255, 8 / 255, 16 / 255, 32 / 255, 64 / 255, 128 / 255]
+    smoothing_sigmas = [1/255]
+    # smoothing_sigmas = [1 / 255, 2 / 255, 4 / 255, 8 / 255, 16 / 255, 32 / 255, 64 / 255, 128 / 255]
     exp = AdvRobustnessNaturalTraining(training_logdir=training_logdir,
                                        exp_logdir=exp_logdir,
                                        device=device,
                                        train_set=train_set,
                                        test_set=test_set)
-    nat_acc, adv_accs = exp.adv_rob_base_clf(net_depth=resnet_depth,
-                         clf_epochs=clf_epochs,
-                         adv_norms=linf_norms,
-                         adv_type='linf',
-                         use_step_lr=use_step_lr,
-                         lr_schedule_gamma=lr_schedule_gamma,
-                         lr_schedule_step=lr_schedule_step)
-    write_res(sw, nat_acc, adv_accs, linf_norms, "resnet110_vanilla", 'linf')
-    for sigma in smoothing_sigmas:
-        nat_acc, adv_accs = exp.adv_rob_smoothclf(net_depth=resnet_depth,
-                              clf_epochs=clf_epochs,
-                              adv_norms=linf_norms,
-                              adv_type='linf',
-                              smoothing_sigma=sigma,
-                              use_step_lr=use_step_lr,
-                              lr_schedule_gamma=lr_schedule_gamma,
-                              lr_schedule_step=lr_schedule_step)
-        write_res(sw, nat_acc, adv_accs, linf_norms, f"resnet110smooth_{round(sigma, 3)}", 'linf')
+    # nat_acc, adv_accs = exp.adv_rob_base_clf(net_depth=resnet_depth,
+    #                      clf_epochs=clf_epochs,
+    #                      adv_norms=linf_norms,
+    #                      adv_type='linf',
+    #                      use_step_lr=use_step_lr,
+    #                      lr_schedule_gamma=lr_schedule_gamma,
+    #                      lr_schedule_step=lr_schedule_step)
+    # write_res(sw, nat_acc, adv_accs, linf_norms, "resnet110_vanilla", 'linf')
+    # for sigma in smoothing_sigmas:
+    #     nat_acc, adv_accs = exp.adv_rob_smoothclf(net_depth=resnet_depth,
+    #                           clf_epochs=clf_epochs,
+    #                           adv_norms=linf_norms,
+    #                           adv_type='linf',
+    #                           smoothing_sigma=sigma,
+    #                           use_step_lr=use_step_lr,
+    #                           lr_schedule_gamma=lr_schedule_gamma,
+    #                           lr_schedule_step=lr_schedule_step)
+    #     write_res(sw, nat_acc, adv_accs, linf_norms, f"resnet110smooth_{round(sigma, 3)}", 'linf')
 
     for smooth_vae_type in ['sample', 'latent']:
         for sigma in smoothing_sigmas:
