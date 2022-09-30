@@ -1,21 +1,35 @@
-from Utils import torch_to_numpy
-from Models import Conv_VAE
+from Utils import torch_to_numpy, timestamp
 import torch
 from torch.linalg import vector_norm
 from Experiments import BaseExp
+from torch.utils.tensorboard import SummaryWriter
+import matplotlib.pyplot as plt
 
 
-def get_latent_rep(vae: Conv_VAE, x):
-    encoded = vae.encoder(x)
-    z_mean, _ = vae.q(encoded)
+def get_latent_rep(vae, x):
+    z_mean, _ = vae.encode(x)
     return z_mean
+
+
+def get_res_hist(title, res):
+    f, a = plt.subplots(1, 2, figsize=(16, 8))
+    f.suptitle(title)
+
+    ax = a[0]
+    ax.set_title("L2 Differences")
+    ax.hist(res['l2'], bins=20)
+
+    ax = a[1]
+    ax.set_title("Linf Differences")
+    ax.hist(res['l_inf'], bins=20)
+    return f
 
 
 def get_norm_comparison(diff: torch.Tensor):
     # flattening along every dimension except for batch
     diff = diff.flatten(start_dim=1)
     l_2 = torch_to_numpy(vector_norm(diff, ord=2, dim=1))
-    l_inf = torch_to_numpy(vector_norm(diff, ord='inf', dim=1))
+    l_inf = torch_to_numpy(vector_norm(diff, ord=float('inf'), dim=1))
     return {'l2': l_2, 'l_inf': l_inf}
 
 
@@ -53,13 +67,37 @@ class VaeAdvGaussianExp(BaseExp):
             norm_constrained_gaussian[i, :] = gaussian_noise / torch.linalg.vector_norm(gaussian_noise) * norm
         return norm_constrained_gaussian
 
+    def save_ex_reconstructions(self,
+                                sw: SummaryWriter,
+                                trained_vae,
+                                trained_clf,
+                                dataset,
+                                attack_eps,
+                                attacker_type,
+                                num_steps=8,
+                                num_attacks=16):
+        original_samples, adv_samples, labels = self.get_adv_examples(trained_clf=trained_clf,
+                                                                      attack_eps=attack_eps,
+                                                                      adversary_type=attacker_type,
+                                                                      steps=num_steps,
+                                                                      num_attacks=num_attacks,
+                                                                      dataset_name=dataset)
+        gaussian_samples = self.get_norm_constrained_noise(original_samples, norm=attack_eps)
+        original_reconstructions = trained_vae.generate(original_samples)
+        adv_reconstructions = trained_vae.generate(adv_samples)
+        gaussian_reconstructions = trained_vae.generate(gaussian_samples)
+        sw.add_images(f"Reconstructions/Original", original_reconstructions)
+        sw.add_images(f"Reconstructions/Adversarial", adv_reconstructions)
+        sw.add_images(f"Reconstructions/Noise", gaussian_reconstructions)
+        return
+
     def reconstruction_comparison(self,
                                   trained_vae,
                                   trained_clf,
                                   dataset,
                                   attacker_type,
                                   attack_eps,
-                                  num_steps,
+                                  num_steps=8,
                                   num_attacks=1000):
         original_samples, adv_samples, labels = self.get_adv_examples(trained_clf=trained_clf,
                                                                       attack_eps=attack_eps,
@@ -68,12 +106,52 @@ class VaeAdvGaussianExp(BaseExp):
                                                                       num_attacks=num_attacks,
                                                                       dataset_name=dataset)
         gaussian_samples = self.get_norm_constrained_noise(original_samples, norm=attack_eps)
-        original_reconstructions = trained_vae(original_samples)
-        adv_reconstructions = trained_vae(adv_samples)
-        gaussian_reconstructions = trained_vae(gaussian_samples)
+        original_reconstructions = trained_vae.generate(original_samples)
+        adv_reconstructions = trained_vae.generate(adv_samples)
+        gaussian_reconstructions = trained_vae.generate(gaussian_samples)
         res = {'gauss_comp': get_norm_comparison(gaussian_reconstructions - original_reconstructions),
                'adv_comp': get_norm_comparison(adv_reconstructions - original_reconstructions)}
         return res
 
-    def single_exp_loop(self):
-        pass
+
+def single_exp_loop(training_logdir, exp_logdir, device):
+    adv_norms = [1 / 255, 2 / 255, 4 / 255, 8 / 255]
+    adv_type = 'linf'
+    clf_epochs = 2
+    vae_epochs = 2
+    exp = VaeAdvGaussianExp(training_logdir=training_logdir,
+                            exp_logdir=exp_logdir,
+                            device=device)
+    for eps in adv_norms:
+        for dataset_name in ['train', 'test']:
+            sw = SummaryWriter(
+                log_dir=exp_logdir + f"/{timestamp()}/{dataset_name}/adv_norm_{round(eps, 3)}")
+            vae = exp.get_trained_vae(batch_size=64,
+                                      epochs=vae_epochs,
+                                      vae_model='vae',
+                                      latent_dim=100,
+                                      in_channels=3)
+            clf = exp.get_trained_resnet(net_depth=110,
+                                         block_name='BottleNeck',
+                                         batch_size=64,
+                                         optimizer='sgd',
+                                         lr=.1,
+                                         epochs=clf_epochs,
+                                         use_step_lr=True,
+                                         lr_schedule_step=50,
+                                         lr_schedule_gamma=.1)
+            exp.save_ex_reconstructions(sw, vae, clf, dataset_name, eps, attacker_type=adv_type)
+            latent_comparison = exp.latent_code_comparison(vae, clf, dataset_name, adv_type, 1000, eps, 8)
+            f = get_res_hist("Noise Difference for Latent Codes", latent_comparison['gauss_comp'])
+            sw.add_figure("Differences/Latent/Noise", f)
+            plt.close(f)
+            f = get_res_hist("Adv Difference for Latent Codes", latent_comparison['adv_comp'])
+            sw.add_figure("Differences/Latent/Adv", f)
+            plt.close(f)
+            reconstruction_comparison = exp.reconstruction_comparison(vae, clf, dataset_name, adv_type, eps, 8)
+            f = get_res_hist("Noise Difference for Reconstructions", reconstruction_comparison['gauss_comp'])
+            sw.add_figure("Differences/Reconstruction/Noise", f)
+            plt.close(f)
+            f = get_res_hist("Adv Difference for Reconstructions", reconstruction_comparison['adv_comp'])
+            sw.add_figure("Differences/Reconstruction/Adv", f)
+            plt.close(f)
