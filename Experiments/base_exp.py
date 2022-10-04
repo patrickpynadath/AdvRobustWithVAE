@@ -14,7 +14,7 @@ class BaseExp:
                  exp_logdir,
                  device,
                  clf_train_set=None,
-                 vae_train_set = None,
+                 vae_train_set=None,
                  test_set=None):
 
         self.training_logdir = training_logdir
@@ -50,7 +50,7 @@ class BaseExp:
         self.test_set = test_set
         self.device = device
 
-    def get_loaders(self, batch_size, clf = True):
+    def get_loaders(self, batch_size, clf=True):
         if clf:
             train_loader = DataLoader(self.clf_train_set, batch_size, shuffle=True)
         else:
@@ -145,23 +145,25 @@ class BaseExp:
                                       block_name,
                                       m_train,
                                       batch_size_clf,
-                                      batch_size_vae,
+                                      epochs_clf,
                                       optimizer,
                                       smoothing_sigma,
                                       smooth_vae_version,
-                                      epochs_clf,
-                                      epochs_vae,
-                                      lr_clf = .1,
-                                      use_step_lr = True,
-                                      lr_schedule_step = 50,
-                                      lr_schedule_gamma = .1,
+                                      trained_vae=None,
+                                      batch_size_vae=0,
+                                      epochs_vae=0,
+                                      lr_clf=.1,
+                                      use_step_lr=True,
+                                      lr_schedule_step=50,
+                                      lr_schedule_gamma=.1,
                                       use_vae_param=False):
         resnet = ResNet(depth=net_depth,
                         num_classes=self.num_classes,
                         block_name=block_name)
-        trained_vae = self.get_trained_vae(batch_size=batch_size_vae,
-                                           epochs=epochs_vae,
-                                           vae_model='vae')
+        if not trained_vae:
+            trained_vae = self.get_trained_vae(batch_size=batch_size_vae,
+                                               epochs=epochs_vae,
+                                               vae_model='vae')
         assert smooth_vae_version in ['sample', 'latent']
         if smooth_vae_version == 'sample':
             smooth_vae = SmoothVAE_Sample(base_classifier=resnet,

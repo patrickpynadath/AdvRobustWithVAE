@@ -3,3 +3,4 @@ from Experiments.nat_training_exp import AdvRobustnessNaturalTraining, run_adv_r
 from Experiments.base_exp import BaseExp
 from Experiments.hyperparam_exp import run_hyperparam_clf, sanity_check
 from Experiments.vae_adversarial import single_exp_loop_vae_adv
+from Experiments.train_save_models import train_save_necessary_models
