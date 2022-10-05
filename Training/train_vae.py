@@ -19,7 +19,7 @@ import os
 
 def get_trained_vq_vae(training_logdir, num_training_updates):
     root_dir = r'../'
-    device = 'cpu'
+    device = 'cuda'
     vq_vae = vae_models['VQVAE2']
     batch_size = 256
 
