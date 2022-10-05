@@ -41,7 +41,6 @@ class VQVAETrainer:
 
     def training_step(self, batch):
         inputs = batch[0]
-        print(batch)
         inputs = inputs.to(self.device)
         self.optimizer.zero_grad()
 
