@@ -130,7 +130,7 @@ class ManifoldModelingExp(BaseExp):
                         adv_steps=8,
                         adv_type='l2',
                         adv_eps=2 / 255):
-        vae = self.get_trained_vae(img_size, num_channel, kernel_num, latent_size, vae_beta, self.device, vae_epochs)
+        vae = self.get_trained_vanilla_vae(img_size, num_channel, kernel_num, latent_size, vae_beta, self.device, vae_epochs)
         px_cnn = self.get_trained_pixel_cnn(epochs=pxcnn_epochs)
         trained_resnet = self.get_trained_resnet(net_depth=net_depth,
                                                  block_name=block_name,

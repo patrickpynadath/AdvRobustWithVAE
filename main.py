@@ -9,7 +9,8 @@ HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 VAE_ADV_EXP = '../ExperimentLogging/AdversarialExpVAE/'
 ADV_ROB_EXP = '../ExperimentLogging/AdvRobExp/'
 if __name__ == '__main__':
-    train_save_necessary_models(training_logdir=TRAIN_METRICS_DIR,
-                                exp_logdir=HYPERPARAM_DIR,
-                                device='cuda')
-
+    exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
+                  exp_logdir=ADV_ROB_EXP,
+                  device='cuda')
+    vq_vae = exp.get_trained_vqvae(150)
+    torch.save(vq_vae.state_dict(), 'saved_models/vq_vae')

@@ -164,11 +164,11 @@ def single_exp_loop_vae_adv(training_logdir, exp_logdir, device):
     exp = VaeAdvGaussianExp(training_logdir=training_logdir,
                             exp_logdir=exp_logdir,
                             device=device)
-    vae = exp.get_trained_vae(batch_size=64,
-                              epochs=vae_epochs,
-                              vae_model='vae',
-                              latent_dim=100,
-                              in_channels=3)
+    vae = exp.get_trained_vanilla_vae(batch_size=64,
+                                      epochs=vae_epochs,
+                                      vae_model='vae',
+                                      latent_dim=100,
+                                      in_channels=3)
     clf = exp.get_trained_resnet(net_depth=110,
                                  block_name='BottleNeck',
                                  batch_size=64,

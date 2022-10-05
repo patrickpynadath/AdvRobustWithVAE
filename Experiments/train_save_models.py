@@ -20,9 +20,9 @@ def train_save_necessary_models(training_logdir,
                   vae_train_set=None,
                   test_set=None)
     print("TRAINING VAE")
-    vae = exp.get_trained_vae(batch_size=batch_size_vae,
-                              epochs=vae_epochs,
-                              vae_model='vae')
+    vae = exp.get_trained_vanilla_vae(batch_size=batch_size_vae,
+                                      epochs=vae_epochs,
+                                      vae_model='vae')
     path = "saved_models/vae_base"
     torch.save(vae.state_dict(), path)
     print("SAVED VAE")

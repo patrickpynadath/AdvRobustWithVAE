@@ -5,12 +5,92 @@ from Models.VAE_Models import vae_models
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 from Utils import timestamp, get_cifar_sets
+import torch.nn.functional as F
 import yaml
 import random
 import numpy as np
 
 
 import os
+class VQVAETrainer:
+    def __init__(self,
+                 device,
+                 tensorboard,
+                 logdir,
+                 trainset,
+                 testset,
+                 batch_size=256,
+                 num_hiddens=128,
+                 num_res_hiddens=32,
+                 num_res_layers=2,
+                 embedding_dim=64,
+                 num_embeddings=512,
+                 commitment_cost=.25,
+                 decay=.9,
+                 lr=1e-3):
+        VQVAE2 = vae_models['VQVAE2']
+        self.model = VQVAE2(num_hiddens, num_res_layers, num_res_hiddens,
+                            num_embeddings, embedding_dim, commitment_cost, decay)
+        self.train_loader = DataLoader(dataset=trainset,batch_size=batch_size,shuffle=True)
+        self.test_loader = DataLoader(dataset=testset, batch_size=batch_size,shuffle=True)
+        self.logdir = logdir
+        self.tensorboard = tensorboard
+        self.device = device
+        self.optimizer = optim.Adam(self.model.parameters(), lr=lr, amsgrad=False)
+        self.training_var = np.var(trainset.data)
+
+    def training_step(self, batch):
+        inputs, _ = batch
+        inputs = inputs.to(self.device)
+        self.optimizer.zero_grad()
+
+        vq_loss, reconstruction, perplexity = self.model(inputs)
+        recon_error = F.mse_loss(reconstruction, inputs) / self.training_var
+        loss = recon_error + vq_loss
+        loss.backward()
+        self.optimizer.step()
+        return recon_error, perplexity
+
+    def validation_step(self, batch):
+        with torch.no_grad():
+            inputs, _ = batch
+            vq_loss, reconstruction, perplexity = self.model(inputs)
+            recon_error = F.mse_loss(reconstruction, inputs) / self.training_var
+        return recon_error, perplexity
+
+    def training_loop(self, num_epochs):
+        writer = None
+        if self.tensorboard:
+            writer = SummaryWriter(log_dir=self.logdir + f'/vqvae_{timestamp()}/')
+        for epoch in num_epochs:
+            self.model.train()
+            train_res = {'recon_error' : [], 'perplexity' : []}
+            val_res = {'recon_error' : [], 'perplexity' : []}
+            datastream = tqdm(enumerate(self.train_loader), total=len(self.train_loader), position=0, leave=True)
+            for batch_idx, batch in datastream:
+                recon_error, perplexity = self.training_step(batch)
+                train_res['recon_error'].append(recon_error.item())
+                train_res['perplexity'].append(perplexity.item())
+
+            for batch_idx, batch in self.test_loader:
+                recon_error, perplexity = self.validation_step(batch)
+                val_res['recon_error'].append(recon_error.item())
+                val_res['perplexity'].append(perplexity.item())
+
+            if writer:
+                # logging training data
+                writer.add_scalar(f"Training/ReconLoss", sum(train_res['recon_error'])/len(train_res['recon_error']), epoch)
+                writer.add_scalar(f"Training/Perplexity", sum(train_res['perplexity'])/len(train_res['perplexity']), epoch)
+                writer.add_scalar(f"Val/ReconLoss", sum(val_res['recon_error']) / len(val_res['recon_error']),
+                                  epoch)
+                writer.add_scalar(f"Val/Perplexity", sum(val_res['perplexity']) / len(val_res['perplexity']), epoch)
+                train_batch = next(iter(self.train_loader))
+                _, train_recon, _ = self.model(train_batch)
+                writer.add_images("Generated/training_reconstruction", train_recon, epoch)
+                test_batch = next(iter(self.test_loader))
+                _, test_recon, _ = self.model(test_batch)
+                writer.add_images("Generated/test_reconstruction", test_recon, epoch)
+        return
 
 
 class VAETrainer:

@@ -20,6 +20,7 @@ from Models.VAE_Models.models.swae import *
 from Models.VAE_Models.models.miwae import *
 from Models.VAE_Models.models.vq_vae import *
 from Models.VAE_Models.models.betatc_vae import *
+from Models.VAE_Models.models.vq_vae2 import VQVAE2
 from Models.VAE_Models.models.dip_vae import *
 
 
@@ -49,4 +50,5 @@ vae_models = {'HVAE':HVAE,
               'LogCoshVAE':LogCoshVAE,
               'VanillaVAE':VanillaVAE,
               'ConditionalVAE':ConditionalVAE,
-              'CategoricalVAE':CategoricalVAE}
+              'CategoricalVAE':CategoricalVAE,
+              'VQVAE2' : VQVAE2}

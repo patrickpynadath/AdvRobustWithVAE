@@ -5,7 +5,7 @@ import torchvision
 from Adversarial import PGD_L2
 from torchattacks import PGD
 from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth
-from Training import NatTrainer, VAETrainer
+from Training import NatTrainer, VAETrainer, VQVAETrainer
 
 
 class BaseExp:
@@ -58,11 +58,11 @@ class BaseExp:
         test_loader = DataLoader(self.test_set, batch_size, shuffle=False)
         return train_loader, test_loader
 
-    def get_trained_vae(self,
-                        batch_size,
-                        epochs,
-                        vae_model,
-                        **kwargs):
+    def get_trained_vanilla_vae(self,
+                                batch_size,
+                                epochs,
+                                vae_model,
+                                **kwargs):
         train_loader, test_loader = self.get_loaders(batch_size, clf=False)
         vae_trainer = VAETrainer(self.device,
                                  True,
@@ -74,6 +74,16 @@ class BaseExp:
                                  **kwargs)
         vae_trainer.training_loop(epochs)
         return vae_trainer.model
+
+    def get_trained_vqvae(self, num_epochs):
+        vq_vae_trainer = VQVAETrainer(device = self.device,
+                                      tensorboard=True,
+                                      logdir=self.training_logdir,
+                                      trainset=self.vae_train_set,
+                                      testset=self.test_set,
+                                      batch_size=32)
+        vq_vae_trainer.training_loop(num_epochs)
+        return vq_vae_trainer.model
 
     def get_trained_resnet(self,
                            net_depth,
@@ -161,9 +171,9 @@ class BaseExp:
                         num_classes=self.num_classes,
                         block_name=block_name)
         if not trained_vae:
-            trained_vae = self.get_trained_vae(batch_size=batch_size_vae,
-                                               epochs=epochs_vae,
-                                               vae_model='vae')
+            trained_vae = self.get_trained_vanilla_vae(batch_size=batch_size_vae,
+                                                       epochs=epochs_vae,
+                                                       vae_model='vae')
         assert smooth_vae_version in ['sample', 'latent']
         if smooth_vae_version == 'sample':
             smooth_vae = SmoothVAE_Sample(base_classifier=resnet,
