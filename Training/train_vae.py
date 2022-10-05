@@ -40,7 +40,7 @@ class VQVAETrainer:
         self.training_var = np.var(trainset.data)
 
     def training_step(self, batch):
-        inputs, _ = batch
+        inputs = batch[0]
         print(batch)
         inputs = inputs.to(self.device)
         self.optimizer.zero_grad()
@@ -54,7 +54,7 @@ class VQVAETrainer:
 
     def validation_step(self, batch):
         with torch.no_grad():
-            inputs, _ = batch
+            inputs = batch[0]
             vq_loss, reconstruction, perplexity = self.model(inputs)
             recon_error = F.mse_loss(reconstruction, inputs) / self.training_var
         return recon_error, perplexity
