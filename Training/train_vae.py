@@ -62,7 +62,7 @@ class VQVAETrainer:
         writer = None
         if self.tensorboard:
             writer = SummaryWriter(log_dir=self.logdir + f'/vqvae_{timestamp()}/')
-        for epoch in num_epochs:
+        for epoch in range(num_epochs):
             self.model.train()
             train_res = {'recon_error' : [], 'perplexity' : []}
             val_res = {'recon_error' : [], 'perplexity' : []}
