@@ -56,7 +56,7 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
                                    pin_memory=True)
     model = vq_vae(num_hiddens, num_residual_layers, num_residual_hiddens,
                   num_embeddings, embedding_dim,
-                  commitment_cost, decay).to(device)
+                  commitment_cost).to(device)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, amsgrad=False)
     model.train()
     train_res_recon_error = []
