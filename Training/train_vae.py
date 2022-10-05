@@ -1,6 +1,6 @@
 from torch import optim
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, dataset
 from Models.VAE_Models import vae_models
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
@@ -9,88 +9,93 @@ import torch.nn.functional as F
 import yaml
 import random
 import numpy as np
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
 
 
 import os
-class VQVAETrainer:
-    def __init__(self,
-                 device,
-                 tensorboard,
-                 logdir,
-                 trainset,
-                 testset,
-                 batch_size=256,
-                 num_hiddens=128,
-                 num_res_hiddens=32,
-                 num_res_layers=2,
-                 embedding_dim=64,
-                 num_embeddings=512,
-                 commitment_cost=.25,
-                 decay=.9,
-                 lr=1e-3):
-        VQVAE2 = vae_models['VQVAE2']
-        self.model = VQVAE2(num_hiddens, num_res_layers, num_res_hiddens,
-                            num_embeddings, embedding_dim, commitment_cost, decay).to(device)
-        self.train_loader = DataLoader(dataset=trainset,batch_size=batch_size,shuffle=True)
-        self.test_loader = DataLoader(dataset=testset, batch_size=batch_size,shuffle=True)
-        self.logdir = logdir
-        self.tensorboard = tensorboard
-        self.device = device
-        self.optimizer = optim.Adam(self.model.parameters(), lr=lr, amsgrad=False)
-        self.training_var = np.var(trainset.data)
+def get_trained_vq_vae(training_logdir, num_training_updates):
+    device = 'cuda'
+    vq_vae = vae_models['VQVAE']
+    batch_size = 256
 
-    def training_step(self, batch):
-        inputs = batch[0]
-        inputs = inputs.to(self.device)
-        self.optimizer.zero_grad()
 
-        vq_loss, reconstruction, perplexity = self.model(inputs)
-        recon_error = F.mse_loss(reconstruction, inputs) / self.training_var
+    num_hiddens = 128
+    num_residual_hiddens = 32
+    num_residual_layers = 2
+
+    embedding_dim = 64
+    num_embeddings = 512
+
+    commitment_cost = 0.25
+
+    decay = 0.99
+
+    learning_rate = 1e-3
+
+    training_data = datasets.CIFAR10(root="data", train=True, download=True,
+                                     transform=transforms.Compose([
+                                         transforms.ToTensor(),
+                                         transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
+                                     ]))
+
+    validation_data = datasets.CIFAR10(root="data", train=False, download=True,
+                                       transform=transforms.Compose([
+                                           transforms.ToTensor(),
+                                           transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
+                                       ]))
+    data_variance = np.var(training_data.data / 255.0)
+    training_loader = DataLoader(training_data,
+                                 batch_size=batch_size,
+                                 shuffle=True,
+                                 pin_memory=True)
+    validation_loader = DataLoader(validation_data,
+                                   batch_size=32,
+                                   shuffle=True,
+                                   pin_memory=True)
+    model = vq_vae(num_hiddens, num_residual_layers, num_residual_hiddens,
+                  num_embeddings, embedding_dim,
+                  commitment_cost, decay).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, amsgrad=False)
+    model.train()
+    train_res_recon_error = []
+    train_res_perplexity = []
+    sw = SummaryWriter(training_logdir + f'vq_vae_{timestamp()}')
+    for i in range(num_training_updates):
+        (data, _) = next(iter(training_loader))
+        data = data.to(device)
+        optimizer.zero_grad()
+
+        vq_loss, data_recon, perplexity = model(data)
+        recon_error = F.mse_loss(data_recon, data) / data_variance
         loss = recon_error + vq_loss
         loss.backward()
-        self.optimizer.step()
-        return recon_error, perplexity
 
-    def validation_step(self, batch):
-        with torch.no_grad():
-            inputs = batch[0].to(self.device)
-            vq_loss, reconstruction, perplexity = self.model(inputs)
-            recon_error = F.mse_loss(reconstruction, inputs) / self.training_var
-        return recon_error, perplexity
+        optimizer.step()
 
-    def training_loop(self, num_epochs):
-        writer = None
-        if self.tensorboard:
-            writer = SummaryWriter(log_dir=self.logdir + f'/vqvae_{timestamp()}/')
-        for epoch in range(num_epochs):
-            self.model.train()
-            train_res = {'recon_error' : [], 'perplexity' : []}
-            val_res = {'recon_error' : [], 'perplexity' : []}
-            datastream = tqdm(enumerate(self.train_loader), total=len(self.train_loader), position=0, leave=True)
-            for batch_idx, batch in datastream:
-                recon_error, perplexity = self.training_step(batch)
-                train_res['recon_error'].append(recon_error.item())
-                train_res['perplexity'].append(perplexity.item())
+        train_res_recon_error.append(recon_error.item())
+        train_res_perplexity.append(perplexity.item())
 
-            for batch_idx, batch in enumerate(self.test_loader):
-                recon_error, perplexity = self.validation_step(batch)
-                val_res['recon_error'].append(recon_error.item())
-                val_res['perplexity'].append(perplexity.item())
+        if (i + 1) % 100 == 0:
+            print('%d iterations' % (i + 1))
+            print('recon_error: %.3f' % np.mean(train_res_recon_error[-100:]))
+            print('perplexity: %.3f' % np.mean(train_res_perplexity[-100:]))
 
-            if writer:
-                # logging training data
-                writer.add_scalar(f"Training/ReconLoss", sum(train_res['recon_error'])/len(train_res['recon_error']), epoch)
-                writer.add_scalar(f"Training/Perplexity", sum(train_res['perplexity'])/len(train_res['perplexity']), epoch)
-                writer.add_scalar(f"Val/ReconLoss", sum(val_res['recon_error']) / len(val_res['recon_error']),
-                                  epoch)
-                writer.add_scalar(f"Val/Perplexity", sum(val_res['perplexity']) / len(val_res['perplexity']), epoch)
-                train_batch = next(iter(self.train_loader))
-                _, train_recon, _ = self.model(train_batch[0].to(self.device))
-                writer.add_images("Generated/training_reconstruction", train_recon, epoch)
-                test_batch = next(iter(self.test_loader))
-                _, test_recon, _ = self.model(test_batch[0].to(self.device))
-                writer.add_images("Generated/test_reconstruction", test_recon, epoch)
-        return
+            model.eval()
+
+            (valid_originals, _) = next(iter(validation_loader))
+            valid_originals = valid_originals.to(device)
+
+            vq_output_eval = model._pre_vq_conv(model._encoder(valid_originals))
+            _, valid_quantize, _, _ = model._vq_vae(vq_output_eval)
+            valid_reconstructions = model._decoder(valid_quantize)
+            sw.add_images('Val/Reconstructions', valid_reconstructions, i)
+
+            (train_originals, _) = next(iter(training_loader))
+            train_originals = train_originals.to(device)
+            _, train_reconstructions, _, _ = model._vq_vae(train_originals)
+            sw.add_images('Train/Reconstructions', train_reconstructions, i)
+    return model
 
 
 class VAETrainer:
