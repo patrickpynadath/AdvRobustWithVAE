@@ -52,10 +52,8 @@ class VQVAETrainer:
         return recon_error, perplexity
 
     def validation_step(self, batch):
-        print(batch)
         with torch.no_grad():
             inputs = batch[0]
-            print(inputs)
             vq_loss, reconstruction, perplexity = self.model(inputs)
             recon_error = F.mse_loss(reconstruction, inputs) / self.training_var
         return recon_error, perplexity
@@ -74,7 +72,7 @@ class VQVAETrainer:
                 train_res['recon_error'].append(recon_error.item())
                 train_res['perplexity'].append(perplexity.item())
 
-            for batch_idx, batch in self.test_loader:
+            for batch_idx, batch in enumerate(self.test_loader):
                 recon_error, perplexity = self.validation_step(batch)
                 val_res['recon_error'].append(recon_error.item())
                 val_res['perplexity'].append(perplexity.item())
