@@ -15,6 +15,7 @@ import torchvision.transforms as transforms
 
 import os
 def get_trained_vq_vae(training_logdir, num_training_updates):
+    root_dir = r'../'
     device = 'cuda'
     vq_vae = vae_models['VQVAE']
     batch_size = 256
@@ -33,13 +34,13 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
 
     learning_rate = 1e-3
 
-    training_data = datasets.CIFAR10(root="data", train=True, download=True,
+    training_data = datasets.CIFAR10(root=root_dir, train=True, download=True,
                                      transform=transforms.Compose([
                                          transforms.ToTensor(),
                                          transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
                                      ]))
 
-    validation_data = datasets.CIFAR10(root="data", train=False, download=True,
+    validation_data = datasets.CIFAR10(root=root_dir, train=False, download=True,
                                        transform=transforms.Compose([
                                            transforms.ToTensor(),
                                            transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
