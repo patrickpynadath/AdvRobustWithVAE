@@ -30,7 +30,7 @@ class VQVAETrainer:
                  lr=1e-3):
         VQVAE2 = vae_models['VQVAE2']
         self.model = VQVAE2(num_hiddens, num_res_layers, num_res_hiddens,
-                            num_embeddings, embedding_dim, commitment_cost, decay)
+                            num_embeddings, embedding_dim, commitment_cost, decay).to(device)
         self.train_loader = DataLoader(dataset=trainset,batch_size=batch_size,shuffle=True)
         self.test_loader = DataLoader(dataset=testset, batch_size=batch_size,shuffle=True)
         self.logdir = logdir
