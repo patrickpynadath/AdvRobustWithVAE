@@ -14,9 +14,12 @@ import torchvision.transforms as transforms
 
 
 import os
+
+
+
 def get_trained_vq_vae(training_logdir, num_training_updates):
     root_dir = r'../'
-    device = 'cuda'
+    device = 'cpu'
     vq_vae = vae_models['VQVAE2']
     batch_size = 256
 
@@ -56,7 +59,7 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
                                    pin_memory=True)
     model = vq_vae(num_hiddens, num_residual_layers, num_residual_hiddens,
                   num_embeddings, embedding_dim,
-                  commitment_cost).to(device)
+                  commitment_cost, decay).to(device)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, amsgrad=False)
     model.train()
     train_res_recon_error = []
@@ -95,7 +98,9 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
             (train_originals, _) = next(iter(training_loader))
             train_originals = train_originals.to(device)
             _, train_reconstructions, _, _ = model._vq_vae(train_originals)
+            print(train_reconstructions.min())
             sw.add_images('Train/Reconstructions', train_reconstructions, i)
+
     return model
 
 
