@@ -52,6 +52,7 @@ class VQVAETrainer:
         return recon_error, perplexity
 
     def validation_step(self, batch):
+        print(batch)
         with torch.no_grad():
             inputs = batch[0]
             print(inputs)
