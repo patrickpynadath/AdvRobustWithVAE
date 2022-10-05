@@ -5,7 +5,7 @@ import torchvision
 from Adversarial import PGD_L2
 from torchattacks import PGD
 from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth
-from Training import NatTrainer, VAETrainer, VQVAETrainer
+from Training import NatTrainer, VAETrainer
 
 
 class BaseExp:
@@ -74,16 +74,6 @@ class BaseExp:
                                  **kwargs)
         vae_trainer.training_loop(epochs)
         return vae_trainer.model
-
-    def get_trained_vqvae(self, num_epochs):
-        vq_vae_trainer = VQVAETrainer(device = self.device,
-                                      tensorboard=True,
-                                      logdir=self.training_logdir,
-                                      trainset=self.vae_train_set,
-                                      testset=self.test_set,
-                                      batch_size=32)
-        vq_vae_trainer.training_loop(num_epochs)
-        return vq_vae_trainer.model
 
     def get_trained_resnet(self,
                            net_depth,
