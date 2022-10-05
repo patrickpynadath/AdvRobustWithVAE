@@ -19,13 +19,13 @@ def train_save_necessary_models(training_logdir,
                   clf_train_set=None,
                   vae_train_set=None,
                   test_set=None)
-    # print("TRAINING VAE")
-    # vae = exp.get_trained_vae(batch_size=batch_size_vae,
-    #                           epochs=vae_epochs,
-    #                           vae_model='vae')
-    # path = "saved_models/vae_base"
-    # torch.save(vae.state_dict(), path)
-    # print("SAVED VAE")
+    print("TRAINING VAE")
+    vae = exp.get_trained_vae(batch_size=batch_size_vae,
+                              epochs=vae_epochs,
+                              vae_model='vae')
+    path = "saved_models/vae_base"
+    torch.save(vae.state_dict(), path)
+    print("SAVED VAE")
     print("TRAINING RESNET")
     resnet_clf = exp.get_trained_resnet(net_depth=resnet_depth,
                                         block_name='BottleNeck',
