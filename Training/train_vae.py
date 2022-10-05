@@ -85,10 +85,10 @@ class VQVAETrainer:
                                   epoch)
                 writer.add_scalar(f"Val/Perplexity", sum(val_res['perplexity']) / len(val_res['perplexity']), epoch)
                 train_batch = next(iter(self.train_loader))
-                _, train_recon, _ = self.model(train_batch)
+                _, train_recon, _ = self.model(train_batch[0].to(self.device))
                 writer.add_images("Generated/training_reconstruction", train_recon, epoch)
                 test_batch = next(iter(self.test_loader))
-                _, test_recon, _ = self.model(test_batch)
+                _, test_recon, _ = self.model(test_batch[0].to(self.device))
                 writer.add_images("Generated/test_reconstruction", test_recon, epoch)
         return
 
