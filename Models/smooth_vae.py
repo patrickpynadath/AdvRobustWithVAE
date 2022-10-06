@@ -125,7 +125,8 @@ class VQVAE_CLF(torch.nn.Module):
         return self.clf.named_parameters(prefix, recurse)
 
     def forward(self, x):
-        reconstruction = self.vq_vae(x)[1]
+        with torch.no_grad():
+            reconstruction = self.vq_vae(x)[1]
         return self.base_classifier(reconstruction)
 
 
