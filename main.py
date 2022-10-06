@@ -17,7 +17,7 @@ if __name__ == '__main__':
                                     block_name='BottleNeck',
                                     batch_size=64,
                                     optimizer='sgd',
-                                    lr=.25,
+                                    lr=.15,
                                     epochs=150,
                                     use_step_lr=True,
                                     lr_schedule_step=50,
