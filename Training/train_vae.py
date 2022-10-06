@@ -16,12 +16,11 @@ import matplotlib.pyplot as plt
 import os
 
 
-def show(img):
-    npimg = img.numpy()
-    fig = plt.imshow(np.transpose(npimg, (1,2,0)), interpolation='nearest')
-    fig.axes.get_xaxis().set_visible(False)
-    fig.axes.get_yaxis().set_visible(False)
-    return fig
+def normalize_imgs(imgs):
+    tmp = torch.flatten(imgs, start_dim=1)
+    tmp -= tmp.min()
+    tmp /= tmp.max()
+    return tmp.view(imgs.size())
 
 
 def get_trained_vq_vae(training_logdir, num_training_updates):
@@ -47,13 +46,13 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
     training_data = datasets.CIFAR10(root=root_dir, train=True, download=True,
                                      transform=transforms.Compose([
                                          transforms.ToTensor(),
-
+                                         transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
                                      ]))
 
     validation_data = datasets.CIFAR10(root=root_dir, train=False, download=True,
                                        transform=transforms.Compose([
                                            transforms.ToTensor(),
-
+                                           transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
                                        ]))
     data_variance = np.var(training_data.data / 255.0)
     training_loader = DataLoader(training_data,
@@ -100,7 +99,7 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
             vq_output_eval = model._pre_vq_conv(model._encoder(valid_originals))
             _, valid_quantize, _, _ = model._vq_vae(vq_output_eval)
             valid_reconstructions = model._decoder(valid_quantize)
-            sw.add_images('Val/Reconstructions', torch.sigmoid(valid_reconstructions), i)
+            sw.add_images('Val/Reconstructions', normalize_imgs(valid_reconstructions), i)
 
 
 
