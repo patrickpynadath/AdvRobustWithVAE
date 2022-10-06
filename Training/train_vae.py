@@ -18,9 +18,10 @@ import os
 
 def normalize_imgs(imgs):
     tmp = torch.flatten(imgs, start_dim=2)
-    tmp -= tmp.min(1)
-    print(tmp.max(1))
-    tmp /= tmp.max()
+    for batch_idx in range(tmp.size(0)):
+        for channel_idx in range(3):
+            tmp[batch_idx, channel_idx, :] -= tmp[batch_idx, channel_idx, :].min()
+            tmp[batch_idx, channel_idx, :] /= tmp[batch_idx, channel_idx, :].max()
     return tmp.view(imgs.size())
 
 
