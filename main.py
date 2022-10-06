@@ -11,3 +11,4 @@ VAE_ADV_EXP = '../ExperimentLogging/AdversarialExpVAE/'
 ADV_ROB_EXP = '../ExperimentLogging/AdvRobExp/'
 if __name__ == '__main__':
     vq_vae = get_trained_vq_vae(TRAIN_METRICS_DIR, 15000)
+    torch.save(vq_vae.state_dict(), 'saved_models/vq_vae')
