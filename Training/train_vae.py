@@ -41,7 +41,7 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
 
     decay = 0.99
 
-    learning_rate = 1e-3
+    learning_rate = .05
 
     training_data = datasets.CIFAR10(root=root_dir, train=True, download=True,
                                      transform=transforms.Compose([
