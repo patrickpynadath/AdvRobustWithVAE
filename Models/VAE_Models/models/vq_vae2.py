@@ -212,7 +212,7 @@ class Decoder(nn.Module):
         x = self._conv_trans_1(x)
         x = F.relu(x)
 
-        return torch.sigmoid(self._conv_trans_2(x))
+        return self._conv_trans_2(x)
 
 
 class VQVAE2(nn.Module):

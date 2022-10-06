@@ -100,8 +100,8 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
             vq_output_eval = model._pre_vq_conv(model._encoder(valid_originals))
             _, valid_quantize, _, _ = model._vq_vae(vq_output_eval)
             valid_reconstructions = model._decoder(valid_quantize)
-            print(valid_reconstructions.min())
-            sw.add_images('Val/Reconstructions', valid_reconstructions, i)
+            #print(valid_reconstructions.min())
+            #sw.add_images('Val/Reconstructions', valid_reconstructions, i)
 
 
 
