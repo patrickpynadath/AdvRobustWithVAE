@@ -108,6 +108,25 @@ class SmoothVAE_Sample(Smooth):
         reconstruction = self.trained_VAE.generate(x + noise)
         return self.base_classifier(reconstruction)
 
+class VQVAE_CLF(torch.nn.Module):
+    def __init__(self,
+                 base_classifier: torch.nn.Module,
+                 vq_vae,):
+
+        super().__init__()
+        self.clf = base_classifier
+        self.vq_vae = vq_vae
+
+    def parameters(self, recurse: bool = True):
+        return self.clf.parameters(recurse=recurse)
+
+    def named_parameters(self, prefix: str = '', recurse: bool = True):
+        return self.clf.named_parameters(prefix, recurse)
+
+    def forward(self, x):
+        reconstruction = self.vq_vae(x)[1]
+        return self.base_classifier(reconstruction)
+
 
 class SmoothVAE_PreProcess(Smooth):
     def __init__(self,

@@ -161,3 +161,5 @@ class NatTrainer:
                 writer.add_scalar('NatTraining/Grad/AvgGradNorm', model_grad_mean, epoch)
                 writer.flush()
         return
+
+

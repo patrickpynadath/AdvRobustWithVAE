@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import torchvision
 from Adversarial import PGD_L2
 from torchattacks import PGD
-from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth
+from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth, vae_models, VQVAE_CLF
 from Training import NatTrainer, VAETrainer
 
 
@@ -197,6 +197,47 @@ class BaseExp:
                                  lr_schedule_step=lr_schedule_step)
         clf_trainer.training_loop(epochs_clf)
         return smooth_vae
+
+    def get_vqvae_resnet(self,
+                         net_depth = 110,
+                         block_name = 'BottleNeck',
+                         batch_size_clf = 64,
+                         epochs_clf = 200,
+                         optimizer = 'sgd',
+                         lr_clf=.15,
+                         use_step_lr=True,
+                         lr_schedule_step=50,
+                         lr_schedule_gamma=.1):
+        num_hiddens = 128
+        num_residual_hiddens = 32
+        num_residual_layers = 2
+        embedding_dim = 64
+        num_embeddings = 512
+        commitment_cost = 0.25
+        VQVAE = vae_models['VQVAE2']
+        vq_vae = VQVAE(num_hiddens, num_residual_layers, num_residual_hiddens,
+                       num_embeddings, embedding_dim,
+                       commitment_cost).to(self.device)
+        vq_vae.load_state_dict(torch.load('saved_models/vq_vae'))
+        resnet = ResNet(depth=net_depth,
+                        num_classes=self.num_classes,
+                        block_name=block_name).to(self.device)
+        clf = VQVAE_CLF(resnet, vq_vae)
+        train_loader, test_loader = self.get_loaders(batch_size_clf)
+        clf_trainer = NatTrainer(model=clf,
+                                 train_loader=train_loader,
+                                 test_loader=test_loader,
+                                 device=self.device,
+                                 optimizer=optimizer,
+                                 lr=lr_clf,
+                                 log_dir=self.training_logdir,
+                                 use_tensorboard=True,
+                                 use_step_lr=use_step_lr,
+                                 lr_schedule_gamma=lr_schedule_gamma,
+                                 lr_schedule_step=lr_schedule_step)
+        clf_trainer.training_loop(epochs_clf)
+        return clf_trainer.model
+
 
     def get_adv_examples(self,
                          trained_clf,
