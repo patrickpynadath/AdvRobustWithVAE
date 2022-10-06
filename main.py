@@ -15,9 +15,9 @@ if __name__ == '__main__':
                   device='cuda')
     resnet = exp.get_trained_resnet(net_depth=110,
                                     block_name='BottleNeck',
-                                    batch_size=256,
+                                    batch_size=128,
                                     optimizer='sgd',
-                                    lr=.1,
+                                    lr=.15,
                                     epochs=150,
                                     use_step_lr=True,
                                     lr_schedule_step=50,
