@@ -114,7 +114,7 @@ class VQVAE_CLF(torch.nn.Module):
                  vq_vae,):
 
         super().__init__()
-        self.clf = base_classifier
+        self.base_classifier = base_classifier
         self.vq_vae = vq_vae
         self.label = 'vqvae_resnet'
 
