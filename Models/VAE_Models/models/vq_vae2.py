@@ -212,7 +212,7 @@ class Decoder(nn.Module):
         x = self._conv_trans_1(x)
         x = F.relu(x)
 
-        return self._conv_trans_2(x)
+        return torch.sigmoid(self._conv_trans_2(x))
 
 
 class VQVAE2(nn.Module):
@@ -242,6 +242,6 @@ class VQVAE2(nn.Module):
         z = self._encoder(x)
         z = self._pre_vq_conv(z)
         loss, quantized, perplexity, _ = self._vq_vae(z)
-        x_recon = F.sigmoid(self._decoder(quantized))
+        x_recon = self._decoder(quantized)
 
         return loss, x_recon, perplexity
