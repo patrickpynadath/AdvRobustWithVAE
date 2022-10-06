@@ -119,10 +119,10 @@ class VQVAE_CLF(torch.nn.Module):
         self.label = 'vqvae_resnet'
 
     def parameters(self, recurse: bool = True):
-        return self.clf.parameters(recurse=recurse)
+        return self.base_classifier.parameters(recurse=recurse)
 
     def named_parameters(self, prefix: str = '', recurse: bool = True):
-        return self.clf.named_parameters(prefix, recurse)
+        return self.base_classifier.named_parameters(prefix, recurse)
 
     def forward(self, x):
         with torch.no_grad():
