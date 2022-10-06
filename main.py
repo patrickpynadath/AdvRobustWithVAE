@@ -18,7 +18,7 @@ if __name__ == '__main__':
                                     batch_size=64,
                                     optimizer='sgd',
                                     lr=.15,
-                                    epochs=150,
+                                    epochs=50,
                                     use_step_lr=True,
                                     lr_schedule_step=50,
                                     lr_schedule_gamma=.1)
