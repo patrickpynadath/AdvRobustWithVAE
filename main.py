@@ -10,5 +10,22 @@ HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 VAE_ADV_EXP = '../ExperimentLogging/AdversarialExpVAE/'
 ADV_ROB_EXP = '../ExperimentLogging/AdvRobExp/'
 if __name__ == '__main__':
-    vq_vae = get_trained_vq_vae(TRAIN_METRICS_DIR, 15000)
-    torch.save(vq_vae.state_dict(), 'saved_models/vq_vae')
+    exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
+                  exp_logdir=VAE_ADV_EXP,
+                  device='cuda')
+    resnet = exp.get_trained_resnet(net_depth=110,
+                                    block_name='BottleNeck',
+                                    batch_size=256,
+                                    optimizer='sgd',
+                                    lr=.1,
+                                    epochs=150,
+                                    use_step_lr=True,
+                                    lr_schedule_step=50,
+                                    lr_schedule_gamma=.1)
+    torch.save(resnet.state_dict(), 'saved_models/resnet_updated')
+    vae = exp.get_trained_vanilla_vae(batch_size=64,
+                                      epochs=150,
+                                      vae_model='VanillaVAE')
+    torch.save(vae.state_dict(), 'saved_models/vae_base_updated')
+    # vq_vae = get_trained_vq_vae(TRAIN_METRICS_DIR, 15000)
+    # torch.save(vq_vae.state_dict(), 'saved_models/vq_vae')
