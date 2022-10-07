@@ -31,13 +31,12 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
     vq_vae = vae_models['VQVAE2']
     batch_size = 256
 
+    num_hiddens = 256
+    num_residual_hiddens = 64
+    num_residual_layers = 10
 
-    num_hiddens = 128
-    num_residual_hiddens = 32
-    num_residual_layers = 2
-
-    embedding_dim = 64
-    num_embeddings = 512
+    embedding_dim = 128
+    num_embeddings = 1024
 
     commitment_cost = 0.25
 

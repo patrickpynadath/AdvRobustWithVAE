@@ -202,7 +202,7 @@ class BaseExp:
                          net_depth = 110,
                          block_name = 'BottleNeck',
                          batch_size_clf = 64,
-                         epochs_clf = 200,
+                         epochs_clf = 50,
                          optimizer = 'sgd',
                          lr_clf=.15,
                          use_step_lr=True,
