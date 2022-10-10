@@ -32,8 +32,12 @@ def run_adv_robust():
     linf_eps = [1/255, 2/255, 5/255, 10/255]
     l2_eps = [.5, 1, 1.5, 2]
     models = {'base_clf' : base_resnet_clf, 'VQVAE-Resnet(ensemble)' : vq_vae_clf, 'VQVAE-Resnet(clf)' : vq_vae_clf.base_classifier}
-    res = {'nat acc' : {}, 'linf adv' : {}, 'l2 adv' : {}}
-    attackers = {'linf adv' : PGD, 'l2 adv' : PGDL2}
+    total_res = {}
+    for name in models.keys():
+        total_res[name] = {'nat acc': 0,
+                           'linf adv': [0 for _ in range(len(linf_eps))],
+                           'l2 adv': [0 for _ in range(len(l2_eps))]}
+    attackers = {'linf adv': PGD, 'l2 adv' : PGDL2}
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     for batch_idx, batch in progress_bar:
         data, labels = batch
@@ -45,7 +49,7 @@ def run_adv_robust():
             outputs = model(data)
             pred = torch.argmax(outputs, dim=1)
             num_correct = get_num_correct(pred, labels)
-            res['nat acc'][model_name] = num_correct/total_samples
+            total_res[model_name]['nat acc'] += num_correct/total_samples
 
             # linf adversaries
             for attacker_type in attackers.keys():
@@ -59,11 +63,11 @@ def run_adv_robust():
                     attacked_data = attacker(data, labels)
                     outputs = model(attacked_data)
                     pred = torch.argmax(outputs, dim=1)
-                    res[attacker_type][i] = get_num_correct(pred, labels)/total_samples
+                    total_res[model_name][attacker_type][i] += get_num_correct(pred, labels)/total_samples
 
     # saving the data
     with open(r'res/prelim_adv_res.pickle', 'wb') as output_file:
-        pickle.dump(res, output_file)
+        pickle.dump(total_res, output_file)
     print("Finished with adv testing")
     return
 
