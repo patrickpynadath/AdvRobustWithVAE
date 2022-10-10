@@ -45,11 +45,10 @@ def run_adv_robust():
     norm_lists = {'linf adv': linf_eps, 'l2 adv' : l2_eps}
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     for batch_idx, batch in progress_bar:
-        data, labels = batch
-        data = data.to(device)
-
         # natural accuracy
         for model_name in models.keys():
+            data, labels = batch
+            data = data.to(device)
             model = models[model_name]
             outputs = model(data)
             pred = torch.argmax(outputs, dim=1)
