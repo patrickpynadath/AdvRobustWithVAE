@@ -24,8 +24,12 @@ def run_adv_robust():
                    num_embeddings, embedding_dim,
                    commitment_cost).to(device)
     vq_vae.load_state_dict(torch.load('saved_models/vq_vae'))
-    vq_vae_clf = VQVAE_CLF(copy.deepcopy(base_resnet_clf), copy.deepcopy(vq_vae)).to(device)
-
+    resnet = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
+    vq_vae2 = VQVAE(num_hiddens, num_residual_layers, num_residual_hiddens,
+                   num_embeddings, embedding_dim,
+                   commitment_cost).to(device)
+    vq_vae_clf = VQVAE_CLF(resnet, vq_vae2)
+    vq_vae_clf.load_state_dict(torch.load('saved_models/vqvae_resnet'))
     _, test_dataset = get_cifar_sets()
     test_loader = DataLoader(test_dataset, batch_size=64)
     total_samples = len(test_dataset)
