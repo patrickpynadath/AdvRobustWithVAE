@@ -57,10 +57,11 @@ def get_cifar_sets():
     train_transform = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
-        transforms.ToTensor()
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
     ])
     test_transform = transforms.Compose(
-        [transforms.ToTensor()])
+        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))])
     trainset = torchvision.datasets.CIFAR10(root=root_dir, train=True,
                                             download=True, transform=train_transform)
 
