@@ -56,7 +56,8 @@ def run_adv_robust():
                         attacker = attackers[attacker_type](model, eps = linf_eps[i], steps = 40)
 
                     attacked_data = attacker(data, labels)
-                    pred = model(attacked_data)
+                    outputs = model(attacked_data)
+                    pred = torch.argmax(outputs, dim=1)
                     res[attacker_type][i] = get_num_correct(pred, labels)/total_samples
 
     # saving the data
