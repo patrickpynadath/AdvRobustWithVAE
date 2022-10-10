@@ -10,7 +10,7 @@ import pickle
 
 def run_adv_robust():
     device = 'cuda'
-    base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10)
+    base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
     base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_updated'))
 
     num_hiddens = 128
