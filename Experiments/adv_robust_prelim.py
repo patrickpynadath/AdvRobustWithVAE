@@ -42,7 +42,8 @@ def run_adv_robust():
         # natural accuracy
         for model_name in models.keys():
             model = models[model_name]
-            pred = model(data)
+            outputs = model(data)
+            pred = torch.argmax(outputs, dim=1)
             num_correct = get_num_correct(pred, labels)
             res['nat acc'][model_name] = num_correct/total_samples
 
