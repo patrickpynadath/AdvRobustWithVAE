@@ -42,6 +42,7 @@ def run_adv_robust():
                            'linf adv': [0 for _ in range(len(linf_eps))],
                            'l2 adv': [0 for _ in range(len(l2_eps))]}
     attackers = {'linf adv': PGD, 'l2 adv' : PGDL2}
+    norms = {'linf adv': linf_eps, 'l2 adv' : l2_eps}
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     for batch_idx, batch in progress_bar:
         data, labels = batch
@@ -57,12 +58,13 @@ def run_adv_robust():
 
             # linf adversaries
             for attacker_type in attackers.keys():
-                for i in range(len(linf_eps)):
+                norms = norms[attacker_type]
+                for i in range(len(norms)):
 
                     if model_name == 'VQVAE-Resnet(ensemble)':
-                        attacker = attackers[attacker_type](vq_vae_clf.base_classifier, eps = linf_eps[i], steps = 40)
+                        attacker = attackers[attacker_type](vq_vae_clf.base_classifier, eps = norms[i], steps = 40)
                     else:
-                        attacker = attackers[attacker_type](model, eps = linf_eps[i], steps = 40)
+                        attacker = attackers[attacker_type](model, eps = norms[i], steps = 40)
 
                     attacked_data = attacker(data, labels)
                     outputs = model(attacked_data)
