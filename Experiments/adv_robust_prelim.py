@@ -34,7 +34,7 @@ def run_adv_robust():
     models = {'base_clf' : base_resnet_clf, 'VQVAE-Resnet(ensemble)' : vq_vae_clf, 'VQVAE-Resnet(clf)' : vq_vae_clf.base_classifier}
     res = {'nat acc' : {}, 'linf adv' : {}, 'l2 adv' : {}}
     attackers = {'linf adv' : PGD, 'l2 adv' : PGDL2}
-    progress_bar = tqdm(enumerate(test_loader))
+    progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     for batch_idx, batch in progress_bar:
         data, labels = batch
         data = data.to(device)
