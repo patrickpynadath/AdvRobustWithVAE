@@ -27,7 +27,7 @@ def run_adv_robust():
     vq_vae_clf = VQVAE_CLF(copy.deepcopy(base_resnet_clf), copy.deepcopy(vq_vae)).to(device)
 
     _, test_dataset = get_cifar_sets()
-    test_loader = DataLoader(test_dataset, batch_size=256)
+    test_loader = DataLoader(test_dataset, batch_size=64)
     total_samples = len(test_dataset)
     linf_eps = [1/255, 2/255, 5/255, 10/255]
     l2_eps = [.5, 1, 1.5, 2]
