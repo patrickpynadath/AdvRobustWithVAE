@@ -14,7 +14,7 @@ if __name__ == '__main__':
     exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
                   exp_logdir=VAE_ADV_EXP,
                   device='cuda')
-    vae = exp.get_trained_vanilla_vae(batch_size=256, epochs=150, vae_model='VanillaVAE')
+    vae = exp.get_trained_vanilla_vae(batch_size=256, epochs=150, vae_model='vae')
     torch.save(vae.state_dict(), 'saved_models/vae_vanilla_base')
     # vq_vae = get_trained_vq_vae(TRAIN_METRICS_DIR, 15000)
     # torch.save(vq_vae.state_dict(), 'saved_models/vq_vae')
