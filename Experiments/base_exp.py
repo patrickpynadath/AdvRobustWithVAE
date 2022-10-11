@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import torchvision
 from Adversarial import PGD_L2
 from torchattacks import PGD
-from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth, vae_models, VQVAE_CLF
+from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth, vae_models, VQVAE_CLF, VAE_CLF
 from Training import NatTrainer, VAETrainer
 
 
@@ -238,6 +238,37 @@ class BaseExp:
         clf_trainer.training_loop(epochs_clf)
         return clf_trainer.model
 
+    def get_vae_resnet(self,
+                     net_depth=110,
+                     block_name='BottleNeck',
+                     batch_size_clf=256,
+                     epochs_clf=100,
+                     optimizer='sgd',
+                     lr_clf=.15,
+                     use_step_lr=True,
+                     lr_schedule_step=85,
+                     lr_schedule_gamma=.1):
+        VAE = vae_models['VanillaVAE']
+        vae = VAE(in_channels=3, latent_dim=512).to(self.device)
+        vae.load_state_dict(torch.load('saved_models/vae_vanilla_base'))
+        resnet = ResNet(depth=net_depth,
+                        num_classes=self.num_classes,
+                        block_name=block_name).to(self.device)
+        clf = VAE_CLF(vae, resnet)
+        train_loader, test_loader = self.get_loaders(batch_size_clf)
+        clf_trainer = NatTrainer(model=clf,
+                                 train_loader=train_loader,
+                                 test_loader=test_loader,
+                                 device=self.device,
+                                 optimizer=optimizer,
+                                 lr=lr_clf,
+                                 log_dir=self.training_logdir,
+                                 use_tensorboard=True,
+                                 use_step_lr=use_step_lr,
+                                 lr_schedule_gamma=lr_schedule_gamma,
+                                 lr_schedule_step=lr_schedule_step)
+        clf_trainer.training_loop(epochs_clf)
+        return clf_trainer.model
 
     def get_adv_examples(self,
                          trained_clf,

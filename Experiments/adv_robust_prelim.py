@@ -1,5 +1,5 @@
 import torch
-from Models import ResNet, vae_models, VQVAE_CLF
+from Models import ResNet, vae_models, VQVAE_CLF, Smooth, VAE_CLF
 from Utils import get_cifar_sets
 from torch.utils.data import DataLoader
 import copy
@@ -19,6 +19,7 @@ def run_adv_robust():
 
     linf_eps = [1/255, 2/255, 5/255, 10/255]
     l2_eps = [.5, 1, 1.5, 2]
+    smoothing_sigmas = [.1, .25, .5]
 
     models = {'base_clf': resnet_base,
               'VQVAE-Resnet(ensemble)': vqvae_clf,
@@ -68,10 +69,18 @@ def run_adv_robust():
 def get_num_correct(pred, labels):
     return sum([1 if pred[i].item() == labels[i].item() else 0 for i in range(len(labels))])
 
+
 def get_base_resnet(device):
     base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
     base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_updated'))
     return base_resnet_clf
+
+
+def get_vae_clf(device):
+    VAE = vae_models['VanillaVAE']
+    vae = VAE(in_channels=3, latent_dim=512).to(device)
+    vae.load_state_dict(torch.load('saved_models/vae_vanilla_base'))
+
 
 def get_vqvae_clf(device):
     base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)

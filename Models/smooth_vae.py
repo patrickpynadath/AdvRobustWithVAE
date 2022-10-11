@@ -129,6 +129,27 @@ class VQVAE_CLF(torch.nn.Module):
             reconstruction = self.vq_vae(x)[1]
         return self.base_classifier(reconstruction)
 
+class VAE_CLF(torch.nn.Module):
+    def __init__(self,
+                 base_classifier: torch.nn.Module,
+                 vae,):
+
+        super().__init__()
+        self.base_classifier = base_classifier
+        self.vae = vae
+        self.label = 'vae_resnet'
+
+    def parameters(self, recurse: bool = True):
+        return self.base_classifier.parameters(recurse=recurse)
+
+    def named_parameters(self, prefix: str = '', recurse: bool = True):
+        return self.base_classifier.named_parameters(prefix, recurse)
+
+    def forward(self, x):
+        with torch.no_grad():
+            reconstruction = self.vae(x)[0]
+        return self.base_classifier(reconstruction)
+
 
 class SmoothVAE_PreProcess(Smooth):
     def __init__(self,

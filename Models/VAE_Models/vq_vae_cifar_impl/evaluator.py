@@ -44,12 +44,12 @@ class Evaluator(object):
         self._valid_originals = self._valid_originals.to(self._device)
 
         vq_output_eval = self._model.pre_vq_conv(self._model.encoder(self._valid_originals))
-        _, valid_quantize, _, _ = self._model.vq_vae(vq_output_eval)
+        _, valid_quantize, _, _ = self._model.vae(vq_output_eval)
         self._valid_reconstructions = self._model.decoder(valid_quantize)
 
         (train_originals, _) = next(iter(self._dataset.training_loader))
         train_originals = train_originals.to(self._device)
-        _, self._train_reconstructions, _, _ = self._model.vq_vae(train_originals)
+        _, self._train_reconstructions, _, _ = self._model.vae(train_originals)
 
     def save_original_images_plot(self, path):
         self._save_image(make_grid(self._valid_originals.cpu()+0.5), path)
@@ -69,7 +69,7 @@ class Evaluator(object):
             metric='euclidean'
         )
 
-        projection = map.fit_transform(self._model.vq_vae.embedding.weight.data.cpu())
+        projection = map.fit_transform(self._model.vae.embedding.weight.data.cpu())
 
         fig = plt.figure()
         plt.scatter(projection[:,0], projection[:,1], alpha=0.3)
