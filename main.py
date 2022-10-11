@@ -19,4 +19,4 @@ if __name__ == '__main__':
     torch.save(vqvae_resnet.vq_vae.state_dict(), 'saved_models/vqvae_ensemble')
     # vq_vae = get_trained_vq_vae(TRAIN_METRICS_DIR, 15000)
     # torch.save(vq_vae.state_dict(), 'saved_models/vq_vae')
-    run_adv_robust()
+    # run_adv_robust()
