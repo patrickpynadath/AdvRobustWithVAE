@@ -14,9 +14,16 @@ if __name__ == '__main__':
     exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
                   exp_logdir=VAE_ADV_EXP,
                   device='cuda')
-    vqvae_resnet = exp.get_vqvae_resnet()
-    torch.save(vqvae_resnet.base_classifier.state_dict(), 'saved_models/resnet_ensemble')
-    torch.save(vqvae_resnet.vq_vae.state_dict(), 'saved_models/vqvae_ensemble')
+    resnet = exp.get_trained_resnet(net_depth=110,
+                           block_name='BottleNeck',
+                           batch_size=256,
+                           optimizer='sgd',
+                           lr=.15,
+                           epochs=100,
+                           use_step_lr=True,
+                           lr_schedule_step=50,
+                           lr_schedule_gamma=.5)
+    torch.save(resnet.state_dict(), 'saved_models/resnet_base')
     # vq_vae = get_trained_vq_vae(TRAIN_METRICS_DIR, 15000)
     # torch.save(vq_vae.state_dict(), 'saved_models/vq_vae')
     # run_adv_robust()
