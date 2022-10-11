@@ -10,39 +10,27 @@ import pickle
 
 def run_adv_robust():
     device = 'cuda'
-    base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
-    base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_updated'))
+    resnet_base = get_base_resnet(device)
+    vqvae_clf = get_vqvae_clf(device)
 
-    num_hiddens = 128
-    num_residual_hiddens = 32
-    num_residual_layers = 2
-    embedding_dim = 64
-    num_embeddings = 512
-    commitment_cost = 0.25
-    VQVAE = vae_models['VQVAE2']
-    vq_vae = VQVAE(num_hiddens, num_residual_layers, num_residual_hiddens,
-                   num_embeddings, embedding_dim,
-                   commitment_cost).to(device)
-    vq_vae.load_state_dict(torch.load('saved_models/vq_vae'))
-    resnet = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
-    vq_vae2 = VQVAE(num_hiddens, num_residual_layers, num_residual_hiddens,
-                   num_embeddings, embedding_dim,
-                   commitment_cost).to(device)
-    vq_vae_clf = VQVAE_CLF(resnet, vq_vae2)
-    vq_vae_clf.load_state_dict(torch.load('saved_models/vqvae_resnet'))
     _, test_dataset = get_cifar_sets()
-    test_loader = DataLoader(test_dataset, batch_size=64)
+    test_loader = DataLoader(test_dataset, batch_size=128)
     total_samples = len(test_dataset)
+
     linf_eps = [1/255, 2/255, 5/255, 10/255]
     l2_eps = [.5, 1, 1.5, 2]
-    models = {'base_clf' : base_resnet_clf, 'VQVAE-Resnet(ensemble)' : vq_vae_clf, 'VQVAE-Resnet(clf)' : vq_vae_clf.base_classifier}
+
+    models = {'base_clf': resnet_base,
+              'VQVAE-Resnet(ensemble)': vqvae_clf,
+              'VQVAE-Resnet(clf)': vqvae_clf.base_classifier}
+
     total_res = {}
     for name in models.keys():
         total_res[name] = {'nat acc': 0,
                            'linf adv': [0 for _ in range(len(linf_eps))],
                            'l2 adv': [0 for _ in range(len(l2_eps))]}
-    attackers = {'linf adv': PGD, 'l2 adv' : PGDL2}
-    norm_lists = {'linf adv': linf_eps, 'l2 adv' : l2_eps}
+    attackers = {'linf adv': PGD, 'l2 adv': PGDL2}
+    norm_lists = {'linf adv': linf_eps, 'l2 adv': l2_eps}
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     for batch_idx, batch in progress_bar:
         # natural accuracy
@@ -61,7 +49,7 @@ def run_adv_robust():
                 for i in range(len(norms)):
 
                     if model_name == 'VQVAE-Resnet(ensemble)':
-                        attacker = attackers[attacker_type](vq_vae_clf.base_classifier, eps = norms[i], steps = 40)
+                        attacker = attackers[attacker_type](vqvae_clf.base_classifier, eps = norms[i], steps = 40)
                     else:
                         attacker = attackers[attacker_type](model, eps = norms[i], steps = 40)
 
@@ -79,3 +67,25 @@ def run_adv_robust():
 
 def get_num_correct(pred, labels):
     return sum([1 if pred[i].item() == labels[i].item() else 0 for i in range(len(labels))])
+
+def get_base_resnet(device):
+    base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
+    base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_updated'))
+    return base_resnet_clf
+
+def get_vqvae_clf(device):
+    base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
+    base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_ensemble'))
+
+    num_hiddens = 128
+    num_residual_hiddens = 32
+    num_residual_layers = 2
+    embedding_dim = 64
+    num_embeddings = 512
+    commitment_cost = 0.25
+    VQVAE = vae_models['VQVAE2']
+    vq_vae = VQVAE(num_hiddens, num_residual_layers, num_residual_hiddens,
+                   num_embeddings, embedding_dim,
+                   commitment_cost).to(device)
+    vq_vae.load_state_dict(torch.load('saved_models/vqvae_ensemble'))
+    return VQVAE_CLF(base_resnet_clf, vq_vae)

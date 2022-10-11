@@ -206,7 +206,7 @@ class BaseExp:
                          optimizer = 'sgd',
                          lr_clf=.15,
                          use_step_lr=True,
-                         lr_schedule_step=50,
+                         lr_schedule_step=85,
                          lr_schedule_gamma=.1):
         num_hiddens = 128
         num_residual_hiddens = 32
