@@ -254,7 +254,7 @@ class BaseExp:
         resnet = ResNet(depth=net_depth,
                         num_classes=self.num_classes,
                         block_name=block_name).to(self.device)
-        clf = VAE_CLF(vae, resnet)
+        clf = VAE_CLF(vae=vae, base_classifier=resnet)
         train_loader, test_loader = self.get_loaders(batch_size_clf)
         clf_trainer = NatTrainer(model=clf,
                                  train_loader=train_loader,
