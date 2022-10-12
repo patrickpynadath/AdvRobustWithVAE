@@ -15,6 +15,7 @@ def test_resnet_base(test_loader, attackers, norm_lists, acc_dct):
     resnet_base.eval()
     total = 0
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
+    print("Testing Base-Resnet")
     for batch_idx, batch in progress_bar:
         data, labels = batch
         data = data.to(device)
@@ -52,6 +53,7 @@ def test_vq_vae_ensemble(test_loader, attackers, norm_lists, acc_dct):
     vqvae_clf.eval()
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     total = 0
+    print('Testing VQVAE-Resnet(ensemble)')
     for batch_idx, batch in progress_bar:
         data, labels = batch
         data = data.to(device)
@@ -91,6 +93,7 @@ def test_vq_vae_clf(test_loader, attackers, norm_lists, acc_dct):
     model.eval()
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     total = 0
+    print('Testing VQVAE-Resnet(clf)')
     for batch_idx, batch in progress_bar:
         data, labels = batch
         data = data.to(device)
@@ -128,6 +131,7 @@ def test_vae_ensemble(test_loader, attackers, norm_lists, acc_dct):
     vae_clf.eval()
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     total = 0
+    print('Testing VAE-Resnet(ensemble)')
     for batch_idx, batch in progress_bar:
         data, labels = batch
         data = data.to(device)
@@ -167,6 +171,7 @@ def test_vae_clf(test_loader, attackers, norm_lists, acc_dct):
     model.eval()
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     total = 0
+    print('Testing VAE-Resnet(clf)')
     for batch_idx, batch in progress_bar:
         data, labels = batch
         data = data.to(device)
@@ -204,6 +209,7 @@ def test_smooth_resnet(test_loader, attackers, norm_lists, acc_dct, sigma):
     model.eval()
     progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
     total = 0
+    print(f'Testing Smooth-Resnet-{sigma}')
     for batch_idx, batch in progress_bar:
         data, labels = batch
         data = data.to(device)
