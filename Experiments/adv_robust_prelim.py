@@ -11,7 +11,7 @@ import pickle
 def run_adv_robust():
     device = 'cuda'
     resnet_base = get_base_resnet(device)
-    resnet_base.eval()
+    #resnet_base.eval()
     vqvae_clf = get_vqvae_clf(device)
     vae_clf = get_vae_clf(device)
     smoothing_sigmas = [.1, .25, .5]
