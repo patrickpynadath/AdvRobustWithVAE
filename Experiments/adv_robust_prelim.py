@@ -237,6 +237,7 @@ def test_smooth_resnet(test_loader, attackers, norm_lists, acc_dct, sigma):
                 pred = torch.argmax(outputs, dim=1)
                 acc_dct[f'Smooth-Resnet-{sigma}'][attacker_type][i] += get_num_correct(pred, labels)
                 total += len(data)
+                torch.cuda.empty_cache()
             acc_dct[f'Smooth-Resnet-{sigma}'][attacker_type][i] /= total
             print(f"Adv Acc: {acc_dct[f'Smooth-Resnet-{sigma}'][attacker_type][i]}")
     print(f"Done testing {f'Smooth-Resnet-{sigma}'}")
