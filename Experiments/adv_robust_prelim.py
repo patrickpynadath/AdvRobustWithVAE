@@ -86,7 +86,7 @@ def get_num_correct(pred, labels):
 
 def get_base_resnet(device):
     base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
-    base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_updated'))
+    base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_base'))
     return base_resnet_clf
 
 
