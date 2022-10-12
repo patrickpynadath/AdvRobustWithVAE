@@ -17,7 +17,7 @@ def run_adv_robust():
     smooth_models = get_resnet_smooth(device, smoothing_sigmas, resnet_base)
 
     _, test_dataset = get_cifar_sets()
-    test_loader = DataLoader(test_dataset, batch_size=128)
+    test_loader = DataLoader(test_dataset, batch_size=32)
     total_samples = len(test_dataset)
 
     linf_eps = [1/255, 2/255, 5/255, 10/255]
