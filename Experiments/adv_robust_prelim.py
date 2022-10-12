@@ -50,7 +50,8 @@ def run_adv_robust():
             outputs = model(data)
             pred = torch.argmax(outputs, dim=1)
             num_correct = get_num_correct(pred, labels)
-            total_res[model_name]['nat acc'] += num_correct/total_samples
+            total_res[model_name]['nat acc'] += num_correct
+        total_res[model_name]['nat acc'] /= total_samples
         print(f"Nat Acc: {total_res[model_name]['nat acc']}")
         progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
         for attacker_type in attackers.keys():
