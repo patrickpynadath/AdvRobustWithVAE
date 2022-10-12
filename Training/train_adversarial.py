@@ -4,7 +4,7 @@ from tqdm import tqdm
 from Utils.utils import requires_grad_
 from typing import List
 from Adversarial.attacks import PGD_L2
-from torchattacks import PGD
+from torchattacks_cust import PGD
 from torch.utils.tensorboard import SummaryWriter
 
 # train the classifier, returning an array of the training loss and accuracy

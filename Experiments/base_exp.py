@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 import torchvision
 from Adversarial import PGD_L2
-from torchattacks import PGD
+from torchattacks_cust import PGD
 from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth, vae_models, VQVAE_CLF, VAE_CLF
 from Training import NatTrainer, VAETrainer
 
@@ -25,7 +25,8 @@ class BaseExp:
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor()
         ])
-        test_transform = transforms.Compose([transforms.ToTensor()])
+        test_transform = transforms.Compose([transforms.ToTensor(),
+                                             transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))])
         root_dir = r'*/'
         if not clf_train_set:
             clf_train_set = torchvision.datasets.CIFAR10(root=root_dir,
