@@ -68,7 +68,7 @@ def run_adv_robust():
                 elif model_name == 'VAE-Resnet(ensemble)':
                     attacker = attackers[attacker_type](vae_clf.base_classifier, eps=norms[i], steps=40)
                 else:
-                    attacker = attackers[attacker_type](model, eps=norms[i], steps=40)
+                    attacker = attackers[attacker_type](model, eps=norms[i], steps=20)
                 progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
                 for batch_idx, batch in progress_bar:
                     data, labels = batch
