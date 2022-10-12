@@ -38,10 +38,11 @@ def run_adv_robust():
                            'l2 adv': [0 for _ in range(len(l2_eps))]}
     attackers = {'linf adv': PGD, 'l2 adv': PGDL2}
     norm_lists = {'linf adv': linf_eps, 'l2 adv': l2_eps}
-    progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
-    for batch_idx, batch in progress_bar:
-        # natural accuracy
-        for model_name in models.keys():
+
+    for model_name in models.keys():
+        print(f"testing {model_name}")
+        progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
+        for batch_idx, batch in progress_bar:
             data, labels = batch
             data = data.to(device)
             model = models[model_name]
@@ -65,7 +66,16 @@ def run_adv_robust():
                     outputs = model(attacked_data)
                     pred = torch.argmax(outputs, dim=1)
                     total_res[model_name][attacker_type][i] += get_num_correct(pred, labels)/total_samples
-
+        print(f"Done testing {model_name}")
+        print("Results:")
+        print(f"Nat Acc: {total_res[model_name]['nat acc']}")
+        print("L2 Adv Acc: ")
+        for i, eps in enumerate(l2_eps):
+            print(f"Adv Eps {round(eps, 5)}: {total_res[model_name]['l2 adv'][i]}")
+        print("Linf Adv Acc: ")
+        for i, eps in enumerate(linf_eps):
+            print(f"Adv Eps {round(eps, 5)}: {total_res[model_name]['linf adv'][i]}")
+        print("")
     # saving the data
     with open(r'res/prelim_adv_res.pickle', 'wb') as output_file:
         pickle.dump(total_res, output_file)
