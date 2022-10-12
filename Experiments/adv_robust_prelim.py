@@ -246,7 +246,7 @@ def test_smooth_resnet(test_loader, attackers, norm_lists, acc_dct, sigma):
 
 def run_adv_robust():
 
-    smoothing_sigmas = [.1, .25, .5]
+    smoothing_sigmas = [.25]
 
     _, test_dataset = get_cifar_sets()
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
