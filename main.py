@@ -11,7 +11,7 @@ HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 VAE_ADV_EXP = '../ExperimentLogging/AdversarialExpVAE/'
 ADV_ROB_EXP = '../ExperimentLogging/AdvRobExp/'
 if __name__ == '__main__':
-    vq_vae = get_trained_vq_vae(TRAIN_METRICS_DIR, 9000)
+    vq_vae = get_trained_vq_vae(TRAIN_METRICS_DIR, 6000)
     torch.save(vq_vae.state_dict(), 'saved_models/vq_vae_0_1')
     torch.cuda.empty_cache()
     exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
