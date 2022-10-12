@@ -40,41 +40,38 @@ def run_adv_robust():
     norm_lists = {'linf adv': linf_eps, 'l2 adv': l2_eps}
 
     for model_name in models.keys():
+        model = models[model_name]
         print(f"testing {model_name}")
+        print('Testing Nat Acc')
         progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
         for batch_idx, batch in progress_bar:
             data, labels = batch
             data = data.to(device)
-            model = models[model_name]
             outputs = model(data)
             pred = torch.argmax(outputs, dim=1)
             num_correct = get_num_correct(pred, labels)
             total_res[model_name]['nat acc'] += num_correct/total_samples
-
-            # adversaries
-            for attacker_type in attackers.keys():
-                norms = norm_lists[attacker_type]
-                for i in range(len(norms)):
-
-                    if model_name == 'VQVAE-Resnet(ensemble)':
-                        attacker = attackers[attacker_type](vqvae_clf.base_classifier, eps = norms[i], steps = 40)
-                    elif model_name == 'VAE-Resnet(ensemble)':
-                        attacker = attackers[attacker_type](vae_clf.base_classifier, eps = norms[i], steps = 40)
-                    else:
-                        attacker = attackers[attacker_type](model, eps=norms[i], steps=40)
+        print(f"Nat Acc: {total_res[model_name]['nat acc']}")
+        progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
+        for attacker_type in attackers.keys():
+            print(attacker_type)
+            norms = norm_lists[attacker_type]
+            for i in range(len(norms)):
+                print(f"Eps: {round(norms[i], 5)}")
+                if model_name == 'VQVAE-Resnet(ensemble)':
+                    attacker = attackers[attacker_type](vqvae_clf.base_classifier, eps=norms[i], steps=40)
+                elif model_name == 'VAE-Resnet(ensemble)':
+                    attacker = attackers[attacker_type](vae_clf.base_classifier, eps=norms[i], steps=40)
+                else:
+                    attacker = attackers[attacker_type](model, eps=norms[i], steps=40)
+                for batch_idx, batch in progress_bar:
+                    data, labels = batch
                     attacked_data = attacker(data, labels)
                     outputs = model(attacked_data)
                     pred = torch.argmax(outputs, dim=1)
                     total_res[model_name][attacker_type][i] += get_num_correct(pred, labels)/total_samples
+                print(f"Adv Acc: {total_res[model_name][attacker_type][i]}")
         print(f"Done testing {model_name}")
-        print("Results:")
-        print(f"Nat Acc: {total_res[model_name]['nat acc']}")
-        print("L2 Adv Acc: ")
-        for i, eps in enumerate(l2_eps):
-            print(f"Adv Eps {round(eps, 5)}: {total_res[model_name]['l2 adv'][i]}")
-        print("Linf Adv Acc: ")
-        for i, eps in enumerate(linf_eps):
-            print(f"Adv Eps {round(eps, 5)}: {total_res[model_name]['linf adv'][i]}")
         print("")
     # saving the data
     with open(r'res/prelim_adv_res.pickle', 'wb') as output_file:
