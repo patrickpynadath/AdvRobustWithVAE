@@ -89,7 +89,7 @@ def get_vae_clf(device):
     vae.load_state_dict(torch.load('saved_models/vae_vanilla_base'))
     resnet_base_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
     resnet_base_clf.load_state_dict(torch.load('saved_models/resnet_vae_ensemble'))
-    return VAE_CLF(base_classifier=resnet_base_clf, vae=VAE)
+    return VAE_CLF(base_classifier=resnet_base_clf, vae=vae)
 
 
 def get_vqvae_clf(device):
