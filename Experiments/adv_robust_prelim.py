@@ -262,12 +262,6 @@ def run_adv_robust():
                            'l2 adv': [0 for _ in range(len(l2_eps))]}
     attackers = {'linf adv': PGD, 'l2 adv': PGDL2}
     norm_lists = {'linf adv': linf_eps, 'l2 adv': l2_eps}
-    try:
-        test_resnet_base(test_loader, attackers, norm_lists, total_res)
-        torch.cuda.empty_cache()
-    except Exception as ex:
-        dump_checkpoint(total_res)
-        print(ex)
     for sigma in smoothing_sigmas:
         try:
             test_smooth_resnet(test_loader, attackers, norm_lists, total_res, sigma)
@@ -275,6 +269,12 @@ def run_adv_robust():
         except Exception as ex:
             dump_checkpoint(total_res)
             print(ex)
+    try:
+        test_resnet_base(test_loader, attackers, norm_lists, total_res)
+        torch.cuda.empty_cache()
+    except Exception as ex:
+        dump_checkpoint(total_res)
+        print(ex)
     try:
         test_vae_ensemble(test_loader, attackers, norm_lists, total_res)
         torch.cuda.empty_cache()
