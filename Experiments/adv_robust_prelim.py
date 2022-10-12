@@ -218,6 +218,7 @@ def test_smooth_resnet(test_loader, attackers, norm_lists, acc_dct, sigma):
         num_correct = get_num_correct(pred, labels)
         acc_dct[f'Smooth-Resnet-{sigma}']['nat acc'] += num_correct
         total += len(data)
+        torch.cuda.empty_cache()
     acc_dct[f'Smooth-Resnet-{sigma}']['nat acc'] /= total
     print(f"Nat Acc: {acc_dct[f'Smooth-Resnet-{sigma}']['nat acc']}")
     for attacker_type in attackers.keys():
