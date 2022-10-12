@@ -247,7 +247,7 @@ def run_adv_robust():
     smoothing_sigmas = [.1, .25, .5]
 
     _, test_dataset = get_cifar_sets()
-    test_loader = DataLoader(test_dataset, batch_size=128, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=256, shuffle=False)
 
     linf_eps = [1/255, 2/255, 5/255, 10/255]
     l2_eps = [.5, 1, 1.5, 2]
