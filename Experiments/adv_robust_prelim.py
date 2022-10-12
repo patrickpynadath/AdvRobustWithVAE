@@ -58,7 +58,6 @@ def run_adv_robust():
             total += len(data)
         total_res[model_name]['nat acc'] /= total
         print(f"Nat Acc: {total_res[model_name]['nat acc']}")
-        progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
         for attacker_type in attackers.keys():
             print(attacker_type)
             norms = norm_lists[attacker_type]
@@ -70,6 +69,7 @@ def run_adv_robust():
                     attacker = attackers[attacker_type](vae_clf.base_classifier, eps=norms[i], steps=40)
                 else:
                     attacker = attackers[attacker_type](model, eps=norms[i], steps=40)
+                progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
                 for batch_idx, batch in progress_bar:
                     data, labels = batch
                     attacked_data = attacker(data, labels)
