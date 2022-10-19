@@ -15,30 +15,4 @@ if __name__ == '__main__':
     exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
                   exp_logdir=VAE_ADV_EXP,
                   device='cuda')
-    resnet = exp.get_trained_resnet(net_depth=110,
-                                    block_name='BottleNeck',
-                                    batch_size=128,
-                                    optimizer='sgd',
-                                    lr=.15,
-                                    epochs=150,
-                                    use_step_lr=True,
-                                    lr_schedule_step=50,
-                                    lr_schedule_gamma=.1)
-    torch.save(resnet.state_dict(), f'saved_models/resnet_base')
-    sigmas = [.1, .25, .3, .4, .5, 1]
-    for s in sigmas:
-        print(f"Training smooth resnet with sigma {s}")
-        smooth_resnet = exp.get_trained_smooth_resnet(net_depth=110,
-                                                      block_name='BottleNeck',
-                                                      m_train=10,
-                                                      batch_size=128,
-                                                      optimizer='sgd',
-                                                      lr=.15,
-                                                      epochs=150,
-                                                      smoothing_sigma=s,
-                                                      use_step_lr=True,
-                                                      lr_schedule_step=50,
-                                                      lr_schedule_gamma=.1)
-        torch.save(smooth_resnet.state_dict(), f'saved_models/smooth_resnet_sigma_{s}')
-        torch.cuda.empty_cache()
-    run_adv_robust()
+    vae = exp.get_trained_vanilla_vae(batch_size=128, epochs=100, vae_model='a')

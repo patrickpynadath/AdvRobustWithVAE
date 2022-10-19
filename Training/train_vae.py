@@ -12,7 +12,7 @@ import numpy as np
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
-
+from Models import ResVAE
 import os
 
 
@@ -118,15 +118,17 @@ class VAETrainer:
                  config_file_name,
                  **kwargs):
 
-        with open(f"Models/VAE_Models/configs/{config_file_name}.yaml", 'r') as file:
-            try:
-                self.config = yaml.safe_load(file)
-            except yaml.YAMLError as exc:
-                print(exc)
+        # with open(f"Models/VAE_Models/configs/{config_file_name}.yaml", 'r') as file:
+        #     try:
+        #         self.config = yaml.safe_load(file)
+        #     except yaml.YAMLError as exc:
+        #         print(exc)
         self.use_tensorboard = use_tensorboard
-        self.params = self.config['exp_params']
-        self.model = vae_models[self.config['model_params']['name']](**self.config['model_params']).to(device)
-        self.model_name = self.config['model_params']['name']
+        # self.params = self.config['exp_params']
+        # self.model = vae_models[self.config['model_params']['name']](**self.config['model_params']).to(device)
+        # self.model_name = self.config['model_params']['name']
+        self.model = ResVAE(latent_dim=1000, encoder_depth=110, encoder_block='BottleNeck')
+        self.model_name = f'ResVAE_110_{timestamp()}'
         self.logdir = logdir
         self.batch_size = batch_size
         self.device = device
@@ -139,12 +141,8 @@ class VAETrainer:
         real_img = real_img.to(self.device)
         labels = labels.to(self.device)
 
-        results = self.model.forward(real_img, labels=labels)
-        train_loss = self.model.loss_function(*results,
-                                              M_N=self.params['kld_weight'],
-                                              # al_img.shape[0]/ self.num_train_imgs,
-                                              optimizer_idx=optimizer_idx,
-                                              batch_idx=batch_idx)
+        results = self.model.forward(real_img)
+        train_loss = self.model.loss_function(*results)
         return train_loss
 
     def validation_step(self, batch, batch_idx, optimizer_idx = 0):
@@ -152,24 +150,16 @@ class VAETrainer:
         real_img = real_img.to(self.device)
         labels = labels.to(self.device)
 
-        results = self.model.forward(real_img, labels = labels)
-        val_loss = self.model.loss_function(*results,
-                                            M_N = 1.0, #real_img.shape[0]/ self.num_val_imgs,
-                                            optimizer_idx = optimizer_idx,
-                                            batch_idx = batch_idx)
+        results = self.model.forward(real_img)
+        val_loss = self.model.loss_function(*results)
 
         return val_loss
 
     def training_loop(self, num_epochs):
-        optimizer = optim.Adam(self.model.parameters(),
-                               lr=self.params['LR'],
-                               weight_decay=self.params['weight_decay'])
+        optimizer = optim.SGD(params=self.model.parameters(), lr=.1)
         scheduler = None
         use_lr_sched = False
-        if self.params['scheduler_gamma'] is not None:
-            use_lr_sched = True
-            scheduler = optim.lr_scheduler.ExponentialLR(optimizer,
-                                                         gamma=self.params['scheduler_gamma'])
+
         writer = None
         if self.use_tensorboard:
             writer = SummaryWriter(log_dir=self.logdir + f'/{self.model_name}_{timestamp()}/')
@@ -233,27 +223,15 @@ class VAETrainer:
         assert mode in ['train', 'test', 'generate']
         if mode == 'train':
             batch, labels = next(iter(self.train_loader))
-            sampled_imgs = self.model.generate(batch.to(self.device), labels=labels)
+            sampled_imgs = self.model.generate(batch.to(self.device))
             return sampled_imgs
         elif mode == 'test':
             batch, labels = next(iter(self.test_loader))
-            sampled_imgs = self.model.generate(batch.to(self.device), labels=labels)
+            sampled_imgs = self.model.generate(batch.to(self.device))
             return sampled_imgs
         elif mode == 'generate':
-            return self.model.sample(num_samples=self.batch_size, current_device=self.device, labels=torch.randint(low=0, high=10, size=(self.batch_size,)))
+            return self.model.sample(num_samples=self.batch_size, device=self.device)
 
-    def configure_optimizers(self):
-        optimizer = optim.Adam(self.model.parameters(),
-                               lr=self.params['LR'],
-                               weight_decay=self.params['weight_decay'])
-
-        try:
-            if self.params['scheduler_gamma'] is not None:
-                scheduler = optim.lr_scheduler.ExponentialLR(optimizer,
-                                                             gamma=self.params['scheduler_gamma'])
-                return optimizer, scheduler
-        except:
-            pass
 
 
 

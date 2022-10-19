@@ -214,6 +214,24 @@ class Decoder(nn.Module):
 
         return self._conv_trans_2(x)
 
+class VAE_Base(nn.Module):
+    def __init__(self, num_hiddens, num_residual_layers, num_residual_hiddens, embedding_dim):
+        super().__init__()
+        self._encoder = Encoder(3, num_hiddens,
+                                num_residual_layers,
+                                num_residual_hiddens)
+
+        self._decoder = Decoder(embedding_dim,
+                                num_hiddens,
+                                num_residual_layers,
+                                num_residual_hiddens)
+
+        self._mu = None
+        self._logvar = None
+
+
+
+
 
 class VQVAE2(nn.Module):
     def __init__(self, num_hiddens, num_residual_layers, num_residual_hiddens,
