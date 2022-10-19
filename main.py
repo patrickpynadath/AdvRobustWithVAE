@@ -14,5 +14,5 @@ if __name__ == '__main__':
 
     exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
                   exp_logdir=VAE_ADV_EXP,
-                  device='cuda')
+                  device='cpu')
     vae = exp.get_trained_vanilla_vae(batch_size=128, epochs=100, vae_model='a')
