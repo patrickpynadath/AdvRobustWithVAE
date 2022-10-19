@@ -21,7 +21,9 @@ class NatTrainer:
                  use_tensorboard=False,
                  use_step_lr=False,
                  lr_schedule_step=1,
-                 lr_schedule_gamma=1,):
+                 lr_schedule_gamma=1,
+                 smooth = False,
+                 noise_sd = 0):
         """
         :param model : maps from [batch x channel x height x width] to [batch x num_classes]
         :param train_loader : torch DataLoader for iterating through training batches
@@ -38,6 +40,8 @@ class NatTrainer:
         self.test_loader = test_loader
         self.device = device
         self.log_dir = log_dir
+        self.smooth = smooth
+        self.noise_sd = noise_sd
         assert optimizer in ['sgd', 'adam']
         if optimizer == 'sgd':
             self.optimizer = SGD(self.model.parameters(),
@@ -65,7 +69,11 @@ class NatTrainer:
         optimizer = self.optimizer
         criterion = self.criterion
         optimizer.zero_grad()
-        outputs = self.model(inputs)
+        if self.smooth:
+            inputs = inputs + torch.randn_like(inputs, device='cuda') * self.noise_sd
+            outputs = self.model(inputs)
+        else:
+            outputs = self.model(inputs)
         pred = torch.argmax(outputs, dim=1)
         batch_score = sum([1 if pred[i].item() == labels[i].item() else 0 for i in range(len(inputs))])
 
@@ -99,7 +107,9 @@ class NatTrainer:
                 criterion = self.criterion
 
                 # generate model outputs, get loss
-                outputs = self.model(inputs)
+                if self.smooth:
+                    inputs = inputs + torch.randn_like(inputs, device=self.device) * self.noise_sd
+                    outputs = self.model(inputs)
                 loss = criterion(outputs, labels)
 
                 # get accuracy values

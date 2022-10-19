@@ -122,13 +122,9 @@ class BaseExp:
         resnet = ResNet(depth=net_depth,
                         num_classes=self.num_classes,
                         block_name=block_name)
-        smooth_resnet = Smooth(base_classifier=resnet,
-                               sigma=smoothing_sigma,
-                               device=self.device,
-                               num_samples=m_train,
-                               num_classes=self.num_classes)
+        noise_sd = smoothing_sigma ** .5
         train_loader, test_loader = self.get_loaders(batch_size)
-        clf_trainer = NatTrainer(model=smooth_resnet,
+        clf_trainer = NatTrainer(model=resnet,
                                  train_loader=train_loader,
                                  test_loader=test_loader,
                                  device=self.device,
@@ -138,9 +134,11 @@ class BaseExp:
                                  use_tensorboard=True,
                                  use_step_lr=use_step_lr,
                                  lr_schedule_step=lr_schedule_step,
-                                 lr_schedule_gamma=lr_schedule_gamma)
+                                 lr_schedule_gamma=lr_schedule_gamma,
+                                 smooth=True,
+                                 noise_sd=noise_sd)
         clf_trainer.training_loop(epochs)
-        return smooth_resnet
+        return resnet
 
     def get_trained_smooth_vae_resnet(self,
                                       net_depth,
