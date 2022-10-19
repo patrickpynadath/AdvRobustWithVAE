@@ -24,7 +24,7 @@ if __name__ == '__main__':
                                     use_step_lr=True,
                                     lr_schedule_step=50,
                                     lr_schedule_gamma=.1)
-    torch.save(resnet.state_dict(), f'saved_models/resnet_base_2')
+    torch.save(resnet.state_dict(), f'saved_models/resnet_base')
     sigmas = [.1, .25, .3, .4, .5, 1]
     for s in sigmas:
         print(f"Training smooth resnet with sigma {s}")
