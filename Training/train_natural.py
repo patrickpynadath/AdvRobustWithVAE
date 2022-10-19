@@ -71,9 +71,7 @@ class NatTrainer:
         optimizer.zero_grad()
         if self.smooth:
             inputs = inputs + torch.randn_like(inputs, device='cuda') * self.noise_sd
-            outputs = self.model(inputs)
-        else:
-            outputs = self.model(inputs)
+        outputs = self.model(inputs)
         pred = torch.argmax(outputs, dim=1)
         batch_score = sum([1 if pred[i].item() == labels[i].item() else 0 for i in range(len(inputs))])
 
@@ -109,7 +107,7 @@ class NatTrainer:
                 # generate model outputs, get loss
                 if self.smooth:
                     inputs = inputs + torch.randn_like(inputs, device=self.device) * self.noise_sd
-                    outputs = self.model(inputs)
+                outputs = self.model(inputs)
                 loss = criterion(outputs, labels)
 
                 # get accuracy values
