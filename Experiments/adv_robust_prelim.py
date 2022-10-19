@@ -329,13 +329,13 @@ def get_vae_clf(device):
     vae = VAE(in_channels=3, latent_dim=512).to(device)
     vae.load_state_dict(torch.load('saved_models/vae_vanilla_base'))
     resnet_base_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
-    resnet_base_clf.load_state_dict(torch.load('saved_models/resnet_vae_ensemble'))
+    resnet_base_clf.load_state_dict(torch.load('saved_models/resnet_base'))
     return VAE_CLF(base_classifier=resnet_base_clf, vae=vae)
 
 
 def get_vqvae_clf(device):
     base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
-    base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_ensemble'))
+    base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_base'))
 
     num_hiddens = 128
     num_residual_hiddens = 32

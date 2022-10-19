@@ -31,3 +31,4 @@ if __name__ == '__main__':
                                                       lr_schedule_gamma=.1)
         torch.save(smooth_resnet.state_dict(), f'saved_models/smooth_resnet_sigma_{s}')
         torch.cuda.empty_cache()
+    run_adv_robust()
