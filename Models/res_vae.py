@@ -195,6 +195,7 @@ class Decoder(nn.Module):
 class ResVAE(nn.Module):
     def __init__(self, latent_dim, encoder_depth, encoder_block, kld_weight = .3):
         super(ResVAE, self).__init__()
+        self.latent_dim = latent_dim
         self.encoder = ResNetEncoder(depth=encoder_depth, latent_size=latent_dim, block_name=encoder_block)
         self.decoder = Decoder(latent_dim)
         self.kld_weight = kld_weight
