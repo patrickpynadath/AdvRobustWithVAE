@@ -122,7 +122,7 @@ class BaseExp:
         resnet = ResNet(depth=net_depth,
                         num_classes=self.num_classes,
                         block_name=block_name)
-        noise_sd = smoothing_sigma ** .5
+        noise_sd = smoothing_sigma
         train_loader, test_loader = self.get_loaders(batch_size)
         clf_trainer = NatTrainer(model=resnet,
                                  train_loader=train_loader,
