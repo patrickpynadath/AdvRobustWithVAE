@@ -189,7 +189,7 @@ class Decoder(nn.Module):
         x = F.relu(x)
         x = x.view(-1, 256, 2, 2)
         x = self._layers(x)
-        return F.tanh(x)
+        return torch.sigmoid(x)
 
 
 class ResVAE(nn.Module):

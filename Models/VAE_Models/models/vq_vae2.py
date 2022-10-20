@@ -211,8 +211,9 @@ class Decoder(nn.Module):
 
         x = self._conv_trans_1(x)
         x = F.relu(x)
+        x = self._conv_trans_2(x)
 
-        return self._conv_trans_2(x)
+        return torch.sigmoid(x)
 
 class VAE_Base(nn.Module):
     def __init__(self, num_hiddens, num_residual_layers, num_residual_hiddens, embedding_dim):
