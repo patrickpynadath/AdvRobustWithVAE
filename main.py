@@ -11,8 +11,8 @@ HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 VAE_ADV_EXP = '../ExperimentLogging/AdversarialExpVAE/'
 ADV_ROB_EXP = '../ExperimentLogging/AdvRobExp/'
 if __name__ == '__main__':
-
-    exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
-                  exp_logdir=VAE_ADV_EXP,
-                  device='cuda')
-    vae = exp.get_trained_vanilla_vae(batch_size=128, epochs=100, vae_model='a')
+    get_trained_vq_vae(training_logdir=TRAIN_METRICS_DIR, num_training_updates=10000)
+    # exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
+    #               exp_logdir=VAE_ADV_EXP,
+    #               device='cuda')
+    # vae = exp.get_trained_vanilla_vae(batch_size=128, epochs=100, vae_model='a')
