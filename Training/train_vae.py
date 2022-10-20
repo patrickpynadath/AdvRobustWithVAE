@@ -71,7 +71,8 @@ def get_trained_vq_vae(training_logdir, epochs, device):
     train_res_perplexity = []
     sw = SummaryWriter(training_logdir + f'vq_vae_{timestamp()}')
     for epoch in range(epochs):
-        for batch_idx, batch in enumerate(training_loader):
+        pg_bar = tqdm(enumerate(training_loader), total=len(training_loader))
+        for batch_idx, batch in pg_bar:
             (data, _) = batch
             data = data.to(device)
             optimizer.zero_grad()
