@@ -57,7 +57,7 @@ class VectorQuantizerEMA(nn.Module):
         self._num_embeddings = num_embeddings
 
         self._embedding = nn.Embedding(self._num_embeddings, self._embedding_dim)
-        self._embedding.weight.data.normal_()
+        self._embedding.weight.data.uniform_()
         self._commitment_cost = commitment_cost
 
         self.register_buffer('_ema_cluster_size', torch.zeros(num_embeddings))

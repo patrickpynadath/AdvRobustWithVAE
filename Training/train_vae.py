@@ -25,9 +25,9 @@ def normalize_imgs(imgs):
     return tmp.view(imgs.size())
 
 
-def get_trained_vq_vae(training_logdir, num_training_updates):
+def get_trained_vq_vae(training_logdir, epochs, device):
     root_dir = r'../'
-    device = 'cuda'
+    device = device
     vq_vae = vae_models['VQVAE2']
     batch_size = 256
 
@@ -46,14 +46,12 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
 
     training_data = datasets.CIFAR10(root=root_dir, train=True, download=True,
                                      transform=transforms.Compose([
-                                         transforms.ToTensor(),
-                                         transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
+                                         transforms.ToTensor()
                                      ]))
 
     validation_data = datasets.CIFAR10(root=root_dir, train=False, download=True,
                                        transform=transforms.Compose([
-                                           transforms.ToTensor(),
-                                           transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0))
+                                           transforms.ToTensor()
                                        ]))
     data_variance = np.var(training_data.data / 255.0)
     training_loader = DataLoader(training_data,
@@ -72,35 +70,35 @@ def get_trained_vq_vae(training_logdir, num_training_updates):
     train_res_recon_error = []
     train_res_perplexity = []
     sw = SummaryWriter(training_logdir + f'vq_vae_{timestamp()}')
-    for i in range(num_training_updates):
-        (data, _) = next(iter(training_loader))
-        data = data.to(device)
-        optimizer.zero_grad()
+    for epoch in range(epochs):
+        for batch_idx, batch in enumerate(training_loader):
+            (data, _) = batch
+            data = data.to(device)
+            optimizer.zero_grad()
 
-        vq_loss, data_recon, perplexity = model(data)
-        recon_error = F.mse_loss(data_recon, data) / data_variance
-        loss = recon_error + vq_loss
-        loss.backward()
+            vq_loss, data_recon, perplexity = model(data)
+            recon_error = F.mse_loss(data_recon, data) / data_variance
+            loss = recon_error + vq_loss
+            loss.backward()
 
-        optimizer.step()
+            optimizer.step()
 
-        train_res_recon_error.append(recon_error.item())
-        train_res_perplexity.append(perplexity.item())
+            train_res_recon_error.append(recon_error.item())
+            train_res_perplexity.append(perplexity.item())
 
-        if (i + 1) % 100 == 0:
-            print('%d iterations' % (i + 1))
-            print('recon_error: %.3f' % np.mean(train_res_recon_error[-100:]))
-            print('perplexity: %.3f' % np.mean(train_res_perplexity[-100:]))
+        print('%d epoch' % (epoch + 1))
+        print('recon_error: %.3f' % np.mean(train_res_recon_error[-100:]))
+        print('perplexity: %.3f' % np.mean(train_res_perplexity[-100:]))
 
-            model.eval()
+        model.eval()
 
-            (valid_originals, _) = next(iter(validation_loader))
-            valid_originals = valid_originals.to(device)
+        (valid_originals, _) = next(iter(validation_loader))
+        valid_originals = valid_originals.to(device)
 
-            vq_output_eval = model._pre_vq_conv(model._encoder(valid_originals))
-            _, valid_quantize, _, _ = model._vq_vae(vq_output_eval)
-            valid_reconstructions = model._decoder(valid_quantize)
-            sw.add_images('Val/Reconstructions', normalize_imgs(valid_reconstructions), i)
+        vq_output_eval = model._pre_vq_conv(model._encoder(valid_originals))
+        _, valid_quantize, _, _ = model._vq_vae(vq_output_eval)
+        valid_reconstructions = model._decoder(valid_quantize)
+        sw.add_images('Val/Reconstructions', normalize_imgs(valid_reconstructions), epoch)
 
 
 
