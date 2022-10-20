@@ -127,7 +127,7 @@ class VAETrainer:
         # self.params = self.config['exp_params']
         # self.model = vae_models[self.config['model_params']['name']](**self.config['model_params']).to(device)
         # self.model_name = self.config['model_params']['name']
-        self.model = ResVAE(latent_dim=1000, encoder_depth=110, encoder_block='BottleNeck').to(device)
+        self.model = ResVAE(latent_dim=100, encoder_depth=110, encoder_block='BottleNeck').to(device)
         self.model_name = f'ResVAE_110_{timestamp()}'
         self.logdir = logdir
         self.batch_size = batch_size

@@ -107,7 +107,7 @@ class ResNetEncoder(nn.Module):
         else:
             raise ValueError('block_name shoule be Basicblock or Bottleneck')
 
-        self.norm_layer = get_normalize_layer('cpu')
+        self.norm_layer = get_normalize_layer('cuda')
         self.inplanes = 16
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1,
                                bias=False)
@@ -189,11 +189,11 @@ class Decoder(nn.Module):
         x = F.relu(x)
         x = x.view(-1, 256, 2, 2)
         x = self._layers(x)
-        return x
+        return F.tanh(x)
 
 
 class ResVAE(nn.Module):
-    def __init__(self, latent_dim, encoder_depth, encoder_block, kld_weight = .3):
+    def __init__(self, latent_dim, encoder_depth, encoder_block, kld_weight = .0000025):
         super(ResVAE, self).__init__()
         self.latent_dim = latent_dim
         self.encoder = ResNetEncoder(depth=encoder_depth, latent_size=latent_dim, block_name=encoder_block)
@@ -225,7 +225,7 @@ class ResVAE(nn.Module):
         input = args[1]
         mu = args[2]
         log_var = args[3]
-
+        log_var = torch.clamp(log_var, -1, 1)
         recons_loss = nn.functional.mse_loss(recons, input)
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)
 
