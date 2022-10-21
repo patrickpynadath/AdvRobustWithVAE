@@ -246,7 +246,7 @@ def test_smooth_resnet(test_loader, attackers, norm_lists, acc_dct, sigma):
 
 def run_adv_robust():
 
-    smoothing_sigmas = [.25, .5, .75]
+    smoothing_sigmas = [.25]
 
     _, test_dataset = get_cifar_sets()
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
@@ -335,7 +335,7 @@ def get_vae_clf(device):
 
 def get_vqvae_clf(device):
     base_resnet_clf = ResNet(depth=110, block_name='BottleNeck', num_classes=10).to(device)
-    base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_base'))
+    base_resnet_clf.load_state_dict(torch.load('saved_models/resnet_ensemble'))
 
     num_hiddens = 128
     num_residual_hiddens = 32
