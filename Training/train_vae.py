@@ -135,7 +135,7 @@ class VAETrainer(GenerativeTrainer):
         real_img = real_img.to(self.device)
 
         recon, orig, mu, logvar = self.model.forward(real_img)
-        total_loss, recon_loss, kld_loss = self.model.loss_function(recon, orig, mu, logvar)
+        total_loss, recon_loss, kld_loss = self.model.loss_fn(recon, orig, mu, logvar)
         return {'total loss': total_loss,
                 'recon loss': recon_loss,
                 'kld loss': kld_loss}
