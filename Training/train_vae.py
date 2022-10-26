@@ -72,9 +72,9 @@ class GenerativeTrainer:
                 # adding the results together
                 for key, value in step_res.items():
                     if key in train_epoch_res:
-                        train_epoch_res[key] += value.item()
+                        train_epoch_res[key].append(value.item())
                     else:
-                        train_epoch_res[key] = value.item()
+                        train_epoch_res[key] = [value.item()]
 
                 # tqdm loading bar
                 datastream.set_description((
@@ -91,15 +91,15 @@ class GenerativeTrainer:
                     val_res = self.training_step(batch)
                     for key, value in val_res.items():
                         if key in val_epoch_res:
-                            val_epoch_res[key] += value.item()
+                            val_epoch_res[key].append(value.item())
                         else:
-                            val_epoch_res[key] = value.item()
+                            val_epoch_res[key] = [value.item()]
             if writer:
                 # logging training data
                 for key, value in train_epoch_res.items():
-                    writer.add_scalar(f"Training/{key}", value, epoch)
+                    writer.add_scalar(f"Training/{key}", np.mean(value), epoch)
                 for key, value in val_epoch_res.items():
-                    writer.add_scalar(f"Val/{key}", value, epoch)
+                    writer.add_scalar(f"Val/{key}", np.mean(value), epoch)
 
                 sampled_imgs_train = self.sample_reconstructions(mode='train')
                 writer.add_images("Generated/training_reconstruction", sampled_imgs_train, epoch)
