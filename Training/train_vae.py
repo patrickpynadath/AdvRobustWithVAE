@@ -111,11 +111,11 @@ class GenerativeTrainer:
         if mode == 'train':
             batch, labels = next(iter(self.train_loader))
             sampled_imgs = self.model.generate(batch.to(self.device))
-            return sampled_imgs
+            return sampled_imgs.permute(0, 2, 3, 1)
         elif mode == 'test':
             batch, labels = next(iter(self.test_loader))
             sampled_imgs = self.model.generate(batch.to(self.device))
-            return sampled_imgs
+            return sampled_imgs.permute(0, 2, 3, 1)
 
 
 class VAETrainer(GenerativeTrainer):
