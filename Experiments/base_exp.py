@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 import torchvision
 from Adversarial import PGD_L2
-from torchattacks_cust import PGD
+from torchattacks import PGD
 from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth, vae_models, VQVAE_CLF, VAE_CLF
 from Training import NatTrainer, VAETrainer
 

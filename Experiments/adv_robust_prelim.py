@@ -3,7 +3,7 @@ from Models import ResNet, vae_models, VQVAE_CLF, Smooth, VAE_CLF
 from Utils import get_cifar_sets
 from torch.utils.data import DataLoader
 import copy
-from torchattacks_cust import PGD, PGDL2
+from torchattacks import PGD, PGDL2
 from tqdm import tqdm
 import pickle
 
