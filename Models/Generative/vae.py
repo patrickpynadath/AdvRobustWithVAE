@@ -3,6 +3,7 @@ import torch.nn as nn
 from Models.Generative.encoder import Encoder
 from Models.Generative.decoder import Decoder
 import torch.nn.functional as F
+from Utils import timestamp
 
 
 class VAE(nn.Module):
@@ -28,6 +29,7 @@ class VAE(nn.Module):
                                 num_hiddens,
                                 num_residual_layers,
                                 num_residual_hiddens)
+        self.label= f'VAE_{timestamp()}'
 
     def encode(self, x):
         enc = self._encoder(x)

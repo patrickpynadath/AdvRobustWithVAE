@@ -2,7 +2,7 @@ import torch.nn as nn
 from Models.Generative.encoder import Encoder
 from Models.Generative.decoder import Decoder
 from .vector_quantizer import NSVQ
-
+from Utils import timestamp
 
 class VQVAE_NSVQ(nn.Module):
     def __init__(self,
@@ -30,6 +30,7 @@ class VQVAE_NSVQ(nn.Module):
                                 num_hiddens,
                                 num_residual_layers,
                                 num_residual_hiddens)
+        self.label = f'VQVAE_{timestamp()}'
 
     def forward(self, x):
         z = self._encoder(x)
