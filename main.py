@@ -1,7 +1,9 @@
-from Experiments import run_hyperparam_clf, sanity_check, BaseExp, single_exp_loop_vae_adv, run_adv_rob_exp
-import torch
-from Experiments import train_save_necessary_models
-from Experiments import run_adv_robust
+import argparse
+from Experiments.helper_functions import run_raw_adv_rob, train_models, load_models
+
+# things to run from commandline: training the models, running prelim adv accs test
+# training the models - make the parameters for the models a text file -- will make my life so much easier
+
 # global experiment variables that stay constant for every experiment
 # logistical parameters
 TRAIN_METRICS_DIR = '../ExperimentLogging/TrainMetrics/'
@@ -9,12 +11,14 @@ HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
 VAE_ADV_EXP = '../ExperimentLogging/AdversarialExpVAE/'
 ADV_ROB_EXP = '../ExperimentLogging/AdvRobExp/'
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run Experiments!')
+    parser.add_argument('pretrained', help='use pretrained models', type=bool, required=True)
+    parser.add_argument('device', help='device to run experiment on', type=str, required=True)
+    args = parser.parse_args()
+    if args.pretrained:
+        train_models()
+    model_dct = load_models()
+    run_raw_adv_rob(args.device)
 
-    #get_trained_vq_vae(training_logdir=TRAIN_METRICS_DIR, epochs=100, device='cpu')
-    exp = BaseExp(training_logdir=TRAIN_METRICS_DIR,
-                  exp_logdir=VAE_ADV_EXP,
-                  device='cuda')
-    resnet = exp.get_trained_resnet(net_depth=110, block_name='BottleNeck', batch_size=64, optimizer='sgd', lr=.1, epochs=150,
-                                    use_step_lr=True, lr_schedule_step=50, lr_schedule_gamma=.1)
-    torch.save(resnet.state_dict(), 'PretrainedModels/ResnetBase')
-    #run_adv_robust()
+
+

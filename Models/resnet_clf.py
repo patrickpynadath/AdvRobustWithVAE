@@ -90,7 +90,7 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, depth, num_classes=1000, block_name='BasicBlock'):
+    def __init__(self, depth, num_classes=1000, block_name='BasicBlock', device='cuda'):
         super(ResNet, self).__init__()
         self.label = f"resnet_depth_{depth}_{block_name}_{timestamp()}"
         # Model type specifies number of layers for CIFAR-10 model
@@ -104,8 +104,8 @@ class ResNet(nn.Module):
             block = Bottleneck
         else:
             raise ValueError('block_name shoule be Basicblock or Bottleneck')
-
-        self.norm_layer = get_normalize_layer('cuda')
+        self.depth = depth
+        self.norm_layer = get_normalize_layer(device)
         self.inplanes = 16
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1,
                                bias=False)

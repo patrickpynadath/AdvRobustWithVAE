@@ -1,3 +1,0 @@
-TRAIN_METRICS_DIR = '../ExperimentLogging/TrainMetrics/'
-HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
-EXP_RES_DIR = '../ExperimentLogging/ExperimentResults'

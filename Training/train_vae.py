@@ -28,10 +28,9 @@ class GenerativeTrainer:
                  device,
                  model : torch.nn.Module,
                  use_tensorboard,
-                 train_loader,
-                 test_loader,
                  logdir,
-                 batch_size):
+                 batch_size,
+                 lr):
 
         self.use_tensorboard = use_tensorboard
         self.model = model
@@ -39,8 +38,10 @@ class GenerativeTrainer:
         self.logdir = logdir
         self.batch_size = batch_size
         self.device = device
-        self.train_loader = train_loader
-        self.test_loader = test_loader
+        train_set, test_set = get_cifar_sets()
+        self.train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+        self.test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
+        self.lr = lr
 
     def training_step(self, batch):
         real_img, labels = batch
@@ -51,7 +52,7 @@ class GenerativeTrainer:
         return {'total loss' : train_loss}
 
     def training_loop(self, num_epochs):
-        optimizer = optim.SGD(params=self.model.parameters(), lr=.1)
+        optimizer = optim.SGD(params=self.model.parameters(), lr=self.lr)
 
         writer = None
         if self.use_tensorboard:
@@ -120,16 +121,6 @@ class GenerativeTrainer:
 
 class VAETrainer(GenerativeTrainer):
 
-    def __init__(self,
-                 device,
-                 model : torch.nn.Module,
-                 use_tensorboard,
-                 train_loader,
-                 test_loader,
-                 logdir,
-                 batch_size):
-        super().__init__(device, model, use_tensorboard, train_loader, test_loader, logdir, batch_size)
-
     def training_step(self, batch):
         real_img, labels = batch
         real_img = real_img.to(self.device)
@@ -143,16 +134,6 @@ class VAETrainer(GenerativeTrainer):
 
 class VQVAETrainer(GenerativeTrainer):
 
-    def __init__(self,
-                 device,
-                 model : torch.nn.Module,
-                 use_tensorboard,
-                 train_loader,
-                 test_loader,
-                 logdir,
-                 batch_size):
-        super().__init__(device, model, use_tensorboard, train_loader, test_loader, logdir, batch_size)
-
     def training_step(self, batch):
         real_img, labels = batch
         real_img = real_img.to(self.device)
@@ -164,15 +145,6 @@ class VQVAETrainer(GenerativeTrainer):
 
 
 class AETrainer(GenerativeTrainer):
-    def __init__(self,
-                 device,
-                 model: torch.nn.Module,
-                 use_tensorboard,
-                 train_loader,
-                 test_loader,
-                 logdir,
-                 batch_size):
-        super().__init__(device, model, use_tensorboard, train_loader, test_loader, logdir, batch_size)
 
     def training_step(self, batch):
         real_img, labels = batch

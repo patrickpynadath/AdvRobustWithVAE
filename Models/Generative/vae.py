@@ -15,6 +15,8 @@ class VAE(nn.Module):
                  device,
                  beta):
         super(VAE, self).__init__()
+        self.res_layers = num_residual_layers
+        self.latent_size = latent_size
         self.beta = beta
         self.device = device
         self.num_hiddens = num_hiddens

@@ -16,7 +16,8 @@ class VQVAE_NSVQ(nn.Module):
                  device,
                  num_training_samples):
         super(VQVAE_NSVQ, self).__init__()
-
+        self.res_layers = num_residual_layers
+        self.latent_size = embedding_dim
         self._encoder = Encoder(3, num_hiddens,
                                 num_residual_layers,
                                 num_residual_hiddens)

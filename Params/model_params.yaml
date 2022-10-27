@@ -1,0 +1,35 @@
+enc_dec_params:
+  num_hiddens: 512
+  num_residual_hiddens: 64
+  num_residual_layers: 20
+  latent_size: 256
+
+vae_params:
+  beta: .1
+
+vqvae_params:
+  embedding_dim: 256
+  num_embedding: 512
+
+resnet_params:
+  depth: 110
+  num_classes: 10
+  block_name: 'BottleNeck'
+
+training_param_clf:
+  batch_size: 32
+  step_lr: 50
+  gamma: .1
+  lr: .1
+  epochs: 150
+  optimizer: sgd
+
+training_param_gen:
+  batch_size: 32
+  lr: .1
+  epochs: 150
+  device : 'cuda'
+  training_samples: 50000
+
+
+

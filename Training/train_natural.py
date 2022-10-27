@@ -6,14 +6,12 @@ from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import StepLR
-from Utils import timestamp
+from Utils import timestamp, get_cifar_sets
 
 
 class NatTrainer:
     def __init__(self,
                  model: nn.Module,
-                 train_loader: DataLoader,
-                 test_loader: DataLoader,
                  device: str,
                  optimizer: str,
                  lr: float,
@@ -23,7 +21,8 @@ class NatTrainer:
                  lr_schedule_step=1,
                  lr_schedule_gamma=1,
                  smooth = False,
-                 noise_sd = 0):
+                 noise_sd = 0,
+                 batch_size=64):
         """
         :param model : maps from [batch x channel x height x width] to [batch x num_classes]
         :param train_loader : torch DataLoader for iterating through training batches
@@ -36,8 +35,9 @@ class NatTrainer:
         """
         self.model = model.to(device)
         self.use_tensorboard = use_tensorboard
-        self.train_loader = train_loader
-        self.test_loader = test_loader
+        train_set, test_set = get_cifar_sets()
+        self.train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+        self.test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
         self.device = device
         self.log_dir = log_dir
         self.smooth = smooth

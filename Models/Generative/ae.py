@@ -13,6 +13,8 @@ class AE(nn.Module):
                  num_residual_hiddens,
                  latent_size):
         super(AE, self).__init__()
+        self.res_layers = num_residual_layers
+        self.latent_size=latent_size
         self.num_hiddens = num_hiddens
         self._encoder = Encoder(3, num_hiddens,
                                 num_residual_layers,
