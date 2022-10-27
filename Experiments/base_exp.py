@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import torchvision
 from Adversarial import PGD_L2
 from torchattacks import PGD
-from Models import SmoothVAE_Sample, SmoothVAE_Latent, ResNet, Smooth, vae_models, VQVAE_CLF, VAE_CLF
+from Models import ResNet, Smooth
 from Training import NatTrainer, VAETrainer
 
 
@@ -57,23 +57,6 @@ class BaseExp:
             train_loader = DataLoader(self.vae_train_set, batch_size, shuffle=True)
         test_loader = DataLoader(self.test_set, batch_size, shuffle=False)
         return train_loader, test_loader
-
-    def get_trained_vanilla_vae(self,
-                                batch_size,
-                                epochs,
-                                vae_model,
-                                **kwargs):
-        train_loader, test_loader = self.get_loaders(batch_size, clf=False)
-        vae_trainer = VAETrainer(self.device,
-                                 True,
-                                 train_loader,
-                                 test_loader,
-                                 self.training_logdir,
-                                 batch_size,
-                                 vae_model,
-                                 **kwargs)
-        vae_trainer.training_loop(epochs)
-        return vae_trainer.model
 
     def get_trained_resnet(self,
                            net_depth,
@@ -138,134 +121,6 @@ class BaseExp:
                                  noise_sd=noise_sd)
         clf_trainer.training_loop(epochs)
         return resnet
-
-    def get_trained_smooth_vae_resnet(self,
-                                      net_depth,
-                                      block_name,
-                                      m_train,
-                                      batch_size_clf,
-                                      epochs_clf,
-                                      optimizer,
-                                      smoothing_sigma,
-                                      smooth_vae_version,
-                                      trained_vae=None,
-                                      batch_size_vae=0,
-                                      epochs_vae=0,
-                                      lr_clf=.1,
-                                      use_step_lr=True,
-                                      lr_schedule_step=50,
-                                      lr_schedule_gamma=.1,
-                                      use_vae_param=False):
-        resnet = ResNet(depth=net_depth,
-                        num_classes=self.num_classes,
-                        block_name=block_name)
-        if not trained_vae:
-            trained_vae = self.get_trained_vanilla_vae(batch_size=batch_size_vae,
-                                                       epochs=epochs_vae,
-                                                       vae_model='vae')
-        assert smooth_vae_version in ['sample', 'latent']
-        if smooth_vae_version == 'sample':
-            smooth_vae = SmoothVAE_Sample(base_classifier=resnet,
-                                          sigma=smoothing_sigma,
-                                          trained_VAE=trained_vae,
-                                          device=self.device,
-                                          num_samples=m_train,
-                                          vae_param=use_vae_param,
-                                          num_classes=self.num_classes)
-        elif smooth_vae_version == 'latent':
-            smooth_vae = SmoothVAE_Latent(base_classifier=resnet,
-                                          sigma=smoothing_sigma,
-                                          trained_VAE=trained_vae,
-                                          device=self.device,
-                                          num_samples=m_train,
-                                          vae_param=use_vae_param,
-                                          num_classes=self.num_classes)
-        train_loader, test_loader = self.get_loaders(batch_size_clf)
-        clf_trainer = NatTrainer(model=smooth_vae,
-                                 train_loader=train_loader,
-                                 test_loader=test_loader,
-                                 device=self.device,
-                                 optimizer=optimizer,
-                                 lr=lr_clf,
-                                 log_dir=self.training_logdir,
-                                 use_tensorboard=True,
-                                 use_step_lr=use_step_lr,
-                                 lr_schedule_gamma=lr_schedule_gamma,
-                                 lr_schedule_step=lr_schedule_step)
-        clf_trainer.training_loop(epochs_clf)
-        return smooth_vae
-
-    def get_vqvae_resnet(self,
-                         net_depth = 110,
-                         block_name = 'BottleNeck',
-                         batch_size_clf = 256,
-                         epochs_clf = 100,
-                         optimizer = 'sgd',
-                         lr_clf=.15,
-                         use_step_lr=True,
-                         lr_schedule_step=85,
-                         lr_schedule_gamma=.1):
-        num_hiddens = 128
-        num_residual_hiddens = 32
-        num_residual_layers = 2
-        embedding_dim = 64
-        num_embeddings = 512
-        commitment_cost = 0.25
-        VQVAE = vae_models['VQVAE2']
-        vq_vae = VQVAE(num_hiddens, num_residual_layers, num_residual_hiddens,
-                       num_embeddings, embedding_dim,
-                       commitment_cost).to(self.device)
-        vq_vae.load_state_dict(torch.load('saved_models/vq_vae'))
-        resnet = ResNet(depth=net_depth,
-                        num_classes=self.num_classes,
-                        block_name=block_name).to(self.device)
-        clf = VQVAE_CLF(resnet, vq_vae)
-        train_loader, test_loader = self.get_loaders(batch_size_clf)
-        clf_trainer = NatTrainer(model=clf,
-                                 train_loader=train_loader,
-                                 test_loader=test_loader,
-                                 device=self.device,
-                                 optimizer=optimizer,
-                                 lr=lr_clf,
-                                 log_dir=self.training_logdir,
-                                 use_tensorboard=True,
-                                 use_step_lr=use_step_lr,
-                                 lr_schedule_gamma=lr_schedule_gamma,
-                                 lr_schedule_step=lr_schedule_step)
-        clf_trainer.training_loop(epochs_clf)
-        return clf_trainer.model
-
-    def get_vae_resnet(self,
-                     net_depth=110,
-                     block_name='BottleNeck',
-                     batch_size_clf=256,
-                     epochs_clf=100,
-                     optimizer='sgd',
-                     lr_clf=.15,
-                     use_step_lr=True,
-                     lr_schedule_step=85,
-                     lr_schedule_gamma=.1):
-        VAE = vae_models['VanillaVAE']
-        vae = VAE(in_channels=3, latent_dim=512).to(self.device)
-        vae.load_state_dict(torch.load('saved_models/vae_vanilla_base'))
-        resnet = ResNet(depth=net_depth,
-                        num_classes=self.num_classes,
-                        block_name=block_name).to(self.device)
-        clf = VAE_CLF(vae=vae, base_classifier=resnet)
-        train_loader, test_loader = self.get_loaders(batch_size_clf)
-        clf_trainer = NatTrainer(model=clf,
-                                 train_loader=train_loader,
-                                 test_loader=test_loader,
-                                 device=self.device,
-                                 optimizer=optimizer,
-                                 lr=lr_clf,
-                                 log_dir=self.training_logdir,
-                                 use_tensorboard=True,
-                                 use_step_lr=use_step_lr,
-                                 lr_schedule_gamma=lr_schedule_gamma,
-                                 lr_schedule_step=lr_schedule_step)
-        clf_trainer.training_loop(epochs_clf)
-        return clf_trainer.model
 
     def get_adv_examples(self,
                          trained_clf,
