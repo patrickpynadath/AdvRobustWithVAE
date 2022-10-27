@@ -1,5 +1,5 @@
 import torch
-from Models import ResNet, vae_models, VQVAE_CLF, Smooth, VAE_CLF
+from Models import ResNet
 from Utils import get_cifar_sets
 from torch.utils.data import DataLoader
 import copy
