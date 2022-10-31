@@ -67,7 +67,7 @@ def load_models(device):
     model_dct['vqvae'] = vqvae
 
     resnet = model_dct['resnet']
-    resnet_path = f"PretrainedModels/Resnet_{resnet.depth}"
+    resnet_path = f"PretrainedModels/Resnet{resnet.depth}"
     resnet.load_state_dict(torch.load(resnet_path))
     model_dct['resnet'] = resnet
     return model_dct
