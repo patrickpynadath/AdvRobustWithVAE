@@ -81,7 +81,7 @@ def run_raw_adv_rob(device):
     linf_eps = [float(Fraction(eps)) for eps in params['adv_params']['linf_eps']]
 
     l2_accs = {'ae' : [], 'vae' : [], 'vqvae' : []}
-    linf_accs = {}
+    linf_accs = {'ae' : [], 'vae' : [], 'vqvae' : []}
     model_dct = load_models(device)
     exp = BaseExp(device)
     resnet = model_dct['resnet']
