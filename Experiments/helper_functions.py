@@ -87,7 +87,7 @@ def run_raw_adv_rob(device):
     resnet = model_dct['resnet']
     nat_acc = exp.eval_clf_clean(resnet)
     adv_accs_l2 = exp.eval_clf_adv_raw(resnet, 'l2', l2_eps, num_steps)
-    adv_accs_linf = exp.eval_clf_adv_raw(resnet, 'linf', linf_accs, num_steps)
+    adv_accs_linf = exp.eval_clf_adv_raw(resnet, 'linf', linf_eps, num_steps)
     resnet_l2 = [nat_acc] + adv_accs_l2
     resnet_linf = [nat_acc] + adv_accs_linf
 
