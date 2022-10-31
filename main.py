@@ -14,11 +14,11 @@ LATENT_DIR = '../ExperimentLogging/LatentSpaceRes'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Experiments!')
-    parser.add_argument('pretrained', help='use pretrained models', type=bool, required=True)
-    parser.add_argument('device', help='device to run experiment on', type=str, required=True)
+    parser.add_argument('pretrained', help='use pretrained models', type=bool)
+    parser.add_argument('device', help='device to run experiment on', type=str)
     args = parser.parse_args()
     if not args.pretrained:
-        train_models()
+        train_models(TRAIN_METRICS_DIR, args.device)
     run_raw_adv_rob(args.device)
 
 

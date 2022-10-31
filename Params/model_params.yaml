@@ -28,7 +28,6 @@ training_param_gen:
   batch_size: 32
   lr: .1
   epochs: 150
-  device : 'cuda'
   training_samples: 50000
 
 
