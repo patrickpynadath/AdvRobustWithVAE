@@ -73,6 +73,7 @@ class BaseExp:
                 num_correct += sum([1 if base_pred[i].item() == labels[i].item() else 0 for i in range(len(base_pred))])
                 total += len(inputs)
             raw_acc = num_correct / total
+            print(f"Raw acc {round(raw_acc, 3)}")
             adv_accs.append(raw_acc)
         return adv_accs
 
