@@ -1,5 +1,6 @@
 import argparse
 from Experiments.helper_functions import run_raw_adv_rob, train_models, load_models
+from Utils import graph_adv_rob_res
 
 # TODO: - Add plotting to scripts so it outputs well formatted graphs
 # TODO: - Debug -- make sure what works right now works
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     if not args.pretrained:
         train_models(TRAIN_METRICS_DIR, args.device)
     run_raw_adv_rob(args.device)
+    graph_adv_rob_res()
 
 
 

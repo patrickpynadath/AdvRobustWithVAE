@@ -108,8 +108,9 @@ def run_raw_adv_rob(device):
 
     l2_accs['base'] = resnet_l2
     linf_accs['base'] = resnet_linf
+    res = {'l2': l2_accs, 'linf': linf_accs, 'l2_eps': l2_eps, 'linf_eps': linf_eps}
     with open("adv_rob_res_raw.pickle", "wb") as stream:
-        pickle.dump({'l2' : l2_accs, 'linf' : linf_accs}, stream)
+        pickle.dump(res, stream)
     return
 
 
