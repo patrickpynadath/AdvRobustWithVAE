@@ -85,6 +85,7 @@ def run_raw_adv_rob(device):
     model_dct = load_models(device)
     exp = BaseExp(device)
     resnet = model_dct['resnet']
+    print("Eval base resnet")
     nat_acc = exp.eval_clf_clean(resnet)
     adv_accs_l2 = exp.eval_clf_adv_raw(resnet, 'l2', l2_eps, num_steps)
     adv_accs_linf = exp.eval_clf_adv_raw(resnet, 'linf', linf_eps, num_steps)
@@ -92,12 +93,14 @@ def run_raw_adv_rob(device):
     resnet_linf = [nat_acc] + adv_accs_linf
 
     for key in linf_accs.keys():
+        print(f"Eval {key}")
         clf = GenClf(model_dct[key], resnet)
         nat_acc = exp.eval_clf_clean(clf)
         adv_accs = exp.eval_clf_adv_raw(clf, 'linf', linf_eps, num_steps)
         linf_accs[key] = [nat_acc] + adv_accs
 
     for key in l2_accs.keys():
+        print(f"Eval {key}")
         clf = GenClf(model_dct[key], resnet)
         nat_acc = exp.eval_clf_clean(clf)
         adv_accs = exp.eval_clf_adv_raw(clf, 'l2', l2_eps, num_steps)
