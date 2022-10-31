@@ -2,6 +2,7 @@ import torch
 from Utils import get_cifar_sets
 from torch.utils.data import DataLoader
 from torchattacks import PGD, PGDL2
+from tqdm import tqdm
 
 
 def get_adv_examples(clf,
@@ -39,7 +40,9 @@ class BaseExp:
         model.eval()
         model.to(self.device)
         total = 0
-        for i, data in enumerate(self.test_loader):
+        pg = tqdm(enumerate(self.test_loader), total=len(self.test_loader))
+        pg.set_description("Natural Accuracy")
+        for i, data in pg:
             inputs, labels = data[0].to(self.device), data[1].to(self.device)
             raw_res = model(inputs)
             base_pred = torch.argmax(raw_res, dim=1)
@@ -55,10 +58,13 @@ class BaseExp:
                          steps):
         adv_accs = []
         model.to(self.device)
+
         for eps in eps_values:
             num_correct = 0
             total = 0
-            for i, data in enumerate(self.test_loader):
+            pg = tqdm(enumerate(self.test_loader), total=len(self.test_loader))
+            pg.set_description(f'Adv Acc for {adversary_type} @ eps {round(eps, 5)}')
+            for i, data in pg:
                 inputs, labels = data[0].to(self.device), data[1].to(self.device)
                 attacked_inputs = get_adv_examples(model, attack_eps=eps, adversary_type=adversary_type,
                                                    steps=steps, nat_img=inputs, labels=labels)
