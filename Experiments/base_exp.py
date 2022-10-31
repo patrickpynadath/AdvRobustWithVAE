@@ -37,6 +37,7 @@ class BaseExp:
     def eval_clf_clean(self, model):
         num_correct = 0
         model.eval()
+        model.to(self.device)
         total = 0
         for i, data in enumerate(self.test_loader):
             inputs, labels = data[0].to(self.device), data[1].to(self.device)
@@ -53,9 +54,9 @@ class BaseExp:
                          eps_values,
                          steps):
         adv_accs = []
+        model.to(self.device)
         for eps in eps_values:
             num_correct = 0
-            model.eval()
             total = 0
             for i, data in enumerate(self.test_loader):
                 inputs, labels = data[0].to(self.device), data[1].to(self.device)
