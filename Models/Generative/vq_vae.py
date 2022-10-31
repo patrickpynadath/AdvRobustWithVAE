@@ -4,6 +4,7 @@ from Models.Generative.decoder import Decoder
 from .vector_quantizer import NSVQ
 from Utils import timestamp
 
+
 class VQVAE_NSVQ(nn.Module):
     def __init__(self,
                  num_hiddens,

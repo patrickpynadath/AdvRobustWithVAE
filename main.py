@@ -1,23 +1,24 @@
 import argparse
 from Experiments.helper_functions import run_raw_adv_rob, train_models, load_models
 
-# things to run from commandline: training the models, running prelim adv accs test
-# training the models - make the parameters for the models a text file -- will make my life so much easier
+# TODO: - Add plotting to scripts so it outputs well formatted graphs
+# TODO: - Debug -- make sure what works right now works
+# TODO: - Add script for latent code comparison, include analysis on auto encoder and vq vae
+# TODO: - Add test for looking at certified accuracies of models
+# TODO: - Add a function for quickly editing the YAML config files -- probably make my life easier in the long run
 
-# global experiment variables that stay constant for every experiment
-# logistical parameters
+# Directory for tensorboard logging -- useful to keep track of training progress for models
 TRAIN_METRICS_DIR = '../ExperimentLogging/TrainMetrics/'
-HYPERPARAM_DIR = '../ExperimentLogging/HyperParamMetrics/'
-VAE_ADV_EXP = '../ExperimentLogging/AdversarialExpVAE/'
-ADV_ROB_EXP = '../ExperimentLogging/AdvRobExp/'
+ROBUST_DIR = '../ExperimentLogging/AdvRobRes'
+LATENT_DIR = '../ExperimentLogging/LatentSpaceRes'
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Experiments!')
     parser.add_argument('pretrained', help='use pretrained models', type=bool, required=True)
     parser.add_argument('device', help='device to run experiment on', type=str, required=True)
     args = parser.parse_args()
-    if args.pretrained:
+    if not args.pretrained:
         train_models()
-    model_dct = load_models()
     run_raw_adv_rob(args.device)
 
 

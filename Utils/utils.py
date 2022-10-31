@@ -5,9 +5,18 @@ from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 import datetime
+import pandas as pd
 
 
 # code borrowed from https://github.com/SashaMalysheva/Pytorch-VAE/blob/master/utils.py
+# TODO for graphing
+# given a dictionary of accuracies from adv rob raw test, returns in the form of a pandas dataframe
+def adv_raw_accs_to_df(adv_accs, fname):
+    return
+
+
+def adv_raw_accs_to_graph(adv_accs, fname):
+    return
 
 
 def get_data_loader(dataset, batch_size, cuda=False):

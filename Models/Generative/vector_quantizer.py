@@ -4,6 +4,14 @@ import torch.distributions.uniform as uniform_dist
 import numpy as np
 
 
+# Code from https://gitlab.com/speech-interaction-technology-aalto-university/nsvq Paper:
+# https://ieeexplore.ieee.org/abstract/document/9696322 Write up:
+# https://towardsdatascience.com/improving-vector-quantization-in-vector-quantized-variational-autoencoders-vq-vae
+# -915f5814b5ce
+# Motivation: For some reason, the perplexity during training of a VQ-VAE with the standard STE for the
+# typical VQ approach was not stable, and hence reproducibility of results was a big concern. This alternative
+# approach to VQ is vastly more stable, converges quicker, and is thus more reproducible.
+
 class NSVQ(torch.nn.Module):
     def __init__(self, num_embeddings, embedding_dim, num_epochs, num_training_samples, batch_size, device,
                  discarding_threshold=0.01, num_first_cbr=10, first_cbr_coefficient=0.005, second_cbr_coefficient=0.03,
