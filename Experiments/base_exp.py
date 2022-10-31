@@ -59,7 +59,7 @@ class BaseExp:
                          steps):
         adv_accs = []
         model.to(self.device)
-
+        model.eval()
         for eps in eps_values:
             num_correct = 0
             total = 0

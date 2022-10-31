@@ -122,20 +122,21 @@ class NSVQ(torch.nn.Module):
         avg_probs = torch.mean(encodings, dim=0)
         perplexity = torch.exp(-torch.sum(avg_probs * torch.log(avg_probs + 1e-10)))
 
-        with torch.no_grad():
-            self.codebooks_used[min_indices] += 1
-            self.batch_counter += 1
+        if self.training:
+            with torch.no_grad():
+                self.codebooks_used[min_indices] += 1
+                self.batch_counter += 1
 
-        # Checking whether it is the time to perform codebook replacement
-        if ((self.batch_counter % self.first_cbr_cycle == 0) & (self.batch_counter <= self.first_cbr_period)):
-            self.replace_unused_codebooks(self.first_cbr_cycle)
+            # Checking whether it is the time to perform codebook replacement
+            if ((self.batch_counter % self.first_cbr_cycle == 0) & (self.batch_counter <= self.first_cbr_period)):
+                self.replace_unused_codebooks(self.first_cbr_cycle)
 
-        if self.batch_counter == self.transition_value:
-            self.replace_unused_codebooks(np.remainder(self.transition_value, self.first_cbr_period))
+            if self.batch_counter == self.transition_value:
+                self.replace_unused_codebooks(np.remainder(self.transition_value, self.first_cbr_period))
 
-        if ((self.batch_counter % self.second_cbr_cycle == 0) &
-                (self.transition_value < self.batch_counter <= self.num_total_updates - self.second_cbr_cycle)):
-            self.replace_unused_codebooks(self.second_cbr_cycle)
+            if ((self.batch_counter % self.second_cbr_cycle == 0) &
+                    (self.transition_value < self.batch_counter <= self.num_total_updates - self.second_cbr_cycle)):
+                self.replace_unused_codebooks(self.second_cbr_cycle)
 
         return quantized_input.permute(0, 3, 1, 2).contiguous(), perplexity
 
