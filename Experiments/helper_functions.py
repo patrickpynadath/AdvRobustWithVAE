@@ -70,6 +70,11 @@ def load_models(device):
     resnet_path = f"PretrainedModels/Resnet{resnet.depth}"
     resnet.load_state_dict(torch.load(resnet_path))
     model_dct['resnet'] = resnet
+
+    resnet_smooth=model_dct['resnetSmooth']
+    resnet_smooth_path = f'PretrainedModels/Resnet110_SmoothSigma_.25'
+    resnet_smooth.load_state_dict(torch.load(resnet_smooth_path))
+    model_dct['resnetSmooth'] = resnet_smooth
     return model_dct
 
 
@@ -142,9 +147,12 @@ def get_untrained_models(device):
     vqvae = VQVAE_NSVQ(num_hiddens, num_residual_layers, num_residual_hiddens, vqvae_num_embedding, vqvae_embedding_dim,
                        batch_size, num_epochs_gen, device, training_samples)
     resnet = ResNet(resnet_depth, resnet_classes, resnet_block, device=device)
+
+    resnet_smooth = ResNet(resnet_depth, resnet_classes, resnet_block, device=device)
     return {'ae' : ae,
             'vae' : vae,
             'vqvae' : vqvae,
             'resnet' : resnet,
+            'resnetSmooth' : resnet_smooth,
             'training_param_gen':model_params['training_param_gen'],
             'training_param_clf':model_params['training_param_clf']}
