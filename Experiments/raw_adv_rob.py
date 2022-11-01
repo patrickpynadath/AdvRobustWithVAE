@@ -15,8 +15,8 @@ def run_raw_adv_rob(device):
     l2_eps = [float(eps) for eps in params['adv_params']['l2_eps']]
     linf_eps = [float(Fraction(eps)) for eps in params['adv_params']['linf_eps']]
 
-    l2_accs = {'ae' : [], 'vae' : [], 'vqvae' : [], 'resnetSmooth': [], 'resnet' : []}
-    linf_accs = {'ae' : [], 'vae' : [], 'vqvae' : [], 'resnetSmooth': [], 'resnet' : []}
+    l2_accs = {}
+    linf_accs = {}
     model_dct = load_models(device)
     exp = BaseExp(device)
     for key in ['resnet', 'resnetSmooth']:
@@ -37,12 +37,24 @@ def run_raw_adv_rob(device):
         adv_accs = exp.eval_clf_adv_raw(clf, 'linf', linf_eps, num_steps)
         linf_accs[key] = [nat_acc] + adv_accs
 
-    for key in l2_accs.keys():
+        print(f"Eval ensemble {key}")
+        clf = GenClf(model_dct[key], model_dct[f"resnet_{key}"])
+        nat_acc = exp.eval_clf_clean(clf)
+        adv_accs = exp.eval_clf_adv_raw(clf, 'linf', linf_eps, num_steps)
+        linf_accs[f"resnet_{key}"] = [nat_acc] + adv_accs
+
+    for key in ['ae', 'vae', 'vqvae']:
         print(f"Eval {key}")
         clf = GenClf(model_dct[key], resnet)
         nat_acc = exp.eval_clf_clean(clf)
         adv_accs = exp.eval_clf_adv_raw(clf, 'l2', l2_eps, num_steps)
         l2_accs[key] = [nat_acc] + adv_accs
+
+        print(f"Eval ensemble {key}")
+        clf = GenClf(model_dct[key], model_dct[f"resnet_{key}"])
+        nat_acc = exp.eval_clf_clean(clf)
+        adv_accs = exp.eval_clf_adv_raw(clf, 'l2', l2_eps, num_steps)
+        l2_accs[f"resnet_{key}"] = [nat_acc] + adv_accs
 
     res = {'l2': l2_accs, 'linf': linf_accs, 'l2_eps': l2_eps, 'linf_eps': linf_eps}
     with open("adv_rob_res_raw.pickle", "wb") as stream:
