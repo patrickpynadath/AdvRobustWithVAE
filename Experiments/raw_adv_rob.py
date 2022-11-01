@@ -30,7 +30,7 @@ def run_raw_adv_rob(device):
 
     resnet = model_dct['resnet']
 
-    for key in linf_accs.keys():
+    for key in ['ae', 'vae', 'vqvae']:
         print(f"Eval {key}")
         clf = GenClf(model_dct[key], resnet)
         nat_acc = exp.eval_clf_clean(clf)
