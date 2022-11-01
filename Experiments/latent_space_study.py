@@ -1,4 +1,5 @@
-from Utils import get_cifar_sets, get_label_idx, get_latent_code_ae, get_latent_code_vae, get_latent_code_vqvae, \
+from Utils import get_cifar_sets, get_label_idx
+from Experiments.helper_functions import get_latent_code_ae, get_latent_code_vae, get_latent_code_vqvae, \
     get_norm_comparison
 from Models import AE, VAE, VQVAE_NSVQ
 import torch
