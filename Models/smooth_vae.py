@@ -15,4 +15,7 @@ class GenClf(nn.Module):
         recon = self.gen_model.generate(x)
         return self.clf(recon)
 
+    def parameters(self, recurse: bool = True):
+        return self.clf.parameters()
+
 
