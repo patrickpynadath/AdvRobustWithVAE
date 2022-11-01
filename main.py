@@ -1,7 +1,6 @@
 import argparse
-from Experiments.helper_functions import train_models, load_models
 from Experiments import run_raw_adv_rob
-from Utils import graph_adv_rob_res
+from Utils import graph_adv_rob_res, train_models, load_models
 
 # TODO: - Add plotting to scripts so it outputs well formatted graphs
 # TODO: - Debug -- make sure what works right now works

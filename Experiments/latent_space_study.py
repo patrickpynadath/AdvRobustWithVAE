@@ -1,10 +1,12 @@
-from Utils import get_cifar_sets, get_label_idx
+from Utils import get_cifar_sets, get_label_idx, get_latent_code_ae, get_latent_code_vae, get_latent_code_vqvae, \
+    get_norm_comparison
 from Models import AE, VAE, VQVAE_NSVQ
 import torch
-from .helper_functions import get_latent_code_ae, get_latent_code_vae, get_latent_code_vqvae, get_norm_comparison
 import random
+import pickle
 
 latent_code_fn = {'ae': get_latent_code_ae, 'vae': get_latent_code_vae, 'vqvae': get_latent_code_vqvae}
+
 
 # getting baseline comparison: differences within the same class, differences within a different class
 def get_random_sample_latent_diffs(class_idx,
@@ -44,5 +46,12 @@ def get_random_sample_latent_diffs(class_idx,
             for t in norm_types:
                 norm_data_same[t][m].append(differences_same_class[t])
                 norm_data_diff[t][m].append(differences_diff_class[t])
+    res = {'same_class' : norm_data_same, 'diff_class' : norm_data_diff}
+    with open("RawExpData/latent_class_norms.pickle", 'wb') as stream:
+        pickle.dump(res, stream)
+    return res
 
+
+def get_peturbation_comparison(gen_model_type, eps, adv_type):
     return
+

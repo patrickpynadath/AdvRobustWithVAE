@@ -3,7 +3,7 @@ from fractions import Fraction
 
 import yaml
 
-from .helper_functions import load_models
+from Utils import load_models
 from .base_exp import BaseExp
 from Models import GenClf
 

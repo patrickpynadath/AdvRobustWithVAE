@@ -10,7 +10,7 @@ class GenClf(nn.Module):
         self.clf = clf
 
     def forward(self, x):
-        recon = self.gen_model.generate(x)
+        recon = self.gen_model.generate(x.detach())
         return self.clf(recon)
 
 
