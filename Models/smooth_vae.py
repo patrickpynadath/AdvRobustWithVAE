@@ -11,6 +11,7 @@ class GenClf(nn.Module):
         self.label = gen_model.label + clf.label
 
     def forward(self, x):
+        self.gen_model.eval()
         recon = self.gen_model.generate(x.detach())
         return self.clf(recon)
 
