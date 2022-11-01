@@ -11,7 +11,6 @@ import pandas as pd
 
 
 # code borrowed from https://github.com/SashaMalysheva/Pytorch-VAE/blob/master/utils.py
-# TODO for graphing
 # given a dictionary of accuracies from adv rob raw test, returns in the form of a pandas dataframe
 from torchattacks import PGD, PGDL2
 
@@ -178,6 +177,7 @@ def load_models(device):
 
     vqvae = model_dct['vqvae']
     vqvae_path = f"PretrainedModels/VQVAE_{vqvae.res_layers}Res{vqvae.latent_size}Lat"
+
     vqvae.load_state_dict(torch.load(vqvae_path))
     model_dct['vqvae'] = vqvae
 

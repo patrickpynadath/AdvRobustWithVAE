@@ -8,6 +8,7 @@ class GenClf(nn.Module):
         super().__init__()
         self.gen_model = gen_model
         self.clf = clf
+        self.label = gen_model.label + clf.label
 
     def forward(self, x):
         recon = self.gen_model.generate(x.detach())
