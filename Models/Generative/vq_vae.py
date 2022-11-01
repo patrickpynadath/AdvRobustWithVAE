@@ -34,10 +34,14 @@ class VQVAE_NSVQ(nn.Module):
                                 num_residual_hiddens)
         self.label = f'VQVAE_{timestamp()}'
 
-    def forward(self, x):
+    def encode(self, x):
         z = self._encoder(x)
         z = self._pre_vq_conv(z)
         quantized, perplexity = self._vq_vae(z)
+        return quantized, perplexity
+
+    def forward(self, x):
+        quantized, perplexity = self.encode(x)
         x_recon = self._decoder(quantized)
 
         return x_recon, perplexity

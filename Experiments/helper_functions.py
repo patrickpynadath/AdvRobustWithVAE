@@ -1,10 +1,9 @@
-import pickle
-from fractions import Fraction
 import torch
 import yaml
-import os
-from .base_exp import BaseExp
-from Models import GenClf, AE, VAE, VQVAE_NSVQ, ResNet
+from torchattacks import PGD, PGDL2
+from Utils import torch_to_numpy
+from torch.linalg import vector_norm
+from Models import AE, VAE, VQVAE_NSVQ, ResNet
 
 from Training import AETrainer, VAETrainer, VQVAETrainer, NatTrainer
 
@@ -78,47 +77,6 @@ def load_models(device):
     return model_dct
 
 
-def run_raw_adv_rob(device):
-    with open("./Params/exp_params.yaml", "r") as stream:
-        params = yaml.safe_load(stream)
-    num_steps = int(params['adv_params']['num_steps'])
-    l2_eps = [float(eps) for eps in params['adv_params']['l2_eps']]
-    linf_eps = [float(Fraction(eps)) for eps in params['adv_params']['linf_eps']]
-
-    l2_accs = {'ae' : [], 'vae' : [], 'vqvae' : [], 'resnetSmooth': []}
-    linf_accs = {'ae' : [], 'vae' : [], 'vqvae' : [], 'resnetSmooth': []}
-    model_dct = load_models(device)
-    exp = BaseExp(device)
-    resnet = model_dct['resnet']
-    print("Eval base resnet")
-    nat_acc = exp.eval_clf_clean(resnet)
-    adv_accs_l2 = exp.eval_clf_adv_raw(resnet, 'l2', l2_eps, num_steps)
-    adv_accs_linf = exp.eval_clf_adv_raw(resnet, 'linf', linf_eps, num_steps)
-    resnet_l2 = [nat_acc] + adv_accs_l2
-    resnet_linf = [nat_acc] + adv_accs_linf
-
-    for key in linf_accs.keys():
-        print(f"Eval {key}")
-        clf = GenClf(model_dct[key], resnet)
-        nat_acc = exp.eval_clf_clean(clf)
-        adv_accs = exp.eval_clf_adv_raw(clf, 'linf', linf_eps, num_steps)
-        linf_accs[key] = [nat_acc] + adv_accs
-
-    for key in l2_accs.keys():
-        print(f"Eval {key}")
-        clf = GenClf(model_dct[key], resnet)
-        nat_acc = exp.eval_clf_clean(clf)
-        adv_accs = exp.eval_clf_adv_raw(clf, 'l2', l2_eps, num_steps)
-        l2_accs[key] = [nat_acc] + adv_accs
-
-    l2_accs['base'] = resnet_l2
-    linf_accs['base'] = resnet_linf
-    res = {'l2': l2_accs, 'linf': linf_accs, 'l2_eps': l2_eps, 'linf_eps': linf_eps}
-    with open("adv_rob_res_raw.pickle", "wb") as stream:
-        pickle.dump(res, stream)
-    return
-
-
 def get_untrained_models(device):
 
     with open("./Params/model_params.yaml", "r") as stream:
@@ -156,3 +114,52 @@ def get_untrained_models(device):
             'resnetSmooth' : resnet_smooth,
             'training_param_gen':model_params['training_param_gen'],
             'training_param_clf':model_params['training_param_clf']}
+
+
+def get_latent_code_ae(ae: AE, x):
+    return ae.encode(x)
+
+
+def get_latent_code_vae(vae: VAE, x):
+    return vae.encode(x)[0]
+
+
+def get_latent_code_vqvae(vqvae: VQVAE_NSVQ, x):
+    return vqvae.encode(x)[0]
+
+
+def get_norm_constrained_noise(original_samples, norm, adv_type, device):
+    if adv_type == 'l2':
+        ord_type = 2
+    elif adv_type == 'linf':
+        ord_type = float('inf')
+    orig_shape = original_samples.size()
+    flatten_orig = torch.flatten(original_samples, start_dim=1)
+
+    norm_constrained_gaussian = torch.zeros_like(flatten_orig).to(device)
+    for i in range(orig_shape[0]):
+        gaussian_noise = torch.randn_like(flatten_orig[i, :])
+        norm_constrained_gaussian[i, :] = (gaussian_noise * norm / torch.linalg.vector_norm(gaussian_noise, ord=ord_type))
+    return torch.reshape(norm_constrained_gaussian, orig_shape)
+
+
+def get_adv_examples(clf,
+                     attack_eps,
+                     adversary_type,
+                     steps,
+                     nat_img,
+                     labels):
+    if adversary_type == 'linf':
+        attacker = PGD(clf, eps=attack_eps, steps=steps)
+    elif adversary_type == 'l2':
+        attacker = PGDL2(clf, eps=attack_eps, steps=steps)
+    return attacker(nat_img, labels)
+
+
+# expects batched data
+def get_norm_comparison(diff: torch.Tensor):
+    # flattening along every dimension except for batch
+    diff = diff.flatten(start_dim=1)
+    l_2 = torch_to_numpy(vector_norm(diff, ord=2, dim=1))
+    l_inf = torch_to_numpy(vector_norm(diff, ord=float('inf'), dim=1))
+    return {'l2': l_2, 'linf': l_inf}

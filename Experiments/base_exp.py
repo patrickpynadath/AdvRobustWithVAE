@@ -1,21 +1,9 @@
 import torch
+
+from .helper_functions import get_adv_examples
 from Utils import get_cifar_sets
 from torch.utils.data import DataLoader
-from torchattacks import PGD, PGDL2
 from tqdm import tqdm
-
-
-def get_adv_examples(clf,
-                     attack_eps,
-                     adversary_type,
-                     steps,
-                     nat_img,
-                     labels):
-    if adversary_type == 'linf':
-        attacker = PGD(clf, eps=attack_eps, steps=steps)
-    elif adversary_type == 'l2':
-        attacker = PGDL2(clf, eps=attack_eps, steps=steps)
-    return attacker(nat_img, labels)
 
 
 class BaseExp:
