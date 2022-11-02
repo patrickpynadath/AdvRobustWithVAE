@@ -74,7 +74,7 @@ def load_models(device):
         gen_model.load_state_dict(torch.load(gen_path))
         model_dct[key] = gen_model
         resnet_ensemble = model_dct[f"resnet_{key}"]
-        ens_path = f'PretrainedModels/Resnet{resnet_ensemble.depth}_{key.upper()}_{gen_model.res_layers}Res{gen_model.latent_size}Lat '
+        ens_path = f'PretrainedModels/Resnet{resnet_ensemble.depth}_{key.upper()}_{gen_model.res_layers}Res{gen_model.latent_size}Lat'
         resnet_ensemble.load_state_dict(torch.load(ens_path))
         model_dct[f"resnet_{key}"] = resnet_ensemble
 
