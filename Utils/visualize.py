@@ -8,7 +8,7 @@ def graph_adv_rob_res():
     for adv in adv_types:
         eps = adv_res[f'{adv}_eps']
         for key in adv_res[adv].keys():
-            plt.plot(eps, adv_res[adv][key], label=key)
+            plt.plot(eps + [0], adv_res[adv][key], label=key)
         plt.title(f"Adv Accuracy Scores {adv}")
         plt.legend(loc='upper right')
         figure = plt.gcf()
