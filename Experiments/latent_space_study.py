@@ -39,6 +39,7 @@ def get_random_sample_latent_diffs(class_idx,
 
         for m in gen_models:
             gen_model = model_dct[m].to(device)
+            gen_model.eval()
             codes = latent_code_fn[m](gen_model, to_encode)
             differences_same_class = get_norm_comparison(codes[0, :] - codes[1, :], batch=False)
             differences_diff_class = get_norm_comparison(codes[0, :] - codes[2, :], batch=False)
