@@ -76,6 +76,9 @@ def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels
     adv_codes = get_latent_code(gen_model, adv_imgs)
     adv_orig_diff = get_norm_comparison((adv_imgs - natural_imgs).detach().cpu())[adv_type]
     noise_orig_diff = get_norm_comparison((noise_imgs - natural_imgs).detach().cpu())[adv_type]
+    adv_code_norms = get_norm_comparison(adv_codes.detach().cpu())[adv_type]
+    noise_code_norms = get_norm_comparison(noise_codes.detach().cpu())[adv_type]
+    nat_code_norms = get_norm_comparison(orig_codes.detach().cpu())[adv_type]
     # getting reconstructions
     orig_recon = gen_model.generate(natural_imgs)
     noise_recon = gen_model.generate(noise_imgs)
@@ -89,7 +92,9 @@ def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels
                  "adv": adv_recon.detach().cpu()}
     return {"codes": code_res, "recon": recon_res, "adv_orig_diff":
         adv_orig_diff, "noise_orig_diff": noise_orig_diff, 'orig_recon_diff': orig_recon_diff,
-            'orig_noiserecon_diff': orig_noiserecon_diff, 'orig_advrecon_diff': orig_advrecon_diff}
+            'orig_noiserecon_diff': orig_noiserecon_diff, 'orig_advrecon_diff': orig_advrecon_diff,
+            'nat_code_norms':nat_code_norms, 'noise_code_norms':noise_code_norms,
+            'adv_code_norms': adv_code_norms}
 
 
 # given a dict of the codes and recon for the orig, noise, and adv inputs,
