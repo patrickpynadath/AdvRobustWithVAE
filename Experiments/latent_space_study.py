@@ -4,7 +4,6 @@ from tqdm import tqdm
 import pandas as pd
 import torch
 import random
-import pickle
 
 latent_code_fn = {'ae': get_latent_code_ae, 'vae': get_latent_code_vae, 'vqvae': get_latent_code_vqvae}
 
