@@ -109,7 +109,7 @@ def peturbation_analysis(data_loader,
                          eps,
                          steps,
                          device):
-    total_code_res = {"noise_diff": [], "adv_diff": []}
+    total_code_res = {"noise_diff": [], "adv_diff": [], "actual_code": []}
     total_recon_res = {"noise_diff": [], "adv_diff": []}
     total_res = {"codes": total_code_res, "recon": total_recon_res,
                  "adv_orig_diff": [], "noise_orig_diff": [], "orig_recon_diff": [],
@@ -142,6 +142,8 @@ def peturbation_analysis(data_loader,
             adv_norm_diffs = get_norm_comparison(orig - adv)[adv_type]
             total_res[k1]["noise_diff"] += list(noise_norm_diffs)
             total_res[k1]["adv_diff"] += list(adv_norm_diffs)
+            if k1 == 'codes':
+                total_res[k1]["actual_code"] += list(adv)
             torch.cuda.empty_cache()
 
         data.detach().cpu()
@@ -160,3 +162,21 @@ def peturbation_analysis(data_loader,
     df["adv_code_norms"] = total_res["adv_code_norms"]
 
     return df
+
+
+def get_total_res(exp, model_dct, device, steps=8):
+    peturb_res_total = {}
+    norms = {'l2': [.25, .5, 1, 1.5, 2, 4, 6, 10, 15], 'linf': [2 / 255, 5 / 255, 10 / 255]}
+    for m in ['ae', 'vae', 'vqvae']:
+        adv_type_res = {}
+        for adv_type in norms.keys():
+            eps_res = {}
+            print(f"{adv_type}")
+            for eps in norms[adv_type]:
+                print(eps)
+                eps_res[eps] = peturbation_analysis(exp.test_loader, model_dct[m],
+                                                    latent_code_fn[m], model_dct[f"resnet_{m}"], adv_type, eps, steps,
+                                                    device)
+            adv_type_res[adv_type] = eps_res
+        peturb_res_total[m] = adv_type_res
+    return peturb_res_total
