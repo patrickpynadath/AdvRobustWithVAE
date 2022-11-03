@@ -52,7 +52,7 @@ def get_random_sample_latent_diffs(class_idx,
     for k1 in res.keys():
         for k2 in res[k1].keys():
             for k3 in res[k1][k2].keys():
-                df[f"{k1}_{k2}_{k2}"] = res[k1][k2][k3]
+                df[f"{k1}_{k2}_{k3}"] = res[k1][k2][k3]
 
     return df
 
