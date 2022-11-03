@@ -1,5 +1,6 @@
 from .helper_functions import get_latent_code_ae, get_latent_code_vae, get_latent_code_vqvae, \
-    get_norm_comparison, get_norm_constrained_noise, get_adv_examples
+    get_norm_comparison, get_norm_constrained_noise, get_adv_examples, load_models
+from .base_exp import BaseExp
 from tqdm import tqdm
 import pandas as pd
 import torch
@@ -164,7 +165,9 @@ def peturbation_analysis(data_loader,
     return df
 
 
-def get_total_res(exp, model_dct, device, steps=8):
+def get_total_res(device, steps=8):
+    model_dct = load_models(device)
+    exp = BaseExp(device)
     peturb_res_total = {}
     norms = {'l2': [.25, .5, 1, 1.5, 2, 4, 6, 10, 15], 'linf': [2 / 255, 5 / 255, 10 / 255]}
     for m in ['ae', 'vae', 'vqvae']:
