@@ -48,9 +48,13 @@ def get_random_sample_latent_diffs(class_idx,
                 norm_data_same[t][m].append(differences_same_class[t])
                 norm_data_diff[t][m].append(differences_diff_class[t])
     res = {'same_class' : norm_data_same, 'diff_class' : norm_data_diff}
-    with open("RawExpData/latent_class_norms.pickle", 'wb') as stream:
-        pickle.dump(res, stream)
-    return res
+    df = pd.DataFrame()
+    for k1 in res.keys():
+        for k2 in res[k1].keys():
+            for k3 in res[k1][k2].keys():
+                df[f"{k1}_{k2}_{k2}"] = res[k1][k2][k3]
+
+    return df
 
 
 # will only focus on the VAE -- only one seemingly demonstrating significant change in robustness properties
