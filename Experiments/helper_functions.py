@@ -173,9 +173,15 @@ def get_adv_examples(clf,
     return attacker(nat_img, labels)
 
 
-def get_norm_comparison(diff: torch.Tensor):
+def get_norm_comparison(diff: torch.Tensor, batch=True):
     # flattening along every dimension except for batch
-    diff = diff.flatten(start_dim=1)
-    l_2 = torch_to_numpy(vector_norm(diff, ord=2, dim=1))
-    l_inf = torch_to_numpy(vector_norm(diff, ord=float('inf'), dim=1))
+    if batch:
+        dim = 1
+        diff = torch.flatten(diff, start_dim=1)
+    else:
+        dim = 0
+        diff = torch.flatten(diff, start_dim=0)
+    l_2 = torch_to_numpy(vector_norm(diff, ord=2, dim=dim))
+    l_inf = torch_to_numpy(vector_norm(diff, ord=float('inf'), dim=dim))
     return {'l2': l_2, 'linf': l_inf}
+
