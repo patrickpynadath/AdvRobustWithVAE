@@ -48,7 +48,7 @@ def get_random_sample_latent_diffs(class_idx,
             for t in norm_types:
                 norm_data_same[t][m].append(differences_same_class[t])
                 norm_data_diff[t][m].append(differences_diff_class[t])
-    res = {'same_class' : norm_data_same, 'diff_class' : norm_data_diff}
+    res = {'same_class': norm_data_same, 'diff_class': norm_data_diff}
     df = pd.DataFrame()
     for k1 in res.keys():
         for k2 in res[k1].keys():
@@ -94,7 +94,7 @@ def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels
     return {"codes": code_res, "recon": recon_res, "adv_orig_diff":
         adv_orig_diff, "noise_orig_diff": noise_orig_diff, 'orig_recon_diff': orig_recon_diff,
             'orig_noiserecon_diff': orig_noiserecon_diff, 'orig_advrecon_diff': orig_advrecon_diff,
-            'nat_code_norms':nat_code_norms, 'noise_code_norms':noise_code_norms,
+            'nat_code_norms': nat_code_norms, 'noise_code_norms': noise_code_norms,
             'adv_code_norms': adv_code_norms}
 
 
@@ -165,7 +165,11 @@ def peturbation_analysis(data_loader,
     return df
 
 
-def get_total_res(device, steps=8):
+def get_total_res(device, steps=8, ensemble=True):
+    if ensemble:
+        clf_key = lambda m: f"resnet_{m}"
+    else:
+        clf_key = lambda m: "resnet"
     model_dct = load_models(device)
     exp = BaseExp(device)
     peturb_res_total = {}
@@ -178,7 +182,7 @@ def get_total_res(device, steps=8):
             for eps in norms[adv_type]:
                 print(eps)
                 eps_res[eps] = peturbation_analysis(exp.test_loader, model_dct[m],
-                                                    latent_code_fn[m], model_dct[f"resnet_{m}"], adv_type, eps, steps,
+                                                    latent_code_fn[m], model_dct[clf_key(m)], adv_type, eps, steps,
                                                     device)
             adv_type_res[adv_type] = eps_res
         peturb_res_total[m] = adv_type_res
