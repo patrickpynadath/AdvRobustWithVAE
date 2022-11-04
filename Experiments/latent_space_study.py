@@ -9,7 +9,8 @@ import random
 latent_code_fn = {'ae': get_latent_code_ae, 'vae': get_latent_code_vae, 'vqvae': get_latent_code_vqvae}
 
 
-# getting baseline comparison: differences within the same class, differences within a different class
+# getting baseline comparison: latent code differences within the same class, differences within a different class
+# TODO: need to also get reconstruction differences
 def get_random_sample_latent_diffs(class_idx,
                                    model_dct,
                                    idx_dct,
@@ -18,6 +19,7 @@ def get_random_sample_latent_diffs(class_idx,
                                    num_samples=1000):
     gen_models = ['ae', 'vae', 'vqvae']
     norm_types = ['l2', 'linf']
+
     norm_data_same = {}
     norm_data_diff = {}
     for t in norm_types:
@@ -42,18 +44,57 @@ def get_random_sample_latent_diffs(class_idx,
             gen_model = model_dct[m].to(device)
             gen_model.eval()
             codes = latent_code_fn[m](gen_model, to_encode)
-            differences_same_class = get_norm_comparison(codes[0, :] - codes[1, :], batch=False)
-            differences_diff_class = get_norm_comparison(codes[0, :] - codes[2, :], batch=False)
+            differences_same_class_code = get_norm_comparison(codes[0, :] - codes[1, :], batch=False)
+            differences_diff_class_code = get_norm_comparison(codes[0, :] - codes[2, :], batch=False)
 
             for t in norm_types:
-                norm_data_same[t][m].append(differences_same_class[t])
-                norm_data_diff[t][m].append(differences_diff_class[t])
+                norm_data_same[t][m].append(differences_same_class_code[t])
+                norm_data_diff[t][m].append(differences_diff_class_code[t])
     res = {'same_class': norm_data_same, 'diff_class': norm_data_diff}
     df = pd.DataFrame()
     for k1 in res.keys():
         for k2 in res[k1].keys():
             for k3 in res[k1][k2].keys():
                 df[f"{k1}_{k2}_{k3}"] = res[k1][k2][k3]
+
+    return df
+
+
+def get_random_sample_orig_diffs(class_idx,
+                                 idx_dct,
+                                 device,
+                                 dataset,
+                                 num_samples=1000):
+    norm_types = ['l2', 'linf']
+
+    norm_data_same = {}
+    norm_data_diff = {}
+    for t in norm_types:
+        same = []
+        diff = []
+
+        norm_data_same[t] = same
+        norm_data_diff[t] = diff
+
+    out_classes = [i for i in range(10)]
+    out_classes.remove(class_idx)
+    for sample_idx in range(num_samples):
+        [orig_sample, in_sample] = random.sample(idx_dct[class_idx], 2)
+        # out sample
+        out_class = random.sample(out_classes, 1)[0]
+        out_sample = random.sample(idx_dct[out_class], 1)[0]
+        to_encode = torch.stack([dataset[idx][0] for idx in [orig_sample, in_sample, out_sample]]).to(device)
+        differences_same_class_orig = get_norm_comparison(to_encode[0, :] - to_encode[1, :], batch=False)
+        differences_diff_class_orig = get_norm_comparison(to_encode[0, :] - to_encode[2, :], batch=False)
+        for t in norm_types:
+            norm_data_same[t].append(differences_same_class_orig[t])
+            norm_data_diff[t].append(differences_diff_class_orig[t])
+    res = {'same_class': norm_data_same, 'diff_class': norm_data_diff}
+    df = pd.DataFrame()
+    for k1 in res.keys():
+        for k2 in res[k1].keys():
+            for k3 in res[k1][k2].keys():
+                df[f"{k1}_{k2}"] = res[k1][k2]
 
     return df
 
