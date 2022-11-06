@@ -20,7 +20,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if not args.pretrained:
         train_models(TRAIN_METRICS_DIR, args.device)
-    run_raw_adv_rob(args.device)
+    # run_raw_adv_rob(args.device)
     get_class_comparisons(device=args.device)
     get_total_res_peturbation(device=args.device, steps=8, ensemble=True)
 
