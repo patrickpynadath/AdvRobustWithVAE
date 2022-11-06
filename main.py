@@ -1,5 +1,5 @@
 import argparse
-from Experiments import run_raw_adv_rob, train_models, load_models
+from Experiments import run_raw_adv_rob, train_models, load_models, get_class_comparisons, get_total_res_peturbation
 from Utils import graph_adv_rob_res
 
 # TODO: - Add plotting to scripts so it outputs well formatted graphs
@@ -21,7 +21,8 @@ if __name__ == '__main__':
     if not args.pretrained:
         train_models(TRAIN_METRICS_DIR, args.device)
     run_raw_adv_rob(args.device)
-    graph_adv_rob_res()
+    get_class_comparisons(device=args.device)
+    get_total_res_peturbation(device=args.device, steps=8, ensemble=True)
 
 
 

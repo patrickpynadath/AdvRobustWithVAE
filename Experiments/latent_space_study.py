@@ -5,12 +5,13 @@ from tqdm import tqdm
 import pandas as pd
 import torch
 import random
+from Utils import get_cifar_sets, get_label_idx
+import pickle
 
 latent_code_fn = {'ae': get_latent_code_ae, 'vae': get_latent_code_vae, 'vqvae': get_latent_code_vqvae}
 
 
 # getting baseline comparison: latent code differences within the same class, differences within a different class
-# TODO: need to also get reconstruction differences
 def get_random_sample_latent_diffs(class_idx,
                                    model_dct,
                                    idx_dct,
@@ -149,7 +150,7 @@ def get_random_sample_orig_diffs(class_idx,
 
 # will only focus on the VAE -- only one seemingly demonstrating significant change in robustness properties
 # retrieve codes and reconstructions for original inputs, noise inputs, and adversarial inputs
-def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels, adv_type, eps, steps, device):
+def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels, adv_type, eps, steps, device, is_vae = False):
     # original codes
     orig_codes = get_latent_code(gen_model, natural_imgs)
     # get noise codes
@@ -164,6 +165,15 @@ def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels
                                 natural_imgs,
                                 labels)
     adv_codes = get_latent_code(gen_model, adv_imgs)
+    if is_vae:
+        # want to retrieve logvar information as well
+        logvar_nat = gen_model.encode(natural_imgs)[1].detach().cpu()
+        logvar_adv = gen_model.encode(adv_imgs)[1].detach().cpu()
+        logvar_noise = gen_model.encode(noise_imgs)[1].detach().cpu()
+
+        adv_orig_diff_var = get_norm_comparison(logvar_adv - logvar_noise)[adv_type]
+        noise_orig_diff_var = get_norm_comparison(logvar_noise - logvar_nat)[adv_type]
+        nat_var_norms = get_norm_comparison(logvar_nat)[adv_type]
     adv_orig_diff = get_norm_comparison((adv_imgs - natural_imgs).detach().cpu())[adv_type]
     noise_orig_diff = get_norm_comparison((noise_imgs - natural_imgs).detach().cpu())[adv_type]
     adv_code_norms = get_norm_comparison(adv_codes.detach().cpu())[adv_type]
@@ -180,11 +190,16 @@ def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels
     code_res = {"orig": orig_codes.detach().cpu(), "noise": noise_codes.detach().cpu(), "adv": adv_codes.detach().cpu()}
     recon_res = {"orig": orig_recon.detach().cpu(), "noise": noise_recon.detach().cpu(),
                  "adv": adv_recon.detach().cpu()}
-    return {"codes": code_res, "recon": recon_res, "adv_orig_diff":
+    total_res = {"codes": code_res, "recon": recon_res, "adv_orig_diff":
         adv_orig_diff, "noise_orig_diff": noise_orig_diff, 'orig_recon_diff': orig_recon_diff,
             'orig_noiserecon_diff': orig_noiserecon_diff, 'orig_advrecon_diff': orig_advrecon_diff,
             'nat_code_norms': nat_code_norms, 'noise_code_norms': noise_code_norms,
             'adv_code_norms': adv_code_norms}
+    if is_vae:
+        total_res['adv_orig_logvar_diff'] = adv_orig_diff_var
+        total_res['noise_orig_logvar_diff'] = noise_orig_diff_var
+        total_res['nat_logvar_norms'] = nat_var_norms
+    return total_res
 
 
 # given a dict of the codes and recon for the orig, noise, and adv inputs,
@@ -198,14 +213,15 @@ def peturbation_analysis(data_loader,
                          adv_type,
                          eps,
                          steps,
-                         device):
+                         device, is_vae = False):
     total_code_res = {"noise_diff": [], "adv_diff": [], "actual_code": []}
     total_recon_res = {"noise_diff": [], "adv_diff": []}
     total_res = {"codes": total_code_res, "recon": total_recon_res,
                  "adv_orig_diff": [], "noise_orig_diff": [], "orig_recon_diff": [],
                  "orig_advrecon_diff": [], "orig_noiserecon_diff": [],
                  "noise_code_norms": [], "nat_code_norms": [],
-                 "adv_code_norms": []}
+                 "adv_code_norms": [], "adv_orig_logvar_diff": [],
+                 "noise_orig_logvar_diff" : [], "nat_logvar_norms" : []}
     gen_model.to(device)
     clf.to(device)
     pg_bar = tqdm(enumerate(data_loader), total=len(data_loader))
@@ -214,7 +230,7 @@ def peturbation_analysis(data_loader,
         data = data.to(device)
 
         batch_peturb_analysis = get_generative_outputs(gen_model, latent_code_fn,
-                                                       clf, data, labels, adv_type, eps, steps, device)
+                                                       clf, data, labels, adv_type, eps, steps, device, is_vae)
         total_res["adv_orig_diff"] += list(batch_peturb_analysis["adv_orig_diff"])
         total_res["noise_orig_diff"] += list(batch_peturb_analysis["noise_orig_diff"])
         total_res["orig_recon_diff"] += list(batch_peturb_analysis["orig_recon_diff"])
@@ -223,6 +239,10 @@ def peturbation_analysis(data_loader,
         total_res["adv_code_norms"] += list(batch_peturb_analysis["adv_code_norms"])
         total_res["nat_code_norms"] += list(batch_peturb_analysis["nat_code_norms"])
         total_res["noise_code_norms"] += list(batch_peturb_analysis["noise_code_norms"])
+        if is_vae:
+            total_res["adv_orig_logvar_diff"] += list(batch_peturb_analysis["adv_orig_logvar_diff"])
+            total_res["noise_orig_logvar_diff"] += list(batch_peturb_analysis["noise_orig_logvar_diff"])
+            total_res["nat_logvar_norms"] += list(batch_peturb_analysis["nat_logvar_norms"])
 
         for k1 in ["codes", "recon"]:
             orig = batch_peturb_analysis[k1]['orig']
@@ -250,11 +270,33 @@ def peturbation_analysis(data_loader,
     df["noise_code_norms"] = total_res["noise_code_norms"]
     df["nat_code_norms"] = total_res["nat_code_norms"]
     df["adv_code_norms"] = total_res["adv_code_norms"]
+    if is_vae:
+        df["adv_orig_logvar_diff"] = total_res["adv_orig_logvar_diff"]
+        df["noise_orig_logvar_diff"] = total_res["noise_orig_logvar_diff"]
+        df["nat_logvar_norms"] = total_res["nat_logvar_norms"]
 
     return df
 
 
-def get_total_res(device, steps=8, ensemble=True):
+def get_class_comparisons(device):
+    model_dct = load_models(device)
+    train_set, test_set = get_cifar_sets()
+    test_idx_dct = get_label_idx(test_set)
+    sample_diffs = {}
+    latent_diffs = {}
+    recon_diffs = {}
+    for i in range(10):
+        sample_diffs[i] = get_random_sample_orig_diffs(i, test_idx_dct, device, test_set)
+        latent_diffs[i] = get_random_sample_latent_diffs(i, model_dct, test_idx_dct, device, test_set)
+        recon_diffs[i] = get_random_sample_recon_diffs(i, model_dct, test_idx_dct, device, test_set)
+
+    total_res = {'orig' : sample_diffs, 'latent' : latent_diffs, 'recon' : recon_diffs}
+    with open('class_comparisons_total.pickle', 'wb') as stream:
+        pickle.dump(total_res, stream)
+    return
+
+
+def get_total_res_peturbation(device, steps=8, ensemble=True):
     if ensemble:
         clf_key = lambda m: f"resnet_{m}"
     else:
@@ -272,7 +314,9 @@ def get_total_res(device, steps=8, ensemble=True):
                 print(eps)
                 eps_res[eps] = peturbation_analysis(exp.test_loader, model_dct[m],
                                                     latent_code_fn[m], model_dct[clf_key(m)], adv_type, eps, steps,
-                                                    device)
+                                                    device, m == 'vae')
             adv_type_res[adv_type] = eps_res
         peturb_res_total[m] = adv_type_res
+    with open("peturb_analysis_total", "wb") as stream:
+        pickle.dump(peturb_res_total, stream)
     return peturb_res_total
