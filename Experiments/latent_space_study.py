@@ -305,7 +305,7 @@ def get_total_res_peturbation(device, steps=8, ensemble=True):
     exp = BaseExp(device)
     peturb_res_total = {}
     norms = {'l2': [.25, .5, 1, 1.5, 2, 4, 6, 10, 15], 'linf': [2 / 255, 5 / 255, 10 / 255]}
-    for m in ['ae', 'vae', 'vqvae']:
+    for m in ['vae', 'ae', 'vqvae']:
         adv_type_res = {}
         for adv_type in norms.keys():
             eps_res = {}
