@@ -263,7 +263,7 @@ def peturbation_analysis(data_loader,
             total_res["nat_logvar_norms"] += list(batch_peturb_analysis["nat_logvar_norms"])
             total_res['nat_mu_norms'] += list(batch_peturb_analysis["nat_mu_norms"])
             total_res['adv_mu_diffs'] += list(batch_peturb_analysis["adv_mu_diffs"])
-            total_res['noise_mu_diffs'] = list(batch_peturb_analysis["noise_mu_diffs"])
+            total_res['noise_mu_diffs'] += list(batch_peturb_analysis["noise_mu_diffs"])
 
         for k1 in ["codes", "recon"]:
             orig = batch_peturb_analysis[k1]['orig']
