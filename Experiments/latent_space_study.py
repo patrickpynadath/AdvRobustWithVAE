@@ -171,7 +171,13 @@ def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels
         logvar_nat = gen_model.encode(natural_imgs)[1].detach().cpu()
         logvar_adv = gen_model.encode(adv_imgs)[1].detach().cpu()
         logvar_noise = gen_model.encode(noise_imgs)[1].detach().cpu()
+        mu_nat = gen_model.encode(natural_imgs)[0].detach().cpu()
+        mu_adv = gen_model.encode(adv_imgs)[0].detach().cpu()
+        mu_noise = gen_model.encode(noise_imgs)[0].detach().cpu()
 
+        adv_mu_diffs = get_norm_comparison(mu_adv - mu_nat)[adv_type]
+        noise_mu_diffs = get_norm_comparison(mu_noise - mu_nat)[adv_type]
+        nat_mu_norms = get_norm_comparison(mu_nat)[adv_type]
         adv_orig_diff_var = get_norm_comparison(logvar_adv - logvar_noise)[adv_type]
         noise_orig_diff_var = get_norm_comparison(logvar_noise - logvar_nat)[adv_type]
         nat_var_norms = get_norm_comparison(logvar_nat)[adv_type]
@@ -200,6 +206,9 @@ def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels
         total_res['adv_orig_logvar_diff'] = adv_orig_diff_var
         total_res['noise_orig_logvar_diff'] = noise_orig_diff_var
         total_res['nat_logvar_norms'] = nat_var_norms
+        total_res['nat_mu_norms'] = nat_mu_norms
+        total_res['adv_mu_diffs'] = adv_mu_diffs
+        total_res['noise_mu_diffs'] = noise_mu_diffs
     return total_res
 
 
@@ -221,8 +230,16 @@ def peturbation_analysis(data_loader,
                  "adv_orig_diff": [], "noise_orig_diff": [], "orig_recon_diff": [],
                  "orig_advrecon_diff": [], "orig_noiserecon_diff": [],
                  "noise_code_norms": [], "nat_code_norms": [],
-                 "adv_code_norms": [], "adv_orig_logvar_diff": [],
-                 "noise_orig_logvar_diff" : [], "nat_logvar_norms" : []}
+                 "adv_code_norms": []}
+
+    if is_vae:
+        total_res['adv_orig_logvar_diff'] = []
+        total_res['noise_orig_logvar_diff'] = []
+        total_res['nat_logvar_norms'] = []
+        total_res['nat_mu_norms'] = []
+        total_res['adv_mu_diffs'] = []
+        total_res['noise_mu_diffs'] = []
+
     gen_model.to(device)
     clf.to(device)
     pg_bar = tqdm(enumerate(data_loader), total=len(data_loader))
@@ -244,6 +261,9 @@ def peturbation_analysis(data_loader,
             total_res["adv_orig_logvar_diff"] += list(batch_peturb_analysis["adv_orig_logvar_diff"])
             total_res["noise_orig_logvar_diff"] += list(batch_peturb_analysis["noise_orig_logvar_diff"])
             total_res["nat_logvar_norms"] += list(batch_peturb_analysis["nat_logvar_norms"])
+            total_res['nat_mu_norms'] += list(batch_peturb_analysis["nat_mu_norms"])
+            total_res['adv_mu_diffs'] += list(batch_peturb_analysis["adv_mu_diffs"])
+            total_res['noise_mu_diffs'] = list(batch_peturb_analysis["noise_mu_diffs"])
 
         for k1 in ["codes", "recon"]:
             orig = batch_peturb_analysis[k1]['orig']
@@ -275,7 +295,9 @@ def peturbation_analysis(data_loader,
         df["adv_orig_logvar_diff"] = total_res["adv_orig_logvar_diff"]
         df["noise_orig_logvar_diff"] = total_res["noise_orig_logvar_diff"]
         df["nat_logvar_norms"] = total_res["nat_logvar_norms"]
-
+        df["nat_mu_norms"] = total_res["nat_mu_norms"]
+        df["adv_mu_diffs"] = total_res["adv_mu_diffs"]
+        df["noise_mu_diffs"] = total_res["noise_mu_diffs"]
     return df
 
 
