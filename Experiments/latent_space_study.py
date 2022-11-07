@@ -165,6 +165,7 @@ def get_generative_outputs(gen_model, get_latent_code, clf, natural_imgs, labels
                                 natural_imgs,
                                 labels)
     adv_codes = get_latent_code(gen_model, adv_imgs)
+    gen_model.eval()
     if is_vae:
         # want to retrieve logvar information as well
         logvar_nat = gen_model.encode(natural_imgs)[1].detach().cpu()
