@@ -1,11 +1,12 @@
 import torch
 import yaml
+from torch import nn as nn
 from torch.linalg import vector_norm
 from torchattacks import PGD, PGDL2
 
 from Models import AE, VAE, VQVAE_NSVQ, ResNet, GenClf
 from Training import AETrainer, VAETrainer, VQVAETrainer, NatTrainer
-from Utils import torch_to_numpy
+from Utils import torch_to_numpy, get_img_l2_norm, norm_imgs_l2
 
 trainer_dct = {'ae': AETrainer, 'vae': VAETrainer, 'vqvae': VQVAETrainer}
 
@@ -168,9 +169,10 @@ def get_adv_examples(clf,
                      labels):
     if adversary_type == 'linf':
         attacker = PGD(clf, eps=attack_eps, steps=steps)
+        return attacker(nat_img, labels)
     elif adversary_type == 'l2':
-        attacker = PGDL2(clf, eps=attack_eps, steps=steps)
-    return attacker(nat_img, labels)
+        attacker = NormConstrainedAttacker(attack_eps, clf, num_iter = steps)
+        return attacker.generate(nat_img, labels)
 
 
 def get_norm_comparison(diff: torch.Tensor, batch=True):
@@ -185,3 +187,36 @@ def get_norm_comparison(diff: torch.Tensor, batch=True):
     l_inf = torch_to_numpy(vector_norm(diff, ord=float('inf'), dim=dim))
     return {'l2': l_2, 'linf': l_inf}
 
+
+class NormConstrainedAttacker:
+    """ projected gradient desscent, with random initialization within the ball """
+    def __init__(self, eps, model, num_iter=10):
+        # define default attack parameters here:
+        self.param = {'eps': eps,
+                      'num_iter': num_iter,
+                      'loss_fn': nn.CrossEntropyLoss()}
+        self.model = model
+        # parse thru the dictionary and modify user-specific params
+
+    def generate(self, x, y):
+        eps = self.param['eps']
+        num_iter = self.param['num_iter']
+        loss_fn = self.param['loss_fn']
+
+        r = get_img_l2_norm(x)
+        delta = torch.rand_like(x, requires_grad=True)
+        delta.data = 2 * delta.detach() - 1
+        delta.data = eps * norm_imgs_l2(delta.detach())
+        delta.data = r * norm_imgs_l2(x + delta) - x
+
+        for t in range(num_iter):
+            self.model.zero_grad()
+            loss = loss_fn(self.model(x + delta), y)
+            loss.backward()
+
+            delta_grad = delta.grad.detach()
+            delta.data = delta + eps * norm_imgs_l2(delta_grad)
+            # delta.data = delta + eps * delta_grad
+            delta.data = r * norm_imgs_l2(x + delta) - x
+            delta.grad.zero_()
+        return delta.detach()

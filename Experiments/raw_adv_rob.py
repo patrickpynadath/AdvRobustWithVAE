@@ -1,8 +1,6 @@
 import pickle
 from fractions import Fraction
-
 import yaml
-
 from . import load_models
 from .base_exp import BaseExp
 from Models import GenClf
@@ -60,3 +58,5 @@ def run_raw_adv_rob(device):
     with open("adv_rob_res_raw.pickle", "wb") as stream:
         pickle.dump(res, stream)
     return
+
+

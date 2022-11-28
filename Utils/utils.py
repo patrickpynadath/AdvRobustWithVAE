@@ -5,11 +5,12 @@ from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 import datetime
-
+from torch.linalg import vector_norm
 
 # code borrowed from https://github.com/SashaMalysheva/Pytorch-VAE/blob/master/utils.py
 # given a dictionary of accuracies from adv rob raw test, returns in the form of a pandas dataframe
 
+AVOID_ZERO_DIV = 1e-12
 
 def adv_raw_accs_to_df(adv_accs, fname):
     return
@@ -116,3 +117,12 @@ def torch_to_numpy(x: torch.Tensor):
     return x.cpu().detach().numpy()
 
 
+# get the norm for batched data
+def get_img_l2_norm(imgs):
+    return vector_norm(imgs, dim=(1, 2, 3))
+
+# normalize image data
+def norm_imgs_l2(imgs):
+    norms = get_img_l2_norm(imgs)
+    normalized_x = imgs / norms.clamp(min=AVOID_ZERO_DIV)
+    return normalized_x
