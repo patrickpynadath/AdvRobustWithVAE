@@ -171,8 +171,8 @@ def get_adv_examples(clf,
         attacker = PGD(clf, eps=attack_eps, steps=steps)
         return attacker(nat_img, labels)
     elif adversary_type == 'l2':
-        attacker = NormConstrainedAttacker(attack_eps, clf, num_iter = steps)
-        return attacker.generate(nat_img, labels)
+        attacker = PGDL2(clf, eps=attack_eps, steps=steps, alpha = (2 * attack_eps) / steps)
+        return attacker(nat_img, labels)
 
 
 def get_norm_comparison(diff: torch.Tensor, batch=True):
