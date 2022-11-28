@@ -123,6 +123,8 @@ def get_img_l2_norm(imgs):
 
 # normalize image data
 def norm_imgs_l2(imgs):
-    norms = get_img_l2_norm(imgs)
-    normalized_x = imgs / norms.clamp(min=AVOID_ZERO_DIV)
+    norms = get_img_l2_norm(imgs).clamp(min=AVOID_ZERO_DIV)
+    normalized_x = torch.zeros_like(imgs, device=imgs.device)
+    for i in range(imgs.size(0)):
+        normalized_x[i, :] = imgs[i, :] / norms[i]
     return normalized_x
