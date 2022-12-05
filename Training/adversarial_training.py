@@ -50,7 +50,7 @@ class AdversarialTrainer:
         adv_outputs = self.model(adv_images)
         adv_pred = torch.argmax(adv_outputs, dim=1)
         adv_score = sum([1 if adv_pred[i].item() == labels[i].item() else 0 for i in range(len(adv_pred))])
-        adv_loss = self.criterion(adv_pred, labels)
+        adv_loss = self.criterion(adv_outputs, labels)
         adv_loss.backward()
         self.optim.step()
         return {'adv loss' : adv_loss.item(),
@@ -79,14 +79,14 @@ class AdversarialTrainer:
                                         labels)
             adv_outputs = self.model(adv_imgs)
             adv_pred = torch.argmax(adv_outputs, dim=1)
-            adv_loss = self.criterion(adv_pred, labels)
+            adv_loss = self.criterion(adv_outputs, labels)
             adv_loss_total += adv_loss.item()
             adv_score = sum([1 if adv_pred[i].item() == labels[i].item() else 0 for i in range(len(labels))])
             adv_score_total += adv_score
 
             nat_outputs = self.model(imgs)
             nat_pred = torch.argmax(nat_outputs, dim=1)
-            nat_loss = self.criterion(nat_pred, dim=1)
+            nat_loss = self.criterion(nat_outputs, dim=1)
             nat_loss.total += nat_loss.item()
             nat_score = sum([1 if nat_pred[i].item() == labels[i].item() else 0 for i in range(len(labels))])
             nat_score_total += nat_score
