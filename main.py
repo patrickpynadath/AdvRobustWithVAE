@@ -1,7 +1,7 @@
 import argparse
 from Experiments import run_raw_adv_rob, get_class_comparisons, get_total_res_peturbation
 from Models import load_models
-from Training.training_script import train_models
+from Training.training_script import train_models_natural
 
 # TODO: - Add plotting to scripts so it outputs well formatted graphs
 # TODO: - Debug -- make sure what works right now works
@@ -23,7 +23,7 @@ if __name__ == '__main__':
                         type=int)
     args = parser.parse_args()
     if not args.pretrained:
-        train_models(TRAIN_METRICS_DIR, args.device)
+        train_models_natural(TRAIN_METRICS_DIR, args.device)
     device = args.device
     exp_num = args.exp_num
     if exp_num == 0:

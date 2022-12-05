@@ -25,7 +25,7 @@ def load_models(device):
     resnet_smooth = model_dct['resnetSmooth']
     resnet_smooth_path = f'PretrainedModels/Resnet110_SmoothSigma_.25'
     resnet_smooth.load_state_dict(torch.load(resnet_smooth_path))
-    model_dct['resnetSmooth'] = resnet_smooth
+    model_dct['resnetGaussian'] = resnet_smooth
 
     return model_dct
 
@@ -63,7 +63,7 @@ def get_untrained_models(device):
             'vae': vae,
             'vqvae': vqvae,
             'resnet': resnet,
-            'resnetSmooth': resnet_smooth,
+            'resnetGaussian': resnet_smooth,
             'resnet_ae': ResNet(resnet_depth, resnet_classes, resnet_block, device=device),
             'resnet_vae': ResNet(resnet_depth, resnet_classes, resnet_block, device=device),
             'resnet_vqvae': ResNet(resnet_depth, resnet_classes, resnet_block, device=device),

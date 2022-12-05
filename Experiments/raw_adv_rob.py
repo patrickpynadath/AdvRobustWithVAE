@@ -16,7 +16,7 @@ def run_raw_adv_rob(device):
     linf_accs = {}
     model_dct = load_models(device)
     exp = BaseExp(device)
-    for key in ['resnet', 'resnetSmooth']:
+    for key in ['resnet', 'resnetGaussian']:
         print(f"Eval base {key}")
         clf = model_dct[key]
         nat_acc = exp.eval_clf_clean(clf)
@@ -52,6 +52,14 @@ def run_raw_adv_rob(device):
         nat_acc = exp.eval_clf_clean(clf)
         adv_accs = exp.eval_clf_adv_raw(clf, 'l2', l2_eps, num_steps)
         l2_accs[f"resnet_{key}"] = [nat_acc] + adv_accs
+
+    print(f"Eval Smooth Resnet")
+    clf = model_dct['resnetGaussian']
+    nat_acc = exp.eval_smoothclf_nat_raw(clf, .25, 100, .1)
+    adv_accs = exp.eval_smoothclf_adv_raw(clf, .25, 100, 'l2', .1, l2_eps, num_steps)
+    l2_accs["resnetSmooth"] = [nat_acc] + adv_accs
+    adv_accs = exp.eval_smoothclf_adv_raw(clf, .25, 100, 'linf', .1, linf_eps, num_steps)
+    linf_accs['resnetSmooth'] = [nat_acc] + adv_accs
 
     res = {'l2': l2_accs, 'linf': linf_accs, 'l2_eps': l2_eps, 'linf_eps': linf_eps}
     with open("adv_rob_res_raw.pickle", "wb") as stream:

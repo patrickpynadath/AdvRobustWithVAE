@@ -1,3 +1,5 @@
+import os
+
 import torch
 
 from Models import GenClf, get_untrained_models
@@ -6,7 +8,7 @@ from Training import AETrainer, VAETrainer, VQVAETrainer, NatTrainer
 trainer_dct = {'ae': AETrainer, 'vae': VAETrainer, 'vqvae': VQVAETrainer}
 
 
-def train_models(training_metrics_dir, device):
+def train_models_natural(training_metrics_dir, device):
     model_dct = get_untrained_models(device)
     gen_lr = float(model_dct['training_param_gen']['lr'])
     gen_batch_size = int(model_dct['training_param_gen']['batch_size'])
@@ -59,3 +61,13 @@ def train_models(training_metrics_dir, device):
     trainer.training_loop(epochs_clf)
     torch.save(resnet.state_dict(), f"PretrainedModels/Resnet_{resnet_smooth.depth}_SmoothSigma_.25")
     return
+
+
+# focus on l_2 attacks for now
+def train_models_adv(training_metrics_dir, device):
+    train_eps = [.1, .25, .5, 1, 1.5, 2]
+    for eps in train_eps:
+        eps_dir = f"PretrainedModels/train_eps_{eps}"
+
+        os.mkdir(eps_dir)
+        model_dct = get_untrained_models(device)
