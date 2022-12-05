@@ -124,6 +124,62 @@ class AdversarialTrainer:
         return
 
 
+class AdversarialTrainerEnsemble(AdversarialTrainer):
+    # gen_loss_fn must take the generative model, the adversarial inputs, and the untouched inputs
+    def __init__(self,
+                 model,
+                 attacker_type,
+                 attack_eps,
+                 device,
+                 log_dir,
+                 attacker_steps,
+                 to_optimize,
+                 gen_loss_fn,
+                 batch_size = 64,
+                 use_tensorboard = False,
+                 lr = .01):
+        super(AdversarialTrainerEnsemble, self).__init__(model,
+                                                         attacker_type,
+                                                         attack_eps,
+                                                         device,
+                                                         log_dir,
+                                                         attacker_steps,
+                                                         batch_size = batch_size,
+                                                         use_tensorboard = use_tensorboard,
+                                                         lr = lr)
+        self.model.to_optimize = to_optimize
+        self.optim = SGD(self.model.parameters(), lr=lr)
+        self.to_optimize = to_optimize
+        self.gen_loss_fn = gen_loss_fn
+
+
+        # can be clf, gen, or ensemble
+
+    def train_step(self, batch):
+        self.optim.zero_grad()
+        imgs, labels = batch
+        imgs = imgs.to(self.device)
+        labels = labels.to(self.device)
+        adv_images = get_adv_examples(clf=self.model,
+                                      attack_eps=self.attack_eps,
+                                      adversary_type=self.attacker_type,
+                                      steps=self.attacker_steps,
+                                      nat_img=imgs,
+                                      labels=labels)
+        # getting the adversarial loss and adversarial score
+        adv_outputs = self.model(adv_images)
+        adv_pred = torch.argmax(adv_outputs, dim=1)
+        adv_score = sum([1 if adv_pred[i].item() == labels[i].item() else 0 for i in range(len(adv_pred))])
+        adv_loss = self.criterion(adv_pred, labels)
+        if self.to_optimize == 'ensemble' or self.to_optimize == 'clf':
+            adv_loss.backward()
+            self.optim.step()
+        elif self.to_optimize == 'gen':
+            gen_loss = self.gen_loss_fn(self.model.gen_model, adv_images, imgs)
+            gen_loss.backward()
+            self.optim.step()
+        return {'adv loss': adv_loss.item(),
+                'adv score': adv_score}
 
 
 
