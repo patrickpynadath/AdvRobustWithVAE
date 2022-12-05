@@ -176,7 +176,7 @@ class AdversarialTrainerEnsemble(AdversarialTrainer):
         adv_outputs = self.model(adv_images)
         adv_pred = torch.argmax(adv_outputs, dim=1)
         adv_score = sum([1 if adv_pred[i].item() == labels[i].item() else 0 for i in range(len(adv_pred))])
-        adv_loss = self.criterion(adv_pred, labels)
+        adv_loss = self.criterion(adv_outputs, labels)
         if self.to_optimize == 'ensemble' or self.to_optimize == 'clf':
             adv_loss.backward()
             self.optim.step()
