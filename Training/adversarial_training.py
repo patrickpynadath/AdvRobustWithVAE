@@ -110,8 +110,8 @@ class AdversarialTrainer:
                         f"Epoch {epoch + 1} / {epochs} | Iteration {i + 1} / {len(self.train_loader)}")
                     train_total += len(data[1])
                     train_step_data = self.train_step(data)
-                    total_loss += train_step_data['loss']
-                    num_correct += train_step_data['score']
+                    total_loss += train_step_data['adv loss']
+                    num_correct += train_step_data['adv score']
             val_step = self.val_loop()
             train_acc = num_correct / train_total
             train_loss = total_loss
