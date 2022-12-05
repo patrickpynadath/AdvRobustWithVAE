@@ -1,7 +1,7 @@
 import pickle
 from fractions import Fraction
 import yaml
-from Utils import load_models
+from . import load_models
 from .base_exp import BaseExp
 from Models import GenClf
 

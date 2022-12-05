@@ -5,7 +5,9 @@ from torch.utils.tensorboard import SummaryWriter
 import torch.nn as nn
 import torch
 from torch.utils.data import DataLoader
-from Utils import get_adv_examples, get_norm_constrained_noise, get_cifar_sets, timestamp
+from Utils import get_cifar_sets, timestamp
+from Experiments import get_norm_constrained_noise
+from Experiments.helper_functions import get_adv_examples
 from tqdm import tqdm
 
 class AdversarialTrainer:

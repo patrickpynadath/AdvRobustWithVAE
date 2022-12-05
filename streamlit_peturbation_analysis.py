@@ -1,6 +1,6 @@
 import streamlit as st
-from Experiments import BaseExp, get_random_sample_latent_diffs
-from Utils import get_label_idx, load_models
+from Experiments import BaseExp, get_random_sample_latent_diffs, load_models
+from Utils import get_label_idx
 
 if 'started' not in st.session_state:
     device='cuda'
