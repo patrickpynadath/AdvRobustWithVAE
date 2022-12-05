@@ -16,15 +16,11 @@ class GenClf(nn.Module):
         recon = self.gen_model.generate(x)
         return self.clf(recon)
 
-    def parameters(self, recurse: bool = True):
-        if self.to_optimize == 'clf':
-            return self.clf.parameters(recurse=recurse)
-        elif self.to_optimize == 'gen':
-            return self.gen_model.parameters(recurse=recurse)
-        else:
-            # actual implementation of parameters() from source
-            for name, param in self.named_parameters(recurse=recurse):
-                yield param
+    def clf_parameters(self, recurse: bool = True):
+        return self.clf.parameters(recurse=recurse)
+
+    def gen_parameters(self, recurse: bool = True):
+        return self.gen_model.parameters(recurse=recurse)
 
 
 

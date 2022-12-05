@@ -149,8 +149,12 @@ class AdversarialTrainerEnsemble(AdversarialTrainer):
                                                          batch_size = batch_size,
                                                          use_tensorboard = use_tensorboard,
                                                          lr = lr)
-        self.model.to_optimize = to_optimize
-        self.optim = SGD(self.model.parameters(), lr=lr)
+        if to_optimize == 'gen':
+            self.optim = SGD(self.model.gen_parameters(), lr=lr)
+        elif to_optimize == 'clf':
+            self.optim = SGD(self.model.clf_parameters(), lr=lr)
+        elif to_optimize == 'ens':
+            self.optim = SGD(self.model.parameters(), lr=lr)
         self.to_optimize = to_optimize
         self.gen_loss_fn = gen_loss_fn
 
