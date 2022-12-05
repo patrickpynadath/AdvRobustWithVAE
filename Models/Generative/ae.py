@@ -49,3 +49,7 @@ class AE(nn.Module):
 
     def get_encoding(self, x):
         return self.encode(x)
+
+
+def get_latent_code_ae(ae: AE, x):
+    return ae.encode(x)

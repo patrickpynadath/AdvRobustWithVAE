@@ -48,3 +48,7 @@ class VQVAE_NSVQ(nn.Module):
 
     def generate(self, x):
         return self.forward(x)[0]
+
+
+def get_latent_code_vqvae(vqvae: VQVAE_NSVQ, x):
+    return vqvae.encode(x)[0]

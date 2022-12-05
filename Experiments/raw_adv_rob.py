@@ -1,9 +1,8 @@
 import pickle
 from fractions import Fraction
 import yaml
-from . import load_models
 from .base_exp import BaseExp
-from Models import GenClf
+from Models import GenClf, load_models
 
 
 def run_raw_adv_rob(device):

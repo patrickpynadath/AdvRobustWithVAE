@@ -69,3 +69,7 @@ class VAE(nn.Module):
         recon_loss = F.mse_loss(recon, x)
         total_loss = recon_loss + self.beta * kld_loss * 32 / 50000
         return total_loss, recon_loss, kld_loss
+
+
+def get_latent_code_vae(vae: VAE, x):
+    return vae.encode(x)[0]

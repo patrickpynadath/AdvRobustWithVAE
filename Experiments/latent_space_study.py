@@ -4,8 +4,8 @@ import pandas as pd
 import torch
 import random
 from Utils import get_cifar_sets, get_label_idx
-from . import load_models, get_latent_code_ae, get_latent_code_vae, get_latent_code_vqvae, get_norm_constrained_noise
-from .helper_functions import get_adv_examples, get_norm_comparison
+from Models import load_models, get_latent_code_vqvae, get_latent_code_ae, get_latent_code_vae
+from .helper_functions import get_adv_examples, get_norm_comparison, get_norm_constrained_noise
 import pickle
 
 latent_code_fn = {'ae': get_latent_code_ae, 'vae': get_latent_code_vae, 'vqvae': get_latent_code_vqvae}
