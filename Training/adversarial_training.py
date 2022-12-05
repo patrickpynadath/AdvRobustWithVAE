@@ -19,29 +19,32 @@ class AdversarialTrainer:
                  device,
                  log_dir,
                  attacker_steps,
+                 warmup_epochs = 50,
                  batch_size = 64,
                  use_tensorboard = False,
                  lr = .01):
         self.model = model
         self.attacker_type = attacker_type
         self.attack_eps = attack_eps
+        self.warmup_epochs = warmup_epochs
         self.device = device
         self.attacker_steps = attacker_steps
         self.optim = SGD(self.model.parameters(), lr=lr)
         self.use_tensorboard = use_tensorboard
         self.log_dir = log_dir
+        self.warmup_epochs = 50
         self.criterion = nn.CrossEntropyLoss()
         train_set, test_set = get_cifar_sets()
         self.train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
         self.test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
-    def train_step(self, batch):
+    def train_step(self, batch, eps):
         self.optim.zero_grad()
         imgs, labels = batch
         imgs = imgs.to(self.device)
         labels = labels.to(self.device)
         adv_images = get_adv_examples(clf = self.model,
-                                      attack_eps=self.attack_eps,
+                                      attack_eps=eps,
                                       adversary_type=self.attacker_type,
                                       steps=self.attacker_steps,
                                       nat_img=imgs,
@@ -104,12 +107,16 @@ class AdversarialTrainer:
             total_loss = 0
             num_correct = 0
             train_total = 0
+            if epoch < self.warmup_epochs:
+                eps = epoch / self.warmup_epochs * self.attack_eps
+            else:
+                eps = self.attack_eps
             with tqdm(enumerate(self.train_loader), total=len(self.train_loader)) as datastream:
                 for i, data in datastream:
                     datastream.set_description(
                         f"Epoch {epoch + 1} / {epochs} | Iteration {i + 1} / {len(self.train_loader)}")
                     train_total += len(data[1])
-                    train_step_data = self.train_step(data)
+                    train_step_data = self.train_step(data, eps)
                     total_loss += train_step_data['adv loss']
                     num_correct += train_step_data['adv score']
             val_step = self.val_loop()
