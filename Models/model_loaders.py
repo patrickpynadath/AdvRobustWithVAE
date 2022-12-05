@@ -22,7 +22,7 @@ def load_models(device):
     resnet.load_state_dict(torch.load(resnet_path))
     model_dct['resnet'] = resnet
 
-    resnet_smooth = model_dct['resnetSmooth']
+    resnet_smooth = model_dct['resnetGaussian']
     resnet_smooth_path = f'PretrainedModels/Resnet110_SmoothSigma_.25'
     resnet_smooth.load_state_dict(torch.load(resnet_smooth_path))
     model_dct['resnetGaussian'] = resnet_smooth
