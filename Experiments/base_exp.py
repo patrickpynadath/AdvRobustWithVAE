@@ -78,7 +78,7 @@ class BaseExp:
         for i, data in pg:
             inputs, labels = data[0].to(self.device), data[1].to(self.device)
             for i in range(len(labels)):
-                pred = smooth.predict(inputs[i, :], num_samples, conf_value, num_samples)
+                pred = smooth.predict(inputs[i, :], num_samples, conf_value, batch_size=10)
                 total += 1
                 if pred == labels[i].item():
                     num_correct += 1
@@ -111,7 +111,7 @@ class BaseExp:
                 attacked_inputs = get_adv_examples(attack_model, attack_eps=eps, adversary_type=adversary_type,
                                                    steps=steps, nat_img=inputs, labels=labels)
                 for i in range(len(labels)):
-                    pred_class = smooth.predict(attacked_inputs[i, :], num_samples, conf_value, batch_size=num_samples)
+                    pred_class = smooth.predict(attacked_inputs[i, :], num_samples, conf_value, batch_size=10)
                     total += 1
                     if pred_class == labels[i].item():
                         num_correct += 1
