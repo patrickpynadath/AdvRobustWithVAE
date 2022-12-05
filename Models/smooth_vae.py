@@ -18,9 +18,9 @@ class GenClf(nn.Module):
 
     def parameters(self, recurse: bool = True):
         if self.to_optimize == 'clf':
-            return self.clf.parameters()
+            return self.clf.parameters(recurse=recurse)
         elif self.to_optimize == 'gen':
-            return self.gen_model.parameters()
+            return self.gen_model.parameters(recurse=recurse)
         else:
             # actual implementation of parameters() from source
             for name, param in self.named_parameters(recurse=recurse):
