@@ -78,7 +78,7 @@ class BaseExp:
         for i, data in pg:
             inputs, labels = data[0].to(self.device), data[1].to(self.device)
             for i in range(len(labels)):
-                pred = smooth.predict(inputs[i, :], num_samples, conf_value, batch_size=10)
+                pred = smooth.predict(inputs[i, :], num_samples, conf_value, batch_size=30)
                 total += 1
                 if pred == labels[i].item():
                     num_correct += 1
