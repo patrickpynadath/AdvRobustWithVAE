@@ -100,7 +100,7 @@ class BaseExp:
         model.to(self.device)
         model.eval()
         smooth = Smooth(model, 10, smoothSigma)
-        attack_model = SmoothSoftClf(model, smoothSigma, model.device)
+        attack_model = SmoothSoftClf(model, smoothSigma, self.device)
         for eps in eps_values:
             num_correct = 0
             total = 0
