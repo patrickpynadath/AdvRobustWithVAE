@@ -86,7 +86,7 @@ class AdversarialTrainer:
 
             nat_outputs = self.model(imgs)
             nat_pred = torch.argmax(nat_outputs, dim=1)
-            nat_loss = self.criterion(nat_outputs, dim=1)
+            nat_loss = self.criterion(nat_outputs, labels)
             nat_loss.total += nat_loss.item()
             nat_score = sum([1 if nat_pred[i].item() == labels[i].item() else 0 for i in range(len(labels))])
             nat_score_total += nat_score
