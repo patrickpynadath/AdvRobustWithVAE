@@ -5,7 +5,7 @@ import numpy as np
 from scipy.stats import norm, binom_test
 from statsmodels.stats.proportion import proportion_confint
 import torch
-
+import torch.nn as nn
 
 class Smooth(object):
     """A smoothed classifier g """
@@ -106,3 +106,20 @@ class Smooth(object):
         :return: a lower bound on the binomial proportion which holds true w.p at least (1 - alpha) over the samples
         """
         return proportion_confint(NA, N, alpha=2 * alpha, method="beta")[0]
+
+
+class SmoothSoftClf(nn.Module):
+    def __init__(self, base_clf, sigma, device, num_samples = 10):
+        super(SmoothSoftClf, self).__init__()
+        self.base_clf = base_clf
+        self.sigma = sigma
+        self.device = device
+        self.num_samples = num_samples
+
+    def forward(self, x):
+        avg = torch.zeros((x.size(0), 10), device=self.device)
+        for i in range(self.num_samples):
+            avg += self.base_clf(torch.randn_like(x, device=self.device) * self.sigma + x)
+        avg /= self.num_samples
+        return avg
+

@@ -2,7 +2,7 @@ import torch
 
 from Utils import get_cifar_sets
 from Experiments.helper_functions import get_adv_examples
-from Models import Smooth
+from Models import Smooth, SmoothSoftClf
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -100,6 +100,7 @@ class BaseExp:
         model.to(self.device)
         model.eval()
         smooth = Smooth(model, 10, smoothSigma)
+        attack_model = SmoothSoftClf(model, smoothSigma, model.device)
         for eps in eps_values:
             num_correct = 0
             total = 0
@@ -107,7 +108,7 @@ class BaseExp:
             pg.set_description(f'Adv Acc for {adversary_type} @ eps {round(eps, 5)}')
             for i, data in pg:
                 inputs, labels = data[0].to(self.device), data[1].to(self.device)
-                attacked_inputs = get_adv_examples(model, attack_eps=eps, adversary_type=adversary_type,
+                attacked_inputs = get_adv_examples(attack_model, attack_eps=eps, adversary_type=adversary_type,
                                                    steps=steps, nat_img=inputs, labels=labels)
                 for i in range(len(labels)):
                     pred_class = smooth.predict(attacked_inputs[i, :], num_samples, conf_value, batch_size=num_samples)
