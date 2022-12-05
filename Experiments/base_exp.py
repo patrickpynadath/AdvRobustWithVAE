@@ -111,7 +111,7 @@ class BaseExp:
                 attacked_inputs = get_adv_examples(attack_model, attack_eps=eps, adversary_type=adversary_type,
                                                    steps=steps, nat_img=inputs, labels=labels)
                 for i in range(len(labels)):
-                    pred_class = smooth.predict(attacked_inputs[i, :], num_samples, conf_value, batch_size=10)
+                    pred_class = smooth.predict(attacked_inputs[i, :], num_samples, conf_value, batch_size=30)
                     total += 1
                     if pred_class == labels[i].item():
                         num_correct += 1
