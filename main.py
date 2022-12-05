@@ -1,5 +1,6 @@
 import argparse
-from Experiments import run_raw_adv_rob, train_models, load_models, get_class_comparisons, get_total_res_peturbation
+from Experiments import run_raw_adv_rob, train_models, get_class_comparisons, get_total_res_peturbation
+from Utils import load_models
 
 # TODO: - Add plotting to scripts so it outputs well formatted graphs
 # TODO: - Debug -- make sure what works right now works

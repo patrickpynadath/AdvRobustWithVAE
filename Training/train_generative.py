@@ -132,6 +132,8 @@ class VAETrainer(GenerativeTrainer):
                 'kld loss': kld_loss}
 
 
+
+
 class VQVAETrainer(GenerativeTrainer):
 
     def training_step(self, batch):
