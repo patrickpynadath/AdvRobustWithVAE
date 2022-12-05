@@ -27,7 +27,7 @@ class AdversarialTrainer:
         self.attack_eps = attack_eps
         self.device = device
         self.attacker_steps = attacker_steps
-        self.optim = SGD(model.parameters(), lr=lr)
+        self.optim = SGD(self.model.parameters(), lr=lr)
         self.use_tensorboard = use_tensorboard
         self.log_dir = log_dir
         self.criterion = nn.CrossEntropyLoss()
@@ -177,7 +177,7 @@ class AdversarialTrainerEnsemble(AdversarialTrainer):
             adv_loss.backward()
             self.optim.step()
         elif self.to_optimize == 'gen':
-            gen_loss = self.gen_loss_fn(self.model.gen_model, adv_images, imgs)
+            gen_loss = self.gen_loss_fn(self.model.gen_model, imgs, adv_images)
             gen_loss.backward()
             self.optim.step()
         return {'adv loss': adv_loss.item(),
