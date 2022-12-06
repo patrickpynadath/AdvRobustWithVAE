@@ -10,7 +10,7 @@ from tqdm import tqdm
 class BaseExp:
     def __init__(self,
                  device,
-                 batch_size=32):
+                 batch_size=64):
 
         self.device = device
         train_set, test_set = get_cifar_sets()
