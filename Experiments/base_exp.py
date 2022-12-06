@@ -107,7 +107,7 @@ class BaseExp:
             pg = tqdm(enumerate(self.test_loader), total=len(self.test_loader))
             pg.set_description(f'Adv Acc for {adversary_type} @ eps {round(eps, 5)}')
             for i, data in pg:
-                inputs, labels = data[0].to(self.device), data[1].to(self.device)
+                inputs, labels = data[0].to(self.device), data[1]
                 attacked_inputs = get_adv_examples(attack_model, attack_eps=eps, adversary_type=adversary_type,
                                                    steps=steps, nat_img=inputs, labels=labels)
                 for i in range(len(labels)):
