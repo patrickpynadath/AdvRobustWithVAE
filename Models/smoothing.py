@@ -89,6 +89,7 @@ class Smooth(object):
                 noise = torch.randn_like(batch, device='cuda') * self.sigma
                 predictions = self.base_classifier(batch + noise).argmax(1)
                 counts += self._count_arr(predictions.cpu().numpy(), self.num_classes)
+                del noise
             return counts
 
     def _count_arr(self, arr: np.ndarray, length: int) -> np.ndarray:
@@ -119,7 +120,9 @@ class SmoothSoftClf(nn.Module):
     def forward(self, x):
         avg = torch.zeros((x.size(0), 10), device=self.device)
         for i in range(self.num_samples):
-            avg += self.base_clf(torch.randn_like(x, device=self.device) * self.sigma + x)
+            noise = torch.randn_like(x, device=self.device) * self.sigma
+            avg += self.base_clf(noise + x)
+            del noise
         avg /= self.num_samples
         return avg
 

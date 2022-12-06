@@ -21,6 +21,7 @@ def run_raw_adv_rob(device):
     nat_acc = exp.eval_smoothclf_nat_raw(clf, .25, 100, .1)
     adv_accs = exp.eval_smoothclf_adv_raw(clf, .25, 100, 'l2', .1, l2_eps, num_steps)
     l2_accs["resnetSmooth"] = [nat_acc] + adv_accs
+
     adv_accs = exp.eval_smoothclf_adv_raw(clf, .25, 100, 'linf', .1, linf_eps, num_steps)
     linf_accs['resnetSmooth'] = [nat_acc] + adv_accs
 
