@@ -82,6 +82,8 @@ class BaseExp:
                 total += 1
                 if pred == labels[i].item():
                     num_correct += 1
+            del inputs
+            del labels
         nat_acc = num_correct / total
         print(f"Nat Acc : {round(nat_acc * 100, 3)}%")
         return nat_acc
@@ -112,10 +114,12 @@ class BaseExp:
                 attacked_inputs = get_adv_examples(attack_model, attack_eps=eps, adversary_type=adversary_type,
                                                    steps=steps, nat_img=inputs, labels=labels)
                 for i in range(len(labels)):
-                    pred_class = smooth.predict(attacked_inputs[i, :], num_samples, conf_value, batch_size=100)
+                    pred_class = smooth.predict(attacked_inputs[i, :], num_samples, conf_value, batch_size=10)
                     total += 1
                     if pred_class == labels[i].item():
                         num_correct += 1
+                del inputs
+                del labels
             raw_acc = num_correct / total
             print(f"Raw adv acc {round(raw_acc * 100, 3)}%")
             adv_accs.append(raw_acc)
