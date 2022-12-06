@@ -108,6 +108,7 @@ class BaseExp:
             pg.set_description(f'Adv Acc for {adversary_type} @ eps {round(eps, 5)}')
             for i, data in pg:
                 inputs, labels = data[0].to(self.device), data[1]
+                attack_model.eval()
                 attacked_inputs = get_adv_examples(attack_model, attack_eps=eps, adversary_type=adversary_type,
                                                    steps=steps, nat_img=inputs, labels=labels)
                 for i in range(len(labels)):
