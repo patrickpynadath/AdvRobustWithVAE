@@ -111,6 +111,7 @@ class BaseExp:
             for i, data in pg:
                 inputs, labels = data[0].to(self.device), data[1]
                 attack_model.eval()
+                print('asd')
                 attacked_inputs = get_adv_examples(attack_model, attack_eps=eps, adversary_type=adversary_type,
                                                    steps=steps, nat_img=inputs, labels=labels)
                 for i in range(len(labels)):
