@@ -115,7 +115,7 @@ class BaseExp:
                                                   steps=steps, nat_img=inputs, labels=labels)
                 for i in range(len(labels)):
 
-                    pred_class = smooth.predict(attacked_inputs[i, None], num_samples, conf_value, batch_size=100)
+                    pred_class = smooth.predict(attacked_inputs[i, :], num_samples, conf_value, batch_size=100)
                     total += 1
                     if pred_class == labels[i].item():
                         num_correct += 1

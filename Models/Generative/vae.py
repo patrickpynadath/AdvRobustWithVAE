@@ -61,13 +61,14 @@ class VAE(nn.Module):
         z = self.parameterize(mu, logvar)
         return z
 
+
     def generate(self, x):
         return self.forward(x)[0]
 
     def loss_fn(self, recon, x, mu, logvar):
         kld_loss = torch.mean(-0.5 * torch.sum(1 + logvar - mu ** 2 - logvar.exp(), dim=1), dim=0)
         recon_loss = F.mse_loss(recon, x)
-        total_loss = recon_loss + self.beta * kld_loss * 32 / 50000
+        total_loss = recon_loss + self.beta * kld_loss
         return total_loss, recon_loss, kld_loss
 
 
