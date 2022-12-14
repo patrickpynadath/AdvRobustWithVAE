@@ -36,7 +36,7 @@ class VAE(nn.Module):
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
-            torch.nn.init.uniform(module.weight.data, -.08, .08)
+            torch.nn.init.uniform_(module.weight.data, -.08, .08)
             if module.bias is not None:
                 module.bias.data.zero_()
 
