@@ -33,12 +33,15 @@ class VAE(nn.Module):
                                 num_residual_hiddens)
         self.label= f'VAE_{timestamp()}'
         self.apply(self._init_weights)
+        torch.nn.init.constant_(self._fc_dec.weight.data, 0)
+        torch.nn.init.constant_(self._fc_dec.bias.data, 0)
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
             torch.nn.init.uniform_(module.weight.data, -.08, .08)
             if module.bias is not None:
                 module.bias.data.zero_()
+
 
     def encode(self, x):
         enc = self._encoder(x)
